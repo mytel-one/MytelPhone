@@ -58,6 +58,91 @@ ApplicationWindow {
         }
     }
 
+    // MyTel: Iranian phone number normalization (+98/0098/098/98 → 0)
+    // Matches the Android MyTelNumberNormalizer rules (leader-approved).
+    function mytelNormalizeNumber(raw) {
+        var s = String(raw).trim()
+        if (!s || s.indexOf("sip:") === 0 || s.indexOf("@") >= 0) return s
+        if (s.indexOf("*") === 0 || s.indexOf("#") === 0) return s
+        // Persian/Arabic digits → ASCII
+        s = s.replace(/[۰-۹]/g, function(d) { return String.fromCharCode(d.charCodeAt(0) - 0x06F0 + 48) })
+        s = s.replace(/[٠-٩]/g, function(d) { return String.fromCharCode(d.charCodeAt(0) - 0x0660 + 48) })
+        // Remove visual separators
+        s = s.replace(/[\s\-().\/]/g, "")
+        if (!s) return raw
+        // Longest applicable prefix first
+        var prefixes = ["0098", "+98", "098", "98"]
+        var prefix = null
+        for (var i = 0; i < prefixes.length; i++) {
+            if (s.indexOf(prefixes[i]) === 0) { prefix = prefixes[i]; break }
+        }
+        if (!prefix) return s
+        var rest = s.substring(prefix.length)
+        if (rest.length === 10) return "0" + rest
+        if (rest.length === 11 && rest.charAt(0) === "0") return rest
+        return s
+    }
+
+    // MyTel: Pre-dial edit popup — shows the normalized number, allows editing,
+    // Cancel initiates nothing
+    Component {
+        id: preDialEditPopupComp
+        Popup {
+            id: preDialEditPopup
+            property string contactName: ""
+            property string initialNumber: ""
+            signal confirmed(string number)
+            anchors.centerIn: parent
+            width: Utils.getSizeWithScreenRatio(370)
+            modal: true
+            leftPadding: Utils.getSizeWithScreenRatio(15)
+            rightPadding: Utils.getSizeWithScreenRatio(15)
+            topPadding: Utils.getSizeWithScreenRatio(20)
+            bottomPadding: Utils.getSizeWithScreenRatio(25)
+            contentItem: ColumnLayout {
+                spacing: Utils.getSizeWithScreenRatio(16)
+                Text {
+                    text: qsTr("dialog_call") + " " + preDialEditPopup.contactName
+                    font.pixelSize: Typography.h2m.pixelSize
+                    font.weight: Typography.h2m.weight
+                    color: DefaultStyle.main2_600
+                    Layout.fillWidth: true
+                }
+                TextField {
+                    id: preDialNumberField
+                    text: preDialEditPopup.initialNumber
+                    font.pixelSize: Typography.b1.pixelSize
+                    Layout.fillWidth: true
+                    focus: true
+                    onAccepted: {
+                        if (text.length > 0) {
+                            preDialEditPopup.confirmed(text)
+                            preDialEditPopup.close()
+                        }
+                    }
+                }
+                RowLayout {
+                    spacing: Utils.getSizeWithScreenRatio(10)
+                    Layout.alignment: Qt.AlignRight
+                    Button {
+                        text: qsTr("dialog_cancel")
+                        style: ButtonStyle.secondary
+                        onClicked: preDialEditPopup.close()
+                    }
+                    Button {
+                        text: qsTr("dialog_call")
+                        style: ButtonStyle.main
+                        enabled: preDialNumberField.text.length > 0
+                        onClicked: {
+                            preDialEditPopup.confirmed(preDialNumberField.text)
+                            preDialEditPopup.close()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     Component {
         id: addressChooserPopupComp
         Popup {
@@ -192,7 +277,44 @@ ApplicationWindow {
                         ? ""
                         : contact.core.phoneNumbers[0].address
                     : contact.core.defaultAddress
-                if (addressToCall.length != 0) UtilsCpp.createCall(addressToCall, {'localVideoEnabled':videoEnabled})
+                if (addressToCall.length != 0) {
+                    // MyTel: pre-dial editor — normalize +98 prefixes and let
+                    // the user edit before calling (Cancel = no call)
+                    // phoneNumbers items have {label, address}; extract the
+                    // raw username from the address for normalization
+                    var rawDisplay = addressToCall
+                    var sipPrefix = "sip:"
+                    var atIdx0 = addressToCall.indexOf("@")
+                    if (atIdx0 > 0) {
+                        var uname = addressToCall.substring(
+                            addressToCall.indexOf(sipPrefix) === 0 ? sipPrefix.length : 0, atIdx0)
+                        if (uname.length > 0) rawDisplay = uname
+                    }
+                    var normalized = mytelNormalizeNumber(rawDisplay)
+                    var preDialPopup = preDialEditPopupComp.createObject()
+                    preDialPopup.parent = parentItem
+                    preDialPopup.contactName = contact.core.fullName || ""
+                    preDialPopup.initialNumber = normalized
+                    preDialPopup.confirmed.connect(function(editedNumber) {
+                        // If the edited value is a full SIP URI use it directly;
+                        // otherwise preserve the original address routing context
+                        var callAddress
+                        if (editedNumber.indexOf("sip:") === 0 || editedNumber.indexOf("@") >= 0) {
+                            callAddress = editedNumber
+                        } else {
+                            // Extract domain from the original address
+                            var atIdx = addressToCall.lastIndexOf("@")
+                            var domain = atIdx >= 0
+                                ? addressToCall.substring(atIdx + 1)
+                                : ""
+                            callAddress = domain.length > 0
+                                ? editedNumber + "@" + domain
+                                : editedNumber
+                        }
+                        UtilsCpp.createCall(callAddress, {'localVideoEnabled': videoEnabled})
+                    })
+                    preDialPopup.open()
+                }
             }
         }
     }

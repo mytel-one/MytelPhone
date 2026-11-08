@@ -38,6 +38,11 @@ set(_Mediastreamer2_CACHE_VARS ${_Mediastreamer2_REQUIRED_VARS})
 if(TARGET mediastreamer2)
 	set(Mediastreamer2_TARGET mediastreamer2)
 	get_target_property(Mediastreamer2_PLUGINS_DIR ${Mediastreamer2_TARGET} MS2_PLUGINS_DIR)
+	if(NOT Mediastreamer2_PLUGINS_DIR)
+		# MyTel: prebuilt linphone-sdk 5.5.x publishes the plugins dir as a
+		# Config variable, not a target property — fall back to the standard path.
+		set(Mediastreamer2_PLUGINS_DIR "${LINPHONE_OUTPUT_DIR}/${CMAKE_INSTALL_LIBDIR}/mediastreamer/plugins")
+	endif()
 endif()
 
 include(FindPackageHandleStandardArgs)

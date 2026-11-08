@@ -27,7 +27,12 @@
 if(NOT TARGET liblinphone)
     set(EXPORT_PATH ${LINPHONE_OUTPUT_DIR})
     include(GNUInstallDirs)
-    include(${EXPORT_PATH}/${CMAKE_INSTALL_DATADIR}/linphone/cmake/linphoneTargets.cmake)
+    include(${EXPORT_PATH}/${CMAKE_INSTALL_DATADIR}/linphone/cmake/linphoneTargets.cmake OPTIONAL)
+    if(NOT TARGET liblinphone)
+        # MyTel: fresh liblinphone installs its package as LibLinphone
+        # (capitalised) instead of the legacy lowercase path.
+        include(${EXPORT_PATH}/${CMAKE_INSTALL_DATADIR}/LibLinphone/cmake/LibLinphoneTargets.cmake OPTIONAL)
+    endif()
 endif()
 
 set(_LibLinphone_REQUIRED_VARS LibLinphone_TARGET LibLinphone_PLUGINS_DIR)
@@ -36,6 +41,10 @@ set(_LibLinphone_CACHE_VARS ${_LibLinphone_REQUIRED_VARS})
 if(TARGET liblinphone)
 	set(LibLinphone_TARGET liblinphone)
 	get_target_property(LibLinphone_PLUGINS_DIR ${LibLinphone_TARGET} LIBLINPHONE_PLUGINS_DIR)
+	if(NOT LibLinphone_PLUGINS_DIR)
+		# MyTel: exported targets don't carry the plugins dir property.
+		set(LibLinphone_PLUGINS_DIR "${LINPHONE_OUTPUT_DIR}/${CMAKE_INSTALL_LIBDIR}/liblinphone/plugins")
+	endif()
 endif()
 
 include(FindPackageHandleStandardArgs)

@@ -19,10 +19,12 @@
  */
 
 #include "MagicSearchList.hpp"
+#include "ServerDirectoryManager.hpp"
 #include "core/App.hpp"
 #include "core/friend/FriendCore.hpp"
 #include "model/tool/ToolModel.hpp"
 #include "tool/Utils.hpp"
+#include <QSet>
 #include <QSharedPointer>
 #include <linphone++/linphone.hh>
 
@@ -147,12 +149,53 @@ void MagicSearchList::setSelf(const QSharedPointer<MagicSearchList> &me) {
 						    contacts->append(contact);
 					    }
 				    }
-				    mModelConnection->invokeToCore([this, contacts]() {
-					    setResults(*contacts);
-					    delete contacts;
-					    emit resultsProcessed();
+					    // MyTel server directory: inject matching entries by name or
+					    // extension (MagicSearch does not index custom friend
+					    // lists). Dedup by canonical address string.
+					    {
+						    auto defaultAccount = core->getDefaultAccount();
+						    if (defaultAccount && defaultAccount->getParams()) {
+							    auto identity = defaultAccount->getParams()->getIdentityAddress();
+							    if (identity) {
+								    auto identityStr = Utils::coreStringToAppString(identity->asStringUriOnly());
+								    auto filterStr = mSearchFilter; // captured from the search lambda
+								    auto directoryEntries =
+								        ServerDirectoryManager::getInstance()->searchEntries(identityStr, filterStr);
+								    // Build a set of canonical addresses already present
+								    QSet<QString> existing;
+								    for (auto &c : *contacts) {
+									    existing.insert(c->getDefaultAddress());
+								    }
+								    for (const auto &entry : directoryEntries) {
+									    auto domainStr = Utils::coreStringToAppString(
+									        defaultAccount->getParams()->getDomain());
+									    QString canonical =
+									        QStringLiteral("sip:%1@%2").arg(entry.number, domainStr);
+									    if (existing.contains(canonical)) continue;
+								    auto address = core->createAddress(
+								        Utils::appStringToCoreString(canonical));
+									    if (!address) continue;
+									    auto friendObj = core->createFriend();
+									    friendObj->setAddress(address);
+									    auto dirContact = FriendCore::create(friendObj, false, 0);
+									    dirContact->setGivenName(entry.name);
+									    dirContact->setDefaultAddress(canonical);
+									    dirContact->setDefaultFullAddress(canonical);
+									    contacts->append(dirContact);
+								    }
+								    if (!directoryEntries.isEmpty()) {
+									    lInfo() << "[Server Directory] Injected" << directoryEntries.size()
+									            << "entries for filter" << filterStr;
+								    }
+							    }
+						    }
+					    }
+					    mModelConnection->invokeToCore([this, contacts]() {
+						    setResults(*contacts);
+						    delete contacts;
+						    emit resultsProcessed();
+					    });
 				    });
-			    });
 			lDebug() << log().arg("Initialized");
 			emit initialized();
 		});

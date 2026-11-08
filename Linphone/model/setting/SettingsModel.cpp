@@ -1258,7 +1258,7 @@ DEFINE_GETSET_CONFIG_STRING(SettingsModel,
 							themeMainColor,
 							ThemeMainColor,
 							"theme_main_color",
-							"orange")
+							"mytel")
 DEFINE_GETSET_CONFIG_STRING(SettingsModel,
 							themeAboutPictureUrl,
 							ThemeAboutPictureUrl,

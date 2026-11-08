@@ -452,31 +452,13 @@ LoginLayout {
 			// anchors.rightMargin: - Utils.getSizeWithScreenRatio(8)
 		},
 		Control.StackView {
-			id: rootStackView
-			initialItem: SettingsCpp.assistantGoDirectlyToThirdPartySipAccountLogin ? secondItem : firstItem
-			anchors.left: parent.left
-			anchors.top: parent.top
-			anchors.bottom: parent.bottom
-			anchors.leftMargin: Utils.getSizeWithScreenRatio(127)
-			width: currentItem ? currentItem.width : 0
-		},
-        // Item {
-		// 	id: sipItem
-		// 	// spacing: Utils.getSizeWithScreenRatio(8)
-        //     anchors.fill: parent
-        //     anchors.rightMargin: Utils.getSizeWithScreenRatio(50) + image.width
-        // },
-		Image {
-			id: image
-			z: -1
-			anchors.top: parent.top
-			anchors.right: parent.right
-            anchors.topMargin: Utils.getSizeWithScreenRatio(129)
-            anchors.rightMargin: Utils.getSizeWithScreenRatio(127)
-            width: Utils.getSizeWithScreenRatio(395)
-            height: Utils.getSizeWithScreenRatio(350)
-			fillMode: Image.PreserveAspectFit
-			source: AppIcons.loginImage
-		}
-	]
-}
+				id: rootStackView
+				initialItem: SettingsCpp.assistantGoDirectlyToThirdPartySipAccountLogin ? secondItem : firstItem
+				anchors.left: parent.left
+				anchors.top: parent.top
+				anchors.bottom: parent.bottom
+				anchors.leftMargin: Utils.getSizeWithScreenRatio(127)
+				width: currentItem ? currentItem.width : 0
+			}
+		]
+	}

@@ -15,7 +15,7 @@ Rectangle {
 	id: mainItem
 	property alias titleContent : titleLayout.children
 	property alias centerContent : centerLayout.children
-	color: DefaultStyle.grey_0
+	color: "#F6F9FD"
 
 	component AboutLine: RowLayout {
 		id: line
@@ -123,52 +123,115 @@ Rectangle {
 		}
 	}
 
-	ColumnLayout {
+	RowLayout {
 		anchors.fill: parent
-        spacing: 0
-        RowLayout {
-			Layout.fillWidth: true
-            Layout.topMargin: Math.max(Utils.getSizeWithScreenRatio(5), Utils.getSizeWithScreenRatio(25 - ((25/(DefaultStyle.defaultHeight - mainWindow.minimumHeight))*(DefaultStyle.defaultHeight-mainWindow.height))))
-            Layout.rightMargin: Math.max(Utils.getSizeWithScreenRatio(5), Utils.getSizeWithScreenRatio(42 - ((42/(DefaultStyle.defaultWidth - mainWindow.minimumWidth))*(DefaultStyle.defaultWidth-mainWindow.width))))
-			spacing: 0
-			Item {
-				Layout.fillWidth: true
-			}
-			BigButton {
-				id: aboutButton
-				Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-				icon.source: AppIcons.info
-				text: qsTr("help_about_title").arg(applicationName)
-				textSize: Typography.p1.pixelSize
-				textWeight: Typography.p1.weight
-				textColor: DefaultStyle.main2_500_main
-				onClicked: aboutPopup.open()
-				style: ButtonStyle.noBackground
-			}
-		}
+		spacing: 0
 
-		RowLayout {
-			id: titleLayout
-			Layout.fillWidth: true
-            Layout.topMargin: Math.max(Utils.getSizeWithScreenRatio(10), Utils.getSizeWithScreenRatio(40 - ((40/(DefaultStyle.defaultHeight - mainWindow.minimumHeight))*(DefaultStyle.defaultHeight-mainWindow.height))))
-			spacing: 0
-		}
-		Item {
-			id: centerLayout
+		// MyTel brand pane (design approved by technical lead 2026-11-06):
+		// navy pane with logo + wordmark on wide windows.
+		Rectangle {
+			id: brandPane
+			visible: mainItem.width >= 760
+			Layout.preferredWidth: Math.round(mainItem.width * 0.4)
 			Layout.fillHeight: true
-			Layout.fillWidth: true
-            Layout.topMargin: Math.max(Utils.getSizeWithScreenRatio(15), Utils.getSizeWithScreenRatio(70 - ((70/(DefaultStyle.defaultHeight - mainWindow.minimumHeight))*(DefaultStyle.defaultHeight-mainWindow.height))))
-            Layout.alignment: Qt.AlignBottom
-
+			color: "#001622"
+			ColumnLayout {
+				anchors.centerIn: parent
+				spacing: 12
+				Image {
+					Layout.alignment: Qt.AlignHCenter
+					source: "image://internal/mytel_logo.png"
+					fillMode: Image.PreserveAspectFit
+					Layout.preferredWidth: 96
+					Layout.preferredHeight: 96
+				}
+				Text {
+					Layout.alignment: Qt.AlignHCenter
+					text: "MytellPhone"
+					color: "#E8F1FC"
+					font.pixelSize: 32
+					font.weight: Font.Bold
+				}
+				Rectangle {
+					Layout.alignment: Qt.AlignHCenter
+					Layout.preferredWidth: 64
+					Layout.preferredHeight: 4
+					color: "#FFAB2E"
+					radius: 2
+				}
+				Text {
+					Layout.alignment: Qt.AlignHCenter
+					text: "Calls and messages for your team"
+					color: "#FFAB2E"
+					font.pixelSize: 14
+				}
+			}
 		}
-		Image {
-			id: bottomMountains
-			source: AppIcons.belledonne
-			fillMode: Image.Stretch
+
+		ColumnLayout {
 			Layout.fillWidth: true
-            Layout.preferredHeight: Utils.getSizeWithScreenRatio(108)
+			Layout.fillHeight: true
+			spacing: 0
+
+			// Compact brand header for narrow windows
+			RowLayout {
+				visible: mainItem.width < 760
+				Layout.fillWidth: true
+				Layout.topMargin: 20
+				spacing: 12
+				Image {
+					Layout.alignment: Qt.AlignHCenter
+					Layout.leftMargin: 24
+					source: "image://internal/mytel_logo.png"
+					fillMode: Image.PreserveAspectFit
+					Layout.preferredWidth: 64
+					Layout.preferredHeight: 64
+				}
+				Text {
+					text: "MytellPhone"
+					color: "#001622"
+					font.pixelSize: 24
+					font.weight: Font.Bold
+				}
+				Item { Layout.fillWidth: true }
+			}
+
+			RowLayout {
+				Layout.fillWidth: true
+				Layout.topMargin: Math.max(Utils.getSizeWithScreenRatio(5), Utils.getSizeWithScreenRatio(25 - ((25/(DefaultStyle.defaultHeight - mainWindow.minimumHeight))*(DefaultStyle.defaultHeight-mainWindow.height))))
+				Layout.rightMargin: Math.max(Utils.getSizeWithScreenRatio(5), Utils.getSizeWithScreenRatio(42 - ((42/(DefaultStyle.defaultWidth - mainWindow.minimumWidth))*(DefaultStyle.defaultWidth-mainWindow.width))))
+				spacing: 0
+				Item {
+					Layout.fillWidth: true
+				}
+				BigButton {
+					id: aboutButton
+					Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+					icon.source: AppIcons.info
+					text: qsTr("help_about_title").arg(applicationName)
+					textSize: Typography.p1.pixelSize
+					textWeight: Typography.p1.weight
+					textColor: DefaultStyle.main2_500_main
+					onClicked: aboutPopup.open()
+					style: ButtonStyle.noBackground
+				}
+			}
+
+			RowLayout {
+				id: titleLayout
+				Layout.fillWidth: true
+				Layout.topMargin: Math.max(Utils.getSizeWithScreenRatio(10), Utils.getSizeWithScreenRatio(40 - ((40/(DefaultStyle.defaultHeight - mainWindow.minimumHeight))*(DefaultStyle.defaultHeight-mainWindow.height))))
+				spacing: 0
+			}
+			Item {
+				id: centerLayout
+				Layout.fillHeight: true
+				Layout.fillWidth: true
+				Layout.topMargin: Math.max(Utils.getSizeWithScreenRatio(15), Utils.getSizeWithScreenRatio(70 - ((70/(DefaultStyle.defaultHeight - mainWindow.minimumHeight))*(DefaultStyle.defaultHeight-mainWindow.height))))
+				Layout.alignment: Qt.AlignBottom
+			}
 		}
 	}
 
-} 
+}
  

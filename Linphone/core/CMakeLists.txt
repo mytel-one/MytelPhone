@@ -56,6 +56,7 @@ list(APPEND _LINPHONEAPP_SOURCES
 	
 	core/search/MagicSearchList.cpp
 	core/search/MagicSearchProxy.cpp
+	core/search/ServerDirectoryManager.cpp
 	
 	core/setting/SettingsCore.cpp
 	

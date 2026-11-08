@@ -108,17 +108,6 @@ LoginLayout {
 					onClicked: {fetchConfigDialog.open()}
 				}
 			}
-		},
-		Image {
-			z: -1
-			anchors.top: parent.top
-			anchors.right: parent.right
-            anchors.topMargin: Utils.getSizeWithScreenRatio(129)
-            anchors.rightMargin: Utils.getSizeWithScreenRatio(127)
-            width: Utils.getSizeWithScreenRatio(395)
-            height: Utils.getSizeWithScreenRatio(350)
-			fillMode: Image.PreserveAspectFit
-			source: AppIcons.loginImage
 		}
 	]
 	Dialog{
