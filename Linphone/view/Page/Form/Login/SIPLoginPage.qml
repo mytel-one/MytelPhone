@@ -53,7 +53,8 @@ LoginLayout {
 			Layout.fillWidth: true
 		},
 		RowLayout {
-			visible: !SettingsCpp.assistantHideCreateAccount
+			// MyTel: always hide the "No account yet? / Register" row
+			visible: false
             Layout.rightMargin: Utils.getSizeWithScreenRatio(51)
             spacing: Utils.getSizeWithScreenRatio(20)
 			Text {
@@ -453,7 +454,9 @@ LoginLayout {
 		},
 		Control.StackView {
 				id: rootStackView
-				initialItem: SettingsCpp.assistantGoDirectlyToThirdPartySipAccountLogin ? secondItem : firstItem
+				// MyTel product decision: always show the login form directly —
+			// the upstream "I understand" warning page is removed
+			initialItem: secondItem
 				anchors.left: parent.left
 				anchors.top: parent.top
 				anchors.bottom: parent.bottom

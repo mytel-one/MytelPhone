@@ -78,17 +78,15 @@ AbstractWindow {
 	function initStackViewItem() {
         if(accountProxy && accountProxy.isInitialized) {
             if (accountProxy.haveAccount) openMainPage()
-            else if (SettingsCpp.getFirstLaunch()) mainStackViewLoader.item.replace(welcomePage, StackView.Immediate)
-            else if (SettingsCpp.assistantGoDirectlyToThirdPartySipAccountLogin) mainStackViewLoader.item.replace(sipLoginPage, StackView.Immediate)
-            else mainStackViewLoader.item.replace(loginPage, StackView.Immediate)
+            // MyTel product decision: ALWAYS go directly to the third-party
+            // SIP login form — no welcome carousel, no Linphone account page
+            else mainStackViewLoader.item.replace(sipLoginPage, StackView.Immediate)
         }
     }
 	
 	function goToLogin() {
-		if (SettingsCpp.assistantGoDirectlyToThirdPartySipAccountLogin)
-			mainStackViewLoader.item.replace(sipLoginPage)
-		else
-			mainStackViewLoader.item.replace(loginPage)
+		// MyTel product decision: always the third-party SIP login form
+		mainStackViewLoader.item.replace(sipLoginPage)
 	}
 
 	function scheduleMeeting(subject, addresses) {
@@ -210,14 +208,13 @@ AbstractWindow {
 			}
 		}
 	}
+	// MyTel: WelcomePage removed entirely — the app goes straight to the
+	// third-party SIP login form (product decision). The component is kept
+	// as an empty placeholder so any lingering reference compiles but shows
+	// nothing if ever navigated to.
 	Component {
 		id: welcomePage
-		WelcomePage {
-			onStartButtonPressed: {
-				goToLogin() // Replacing the first item will destroy the old.
-				SettingsCpp.setFirstLaunch(false)
-			}
-		}
+		Item {}
 	}
 	Component {
 		id: ssoPage

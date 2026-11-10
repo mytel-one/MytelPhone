@@ -18,6 +18,10 @@ algorithm=SHA-256
 password_min_length=6
 username_regex=^[a-z0-9+_.\-]*$
 
+[app]
+assistant_go_directly_to_third_party_sip_account_login=1
+assistant_hide_create_account=1
+
 [lime]
 lime_update_threshold=86400
 
