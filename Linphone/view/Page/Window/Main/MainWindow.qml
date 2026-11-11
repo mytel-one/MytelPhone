@@ -95,6 +95,9 @@ AbstractWindow {
 	}
 
 	property bool authenticationPopupOpened: false
+	// Set once the MyTel intro overlay has fully faded away; the splash
+	// Loader then deactivates for the rest of the session
+	property bool splashDismissed: false
 	Component {
 		id: authenticationPopupComp
 		AuthenticationDialog{
@@ -157,9 +160,12 @@ AbstractWindow {
 		sourceComponent: mainStackViewComp
 	}
 
+	// MyTel animated intro (owner requirement 2026-11-11; GPT-6.1-sol leader
+	// decision #5): stays until the intro finished AND the core started, so a
+	// fast core never cuts the animation and a slow core never restarts it.
 	Loader {
 		anchors.fill: parent
-		active: !AppCpp.coreStarted
+		active: !mainWindow.splashDismissed
 		sourceComponent: splashScreen
 	}
 
@@ -194,17 +200,278 @@ AbstractWindow {
 		}
 	}
 
+	// MyTel branded animated intro (owner requirement 2026-11-11; GPT-6.1-sol
+	// leader design verdict 2026-11-11): emblem visible from the first frame,
+	// luminous highlight travels once around the ring (0-500 ms), emblem
+	// settles 0.96 -> 1.02 -> 1.0 with a <=12% halo (150-650 ms), wordmark
+	// fades up (300-800 ms), 64x2 orange underline reveals (650-1000 ms),
+	// crossfade out (1000-1200 ms). Transform/property animations only — no
+	// per-frame Canvas repaints (leader decision #5).
 	Component {
 		id: splashScreen
-		Rectangle {
-			color: DefaultStyle.grey_0
-			Image {
+		Item {
+			id: mytelSplashRoot
+
+			property bool introFinished: false
+			property bool dismissRequested: false
+
+			function requestDismiss() {
+				if (mytelSplashRoot.dismissRequested) return
+				mytelSplashRoot.dismissRequested = true
+				dismissFade.start()
+			}
+
+			Rectangle {
+				anchors.fill: parent
+				color: "#001622"
+			}
+
+			Rectangle {
+				id: halo
+				anchors.centerIn: emblemContainer
+				width: emblemContainer.width * 1.8
+				height: width
+				radius: width / 2
+				// AARRGGBB: 12% orange (leader correction: valid 8-digit color)
+				color: "#1FFFAB2E"
+				opacity: 0
+			}
+
+			Item {
+				id: emblemContainer
 				anchors.centerIn: parent
-				source: AppIcons.splashscreenLogo
-                sourceSize.width: Utils.getSizeWithScreenRatio(395)
-                sourceSize.height: Utils.getSizeWithScreenRatio(395)
-                width: Utils.getSizeWithScreenRatio(395)
-                height: Utils.getSizeWithScreenRatio(395)
+				width: Utils.getSizeWithScreenRatio(160)
+				height: width
+
+				Image {
+					id: emblem
+					anchors.fill: parent
+					source: "image://internal/mytel_logo.png"
+					fillMode: Image.PreserveAspectFit
+					asynchronous: false
+					scale: 0.96
+				}
+
+				// Luminous highlight riding the ring once (rotating transform)
+				Item {
+					id: ringSweep
+					anchors.centerIn: parent
+					width: parent.width
+					height: parent.height
+					rotation: 0
+					Rectangle {
+						width: emblemContainer.width * 0.085
+						height: width
+						radius: width / 2
+						anchors.horizontalCenter: parent.horizontalCenter
+						y: -height / 2 + emblemContainer.width * 0.0425
+						color: "#E8F1FC"
+						opacity: 0.9
+					}
+				}
+			}
+
+			Text {
+				id: wordmark
+				anchors.top: emblemContainer.bottom
+				anchors.topMargin: Utils.getSizeWithScreenRatio(20)
+				anchors.horizontalCenter: parent.horizontalCenter
+				// Leader correction: complete wordmark in soft white
+				text: "MytellPhone"
+				color: "#E8F1FC"
+				font.pixelSize: Utils.getSizeWithScreenRatio(26)
+				font.weight: Font.DemiBold
+				opacity: 0
+				transform: Translate {
+					id: wordmarkTranslate
+					y: Utils.getSizeWithScreenRatio(8)
+				}
+			}
+
+			Rectangle {
+				id: underline
+				anchors.top: wordmark.bottom
+				anchors.topMargin: Utils.getSizeWithScreenRatio(10)
+				anchors.horizontalCenter: parent.horizontalCenter
+				width: Utils.getSizeWithScreenRatio(64)
+				height: Math.max(2, Utils.getSizeWithScreenRatio(2))
+				color: "#FFAB2E"
+				// Leader correction: Item has no scaleX — use a Scale transform
+				transform: Scale {
+					id: underlineScale
+					origin.x: 0
+					origin.y: underline.height / 2
+					xScale: 0
+				}
+			}
+
+			// Owner requirement: keyboard skip (Escape/Space) and click skip.
+			// forceActiveFocus is required — plain focus:true loses to the
+			// window's initial focus item and keys never arrive.
+			Keys.onEscapePressed: mytelSplashRoot.requestDismiss()
+			Keys.onSpacePressed: mytelSplashRoot.requestDismiss()
+
+			MouseArea {
+				anchors.fill: parent
+				onClicked: mytelSplashRoot.requestDismiss()
+			}
+
+			Connections {
+				target: AppCpp
+				function onCoreStartedChanged() {
+					if (AppCpp.coreStarted && mytelSplashRoot.introFinished) mytelSplashRoot.requestDismiss()
+				}
+			}
+
+			// Leader correction: actionable navigation (calls window taking
+			// focus, another window, dialogs) must interrupt the intro.
+			// `active` is a Window property — watch it via the window, not
+			// the Item (an Item-level onActiveChanged fails the whole QML
+			// load).
+			Connections {
+				target: mainWindow
+				function onActiveChanged() {
+					if (!mainWindow.active) mytelSplashRoot.requestDismiss()
+				}
+			}
+
+			// Reduced motion (leader correction): static brand only, quick
+			// fade, no decorative stages. Driven by the real Windows
+			// client-area animation preference through the C++ bridge
+			// (SPI_GETCLIENTAREAANIMATION), with MYTELL_REDUCED_MOTION=1 as
+			// a supplemental override.
+			property bool reducedMotion: UtilsCpp.isReduceMotionEnabled()
+
+			// Adaptive startup budget (leader correction): the ~2.2s launch
+			// target covers startup through usable content, so decoration is
+			// shortened when the app itself already consumed the budget.
+			// 1 = full sequence, 0.5 = halved, 0 = static brand only.
+			property real introScale: {
+				if (reducedMotion) return 0
+				var elapsed = AppCpp.startupElapsedMs()
+				if (elapsed > 2500) return 0
+				if (elapsed > 1500) return 0.5
+				return 1
+			}
+
+			onReducedMotionChanged: if (reducedMotion) mytelSplashRoot.showStaticBrand()
+			Component.onCompleted: {
+				mytelSplashRoot.forceActiveFocus()
+				if (introScale === 0) mytelSplashRoot.showStaticBrand()
+			}
+
+			function showStaticBrand() {
+				introSequence.stop()
+				wordmark.opacity = 1
+				wordmarkTranslate.y = 0
+				underlineScale.xScale = 1
+				emblem.scale = 1
+				introFinished = true
+				// Always hold the static brand briefly so reduced motion
+				// still shows the brand instead of skipping to the app
+				staticHoldTimer.start()
+			}
+
+			Timer {
+				id: staticHoldTimer
+				interval: 600
+				onTriggered: if (AppCpp.coreStarted) mytelSplashRoot.requestDismiss()
+				else staticHoldTimer.restart()
+			}
+
+			ParallelAnimation {
+				id: introSequence
+				running: mytelSplashRoot.introScale > 0
+				// 0-500 ms: highlight travels once around the ring
+				NumberAnimation {
+					target: ringSweep
+					property: "rotation"
+					from: 0
+					to: 360
+					duration: 500 * mytelSplashRoot.introScale
+					easing.type: Easing.InOutQuad
+				}
+				// 150-650 ms: halo in + emblem settle
+				SequentialAnimation {
+					PauseAnimation { duration: 150 * mytelSplashRoot.introScale }
+					ParallelAnimation {
+						NumberAnimation {
+							target: halo
+							property: "opacity"
+							to: 1
+							duration: 250 * mytelSplashRoot.introScale
+						}
+						SequentialAnimation {
+							NumberAnimation {
+								target: emblem
+								property: "scale"
+								from: 0.96
+								to: 1.02
+								duration: 300 * mytelSplashRoot.introScale
+								easing.type: Easing.OutQuad
+							}
+							NumberAnimation {
+								target: emblem
+								property: "scale"
+								to: 1.0
+								duration: 200 * mytelSplashRoot.introScale
+								easing.type: Easing.InOutQuad
+							}
+						}
+					}
+				}
+				// 300-800 ms: wordmark rises in (soft white, single text —
+				// leader correction: complete wordmark in soft white)
+				SequentialAnimation {
+					PauseAnimation { duration: 300 * mytelSplashRoot.introScale }
+					ParallelAnimation {
+						NumberAnimation {
+							target: wordmark
+							property: "opacity"
+							to: 1
+							duration: 500 * mytelSplashRoot.introScale
+							easing.type: Easing.OutQuad
+						}
+						NumberAnimation {
+							target: wordmarkTranslate
+							property: "y"
+							to: 0
+							duration: 500 * mytelSplashRoot.introScale
+							easing.type: Easing.OutQuad
+						}
+					}
+				}
+				// 650-1000 ms: orange underline reveal
+				SequentialAnimation {
+					PauseAnimation { duration: 650 * mytelSplashRoot.introScale }
+					NumberAnimation {
+						target: underlineScale
+						property: "xScale"
+						to: 1
+						duration: 350 * mytelSplashRoot.introScale
+						easing.type: Easing.InOutQuad
+					}
+				}
+				// 1000 ms: intro done; dismiss when the core is up
+				SequentialAnimation {
+					PauseAnimation { duration: 1000 * mytelSplashRoot.introScale }
+					ScriptAction {
+						script: {
+							mytelSplashRoot.introFinished = true
+							if (AppCpp.coreStarted) mytelSplashRoot.requestDismiss()
+						}
+					}
+				}
+			}
+
+			NumberAnimation {
+				id: dismissFade
+				target: mytelSplashRoot
+				property: "opacity"
+				to: 0
+				duration: 200
+				easing.type: Easing.InOutQuad
+				onFinished: mainWindow.splashDismissed = true
 			}
 		}
 	}
@@ -341,18 +608,40 @@ AbstractWindow {
 	}
 	Component {
 		id: mainPage
-		MainLayout {
-			id: mainLayout
-			objectName: "mainPage"
-			onAddAccountRequest: goToLogin()
-			onAccountRemoved: {
-				initStackViewItem()
+		Item {
+			// Wrapper so the connection chip floats above the page chrome
+			// inside the page tree (a window-level item stopped painting in
+			// some theme states)
+			MainLayout {
+				id: mainLayout
+				anchors.fill: parent
+				objectName: "mainPage"
+				onAddAccountRequest: goToLogin()
+				onAccountRemoved: {
+					initStackViewItem()
+				}
+				Connections {
+					target: mainWindow
+					function onCallCreated(){ mainLayout.callCreated() }
+				}
+				// StackView.onActivated: connectionSecured(0) // TODO : connect to cpp part when ready
 			}
-			Connections {
-				target: mainWindow
-				function onCallCreated(){ mainLayout.callCreated() }
+
+			// Owner requirement 2026-11-11: unmistakable connection indicator
+			// (reusable component; the GUI test loads the SAME file).
+			MyTelConnectionChip {
+				id: connectionChip
+				x: parent.width - width - 24
+				y: 46
+				z: 1000
+				visible: mainWindow.accountProxy !== null && mainWindow.accountProxy !== undefined
+					&& mainWindow.accountProxy.haveAccount === true
+				registered: {
+					var account = mainWindow.accountProxy?.defaultAccount
+					return account && account.core
+						&& account.core.registrationState === LinphoneEnums.RegistrationState.Ok
+				}
 			}
-			// StackView.onActivated: connectionSecured(0) // TODO : connect to cpp part when ready
 		}
 	}
 

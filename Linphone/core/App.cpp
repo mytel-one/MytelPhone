@@ -296,6 +296,7 @@ void App::setAutoStart(bool enabled) {
 
 App::App(int &argc, char *argv[])
     : SingleApplication(argc, argv, true, Mode::User | Mode::ExcludeAppPath | Mode::ExcludeAppVersion) {
+	mStartupTimer.start();
 	// Do not use APPLICATION_NAME here.
 	// The EXECUTABLE_NAME will be used in qt standard paths. It's our goal.
 	QDir::setCurrent(
@@ -400,10 +401,14 @@ void App::connectCoreModel() {
 	mCoreModelConnection->makeConnectToModel(
 	    &CoreModel::globalStateChanged,
 	    [this](const std::shared_ptr<linphone::Core> &core, linphone::GlobalState gstate, const std::string &message) {
-		    mCoreModelConnection->invokeToCore([this, gstate] {
-			    lInfo() << log().arg("Core global state changed :") << (int)gstate;
-			    setCoreStarted(gstate == linphone::GlobalState::On);
-			    setCoreGlobalState((int)gstate);
+			    mCoreModelConnection->invokeToCore([this, gstate] {
+				    lInfo() << log().arg("Core global state changed :") << (int)gstate;
+				    setCoreStarted(gstate == linphone::GlobalState::On);
+				    // MyTel: seed the reachability property at core start
+				    if (gstate == linphone::GlobalState::On) {
+					    setNetworkReachable(CoreModel::getInstance()->getCore()->isNetworkReachable());
+				    }
+				    setCoreGlobalState((int)gstate);
 			    if (gstate == linphone::GlobalState::Configuring) {
 				    if (mEngine) {
 					    // Force cleaning components when configuring for the buttons styles to be reset
@@ -415,6 +420,14 @@ void App::connectCoreModel() {
 		    });
 	    });
 	mCoreModelConnection->makeConnectToModel(&CoreModel::authenticationRequested, &App::onAuthenticationRequested);
+	// MyTel: keep the QML-visible network reachability property live
+	mCoreModelConnection->makeConnectToModel(
+	    &CoreModel::networkReachableChanged,
+	    [this](const std::shared_ptr<linphone::Core> &core, bool reachable) {
+		    mCoreModelConnection->invokeToCore([this, reachable]() {
+			    setNetworkReachable(reachable);
+		    });
+	    });
 	// Config error message
 	mCoreModelConnection->makeConnectToModel(
 	    &CoreModel::configuringStatus, [this](const std::shared_ptr<linphone::Core> &core,
@@ -469,9 +482,14 @@ void App::connectCoreModel() {
 	// Synchronize state for because linphoneCore was ran before any connections.
 	mCoreModelConnection->invokeToModel([this]() {
 		auto state = CoreModel::getInstance()->getCore()->getGlobalState();
-		mCoreModelConnection->invokeToCore([this, state] {
+		// MyTel (leader correction): capture reachability NOW — the initial
+		// onNetworkReachable event may have fired before our connections
+		// were installed, which would leave the chip stuck Offline.
+		bool reachable = CoreModel::getInstance()->getCore()->isNetworkReachable();
+		mCoreModelConnection->invokeToCore([this, state, reachable] {
 			setCoreGlobalState((int)state);
 			setCoreStarted(state == linphone::GlobalState::On);
+			setNetworkReachable(reachable);
 			if (state == linphone::GlobalState::Off) {
 				CoreModel::getInstance()->getCore()->stopHidDevicesDetection();
 			}
@@ -1251,6 +1269,28 @@ void App::setCoreStarted(bool started) {
 		mCoreStarted = started;
 		emit coreStartedChanged(mCoreStarted);
 	}
+}
+
+// MyTel: reactive network reachability (leader correction 2026-11-11)
+bool App::getNetworkReachable() const {
+	return mNetworkReachable;
+}
+
+void App::setNetworkReachable(bool reachable) {
+	if (mNetworkReachable != reachable) {
+		// MyTel telemetry (leader correction): reachability transitions are
+		// recorded so state changes are observable without screen captures
+		lInfo() << QStringLiteral("[MyTel] Core network reachability: %1 -> %2")
+		           .arg(mNetworkReachable)
+		           .arg(reachable);
+		mNetworkReachable = reachable;
+		emit networkReachableChanged(mNetworkReachable);
+	}
+}
+
+// MyTel: startup budget measurement for the adaptive intro
+qint64 App::startupElapsedMs() const {
+	return mStartupTimer.elapsed();
 }
 
 int App::getCoreGlobalState() const {

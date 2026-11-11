@@ -64,6 +64,12 @@ public:
 
 	Q_INVOKABLE static VariantObject *getDisplayName(const QString &address);
 	Q_INVOKABLE static QString getUsername(const QString &address);
+	// MyTel: system reduced-motion preference (leader correction 2026-11-11).
+	// Windows client-area animation off -> reduced motion; the
+	// MYTELL_REDUCED_MOTION=1 environment override may force it on.
+	Q_INVOKABLE static bool isReduceMotionEnabled();
+	// MyTel: core network reachability for the connection indicator.
+	Q_INVOKABLE static bool isNetworkReachable();
 	Q_INVOKABLE static QString getGivenNameFromFullName(const QString &fullName);
 	Q_INVOKABLE static QString getFamilyNameFromFullName(const QString &fullName);
 	Q_INVOKABLE static QString getInitials(const QString &username, int letterCount = 2); // Support UTF32

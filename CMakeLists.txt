@@ -294,3 +294,27 @@ endif()
 
 
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/cmake/hook/pre-commit" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/.git/hooks/")
+
+# MyTel: focus-free GUI test for the connection indicator (leader decision
+# 2026-11-11). Loads the production component file; offscreen platform.
+option(ENABLE_MYTEL_TESTS "Build MyTel test targets" ON)
+if(ENABLE_MYTEL_TESTS)
+	find_package(Qt6 REQUIRED COMPONENTS Qml)
+	add_executable(mytel-chip-test tests/mytelchip/test_main.cpp)
+	target_link_libraries(mytel-chip-test PRIVATE Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick)
+	target_compile_definitions(mytel-chip-test PRIVATE
+		MYTEL_CHIP_QML="${CMAKE_CURRENT_SOURCE_DIR}/Linphone/view/Control/Display/MyTel/MyTelConnectionChip.qml")
+	set_target_properties(mytel-chip-test PROPERTIES AUTOMOC ON)
+endif()
+
+# MyTel production-path reachability test (leader decision 2026-11-11).
+# NOTE: linking against the production app proved infeasible — "Linphone"
+# is a single executable target; ENABLE_EXPORTS fails at link (LNK2001 in
+# the auto-generated exports.def). Kept disabled until App/CoreModel are
+# extracted into a static library target (disclosed as the open blocker).
+if(ENABLE_MYTEL_TESTS AND MYTEL_PRODUCTION_REACH_TEST)
+	add_executable(mytel-prod-reach-test tests/mytelprodreach/test_main.cpp)
+	target_link_libraries(mytel-prod-reach-test PRIVATE Linphone Qt6::Core Qt6::Gui Qt6::Widgets)
+	target_include_directories(mytel-prod-reach-test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Linphone")
+	set_target_properties(mytel-prod-reach-test PROPERTIES AUTOMOC ON)
+endif()

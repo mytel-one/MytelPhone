@@ -128,7 +128,18 @@ FocusScope {
                         ColumnLayout {
                             Text {
                                 Layout.fillWidth: true
-                                text: UtilsCpp.encodeEmojiToQmlRichFormat(mainItem.chat?.core.title) || ""
+                                // Owner requirement 2026-11-11: peer number/extension
+                                // beside the name in 1-to-1 conversations ("Name (123)")
+                                text: {
+                                    if (!mainItem.chat) return ""
+                                    var title = mainItem.chat.core.title
+                                    var rich = UtilsCpp.encodeEmojiToQmlRichFormat(title) || ""
+                                    if (mainItem.chat.core.isGroupChat) return rich
+                                    var username = UtilsCpp.getUsername(mainItem.chat.core.peerAddress)
+                                    if (!username || username.length === 0 || username === title)
+                                        return rich
+                                    return rich + " (" + username + ")"
+                                }
                                 color: DefaultStyle.main2_600
                                 maximumLineCount: 1
                                 font {

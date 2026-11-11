@@ -32,16 +32,16 @@ LoginLayout {
 				//: Return
 				Accessible.name: qsTr("return_accessible_name")
 			}
-			EffectImage {
+			// MyTel branding: official logo instead of the generic profile icon
+			Image {
 				fillMode: Image.PreserveAspectFit
-				imageSource: AppIcons.profile
-                Layout.preferredHeight: Utils.getSizeWithScreenRatio(34)
-                Layout.preferredWidth: Utils.getSizeWithScreenRatio(34)
-				colorizationColor: DefaultStyle.main2_600
+				source: "image://internal/mytel_logo.png"
+                Layout.preferredHeight: Utils.getSizeWithScreenRatio(42)
+                Layout.preferredWidth: Utils.getSizeWithScreenRatio(42)
 			}
 			Text {
-                //: Compte SIP tiers
-                text: qsTr("assistant_login_third_party_sip_account_title")
+                //: MyTel contact center login
+                text: "MyTel Contact Center Login"
 				font {
                     pixelSize: Typography.h1.pixelSize
                     weight: Typography.h1.weight

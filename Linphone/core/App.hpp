@@ -20,6 +20,7 @@
 
 #include <QAction>
 #include <QCommandLineParser>
+#include <QElapsedTimer>
 #include <QQmlApplicationEngine>
 #include <QSharedPointer>
 
@@ -49,6 +50,7 @@ class NotificationBackend;
 class App : public SingleApplication, public AbstractObject {
 	Q_OBJECT
 	Q_PROPERTY(bool coreStarted READ getCoreStarted WRITE setCoreStarted NOTIFY coreStartedChanged)
+	Q_PROPERTY(bool networkReachable READ getNetworkReachable WRITE setNetworkReachable NOTIFY networkReachableChanged)
 	Q_PROPERTY(int coreGlobalState READ getCoreGlobalState WRITE setCoreGlobalState NOTIFY coreGlobalStateChanged)
 	Q_PROPERTY(AccountList *accounts READ getAccounts NOTIFY accountsChanged)
 	Q_PROPERTY(AccountGui *currentAccount READ getCurrentAccount NOTIFY currentAccountChanged)
@@ -154,6 +156,14 @@ public:
 	bool getCoreStarted() const;
 	void setCoreStarted(bool started);
 
+	// MyTel: reactive network reachability for the connection indicator
+	bool getNetworkReachable() const;
+	void setNetworkReachable(bool reachable);
+
+	// MyTel: ms elapsed since application start; the intro shortens itself
+	// when the startup budget is already consumed (leader correction)
+	Q_INVOKABLE qint64 startupElapsedMs() const;
+
 	int getCoreGlobalState() const;
 	void setCoreGlobalState(int state);
 
@@ -235,6 +245,7 @@ public:
 signals:
 	void mainWindowChanged();
 	void coreStartedChanged(bool coreStarted);
+	void networkReachableChanged(bool reachable);
 	void coreGlobalStateChanged(int coreGlobalState);
 	void isRestartingChanged(bool restarting);
 	void accountsChanged();
@@ -289,6 +300,8 @@ private:
 	QSharedPointer<SafeConnection<App, CliModel>> mCliModelConnection;
 	bool mAutoStart = false;
 	bool mCoreStarted = false;
+	bool mNetworkReachable = false;
+	QElapsedTimer mStartupTimer;
 	int mCoreGlobalState = 0;
 	bool mIsRestarting = false;
 	bool mPossiblyLookForAddedAccount = false;

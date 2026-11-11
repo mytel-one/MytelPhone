@@ -98,6 +98,16 @@ ListView {
         }
     }
     //----------------------------------------------------------------
+    // Owner requirement 2026-11-11: peer number/extension displayed beside
+    // the contact name ("Name (123)"); deduplicated when name is the number
+    function nameWithNumber(displayName, remoteAddress) {
+        var username = UtilsCpp.getUsername(remoteAddress)
+        if (!username || username.length === 0 || username === displayName)
+            return displayName
+        if (!displayName || displayName.length === 0)
+            return username
+        return displayName + " (" + username + ")"
+    }
     function moveToCurrentItem() {
         if (mainItem.currentIndex >= 0)
             Utils.updatePosition(mainItem, mainItem)
@@ -164,7 +174,7 @@ ListView {
                 Text {
                     Layout.fillWidth: true
                     maximumLineCount: 1
-                    text: modelData.core.displayName
+                    text: mainItem.nameWithNumber(modelData.core.displayName, modelData.core.remoteAddress)
                     font {
                         pixelSize: Typography.p1.pixelSize
                         weight: Typography.p1.weight

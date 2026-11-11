@@ -598,6 +598,12 @@ void CoreModel::onGlobalStateChanged(const std::shared_ptr<linphone::Core> &core
                                      const std::string &message) {
 	emit globalStateChanged(core, gstate, message);
 }
+
+// MyTel: connection-indicator parity (leader correction 2026-11-11) — expose
+// core network-reachability changes so QML bindings can react live.
+void CoreModel::onNetworkReachable(const std::shared_ptr<linphone::Core> &core, bool reachable) {
+	emit networkReachableChanged(core, reachable);
+}
 void CoreModel::onIsComposingReceived(const std::shared_ptr<linphone::Core> &core,
                                       const std::shared_ptr<linphone::ChatRoom> &room) {
 	emit isComposingReceived(core, room);

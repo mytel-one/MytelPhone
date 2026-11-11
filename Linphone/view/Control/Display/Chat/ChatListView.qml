@@ -35,7 +35,18 @@ ListView {
     }
 
     onChatClicked: (chat) => {selectChat(chat)}
-    
+
+    // Owner requirement 2026-11-11: peer number/extension displayed beside
+    // the contact name in 1-to-1 conversations ("Name (123)")
+    function nameWithNumber(title, peerAddress) {
+        var username = UtilsCpp.getUsername(peerAddress)
+        if (!username || username.length === 0 || username === title)
+            return title
+        if (!title || title.length === 0)
+            return username
+        return title + " (" + username + ")"
+    }
+
     signal markAllAsRead()
     signal chatClicked(ChatGui chat)
 
@@ -194,7 +205,7 @@ ListView {
                     id: friendAddress
                     Layout.fillWidth: true
                     maximumLineCount: 1
-                    text: modelData ? modelData.core.title : ""
+                    text: modelData ? (modelData.core.isGroupChat ? modelData.core.title : mainItem.nameWithNumber(modelData.core.title, modelData.core.peerAddress)) : ""
                     textFormat: Text.PlainText
                     color: DefaultStyle.main2_800
                     font {

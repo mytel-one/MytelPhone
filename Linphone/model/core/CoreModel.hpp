@@ -178,6 +178,8 @@ private:
 	virtual void onIsComposingReceived(const std::shared_ptr<linphone::Core> &core,
 	                                   const std::shared_ptr<linphone::ChatRoom> &room) override;
 	virtual void onLastCallEnded(const std::shared_ptr<linphone::Core> &core) override;
+	// MyTel: network reachability changes for the connection indicator
+	virtual void onNetworkReachable(const std::shared_ptr<linphone::Core> &core, bool reachable) override;
 	virtual void onLogCollectionUploadStateChanged(const std::shared_ptr<linphone::Core> &core,
 	                                               linphone::Core::LogCollectionUploadState state,
 	                                               const std::string &info) override;
@@ -269,6 +271,8 @@ signals:
 	void isComposingReceived(const std::shared_ptr<linphone::Core> &core,
 	                         const std::shared_ptr<linphone::ChatRoom> &room);
 	void lastCallEnded();
+	// MyTel: emitted when core network reachability changes
+	void networkReachableChanged(const std::shared_ptr<linphone::Core> &core, bool reachable);
 	void logCollectionUploadStateChanged(const std::shared_ptr<linphone::Core> &core,
 	                                     linphone::Core::LogCollectionUploadState state,
 	                                     const std::string &info);

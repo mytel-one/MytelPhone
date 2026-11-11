@@ -112,6 +112,24 @@ QString Utils::getUsername(const QString &address) {
 	return res;
 }
 
+bool Utils::isReduceMotionEnabled() {
+	// MyTel: honour the Windows "animate controls" accessibility preference
+	// (leader correction 2026-11-11); MYTELL_REDUCED_MOTION=1 supplements it.
+	BOOL clientAreaAnimation = TRUE;
+	SystemParametersInfo(SPI_GETCLIENTAREAANIMATION, 0, &clientAreaAnimation, 0);
+	bool reduced = (clientAreaAnimation == FALSE);
+	if (qEnvironmentVariable("MYTELL_REDUCED_MOTION") == QStringLiteral("1")) reduced = true;
+	return reduced;
+}
+
+bool Utils::isNetworkReachable() {
+	// MyTel: connection-indicator parity with Android (leader correction
+	// 2026-11-11) — registration alone is not "connected".
+	auto core = CoreModel::getInstance()->getCore();
+	if (!core || core->getGlobalState() != linphone::GlobalState::On) return false;
+	return core->isNetworkReachable();
+}
+
 QString Utils::getGivenNameFromFullName(const QString &fullName) {
 	if (fullName.isEmpty()) return QString();
 	auto nameSplitted = fullName.split(" ");

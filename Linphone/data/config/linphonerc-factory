@@ -22,6 +22,10 @@ username_regex=^[a-z0-9+_.\-]*$
 assistant_go_directly_to_third_party_sip_account_login=1
 assistant_hide_create_account=1
 
+[ui]
+hide_sip_addresses=1
+only_display_sip_uri_username=1
+
 [lime]
 lime_update_threshold=86400
 
