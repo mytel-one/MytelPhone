@@ -330,6 +330,13 @@ AbstractMainPage {
                             mainItem.remoteAddress = contact.core.defaultAddress
                         }
                     }
+                    // MyTel (owner requirement 2026-11-12): direct entry is
+                    // the primary path — normalized destination flows into
+                    // remoteAddress -> SDK-aware interpretUrl + room lookup
+                    onChatDestinationRequested: (destination) => {
+                        mainItem.remoteAddress = ""
+                        mainItem.remoteAddress = destination
+                    }
                 }
             }
         }

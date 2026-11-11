@@ -609,12 +609,17 @@ AbstractWindow {
 	Component {
 		id: mainPage
 		Item {
-			// Wrapper so the connection chip floats above the page chrome
-			// inside the page tree (a window-level item stopped painting in
-			// some theme states)
+			// Reserved-footer wrapper (owner requirement 2026-11-12): the
+			// layout consumes the whole page minus a fixed footer row, and
+			// the connection indicator lives right-aligned in that footer —
+			// reserved space, no floating overlay, no overlap with content.
 			MainLayout {
 				id: mainLayout
-				anchors.fill: parent
+				anchors.top: parent.top
+				anchors.left: parent.left
+				anchors.right: parent.right
+				anchors.bottom: parent.bottom
+				anchors.bottomMargin: mytelFooter.height
 				objectName: "mainPage"
 				onAddAccountRequest: goToLogin()
 				onAccountRemoved: {
@@ -627,19 +632,29 @@ AbstractWindow {
 				// StackView.onActivated: connectionSecured(0) // TODO : connect to cpp part when ready
 			}
 
-			// Owner requirement 2026-11-11: unmistakable connection indicator
-			// (reusable component; the GUI test loads the SAME file).
-			MyTelConnectionChip {
-				id: connectionChip
-				x: parent.width - width - 24
-				y: 46
-				z: 1000
-				visible: mainWindow.accountProxy !== null && mainWindow.accountProxy !== undefined
-					&& mainWindow.accountProxy.haveAccount === true
-				registered: {
-					var account = mainWindow.accountProxy?.defaultAccount
-					return account && account.core
-						&& account.core.registrationState === LinphoneEnums.RegistrationState.Ok
+			// MyTel footer: reserved status row, clear of the resize grip
+			Rectangle {
+				id: mytelFooter
+				anchors.left: parent.left
+				anchors.right: parent.right
+				anchors.bottom: parent.bottom
+				height: Utils.getSizeWithScreenRatio(36)
+				color: DefaultStyle.grey_0
+
+				// Owner requirement: unmistakable connection indicator
+				// (reusable component; the GUI test loads the SAME file).
+				MyTelConnectionChip {
+					id: connectionChip
+					anchors.right: parent.right
+					anchors.rightMargin: Utils.getSizeWithScreenRatio(16)
+					anchors.verticalCenter: parent.verticalCenter
+					visible: mainWindow.accountProxy !== null && mainWindow.accountProxy !== undefined
+						&& mainWindow.accountProxy.haveAccount === true
+					registered: {
+						var account = mainWindow.accountProxy?.defaultAccount
+						return account && account.core
+							&& account.core.registrationState === LinphoneEnums.RegistrationState.Ok
+					}
 				}
 			}
 		}

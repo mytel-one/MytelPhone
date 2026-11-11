@@ -8,11 +8,15 @@ import UtilsCpp
 import SettingsCpp
 import 'qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js' as Utils
 
-FocusScope {
-	id: mainItem
-	property color searchBarColor: DefaultStyle.grey_100
-	property color searchBarBorderColor: "transparent"
-	property alias searchBar: searchBar
+	FocusScope {
+		id: mainItem
+		property color searchBarColor: DefaultStyle.grey_100
+		property color searchBarBorderColor: "transparent"
+		property alias searchBar: searchBar
+		// MyTel: allow consumers (direct-entry flows) to hide the baked-in
+		// contact search and contact list
+		property bool searchBarVisible: true
+		property bool contactListVisible: true
     property string startGroupButtonText
     property bool startGroupButtonVisible: true
 	property NumericPadPopup numPadPopup
@@ -37,6 +41,7 @@ FocusScope {
             spacing: Utils.getSizeWithScreenRatio(38)
             SearchBar {
                 id: searchBar
+                visible: mainItem.searchBarVisible
                 Layout.alignment: Qt.AlignTop
                 Layout.fillWidth: true
                 Layout.rightMargin: mainItem.searchBarRightMaring
@@ -111,6 +116,7 @@ FocusScope {
                 }
                 AllContactListView {
                     id: contactList
+                    visible: mainItem.contactListVisible
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     showContactMenu: false

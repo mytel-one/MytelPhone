@@ -8460,5 +8460,30 @@ Error in the chat</extracomment>
         <source>okButton</source>
         <translation>Ok</translation>
     </message>
+    <message>
+        <source>mytel_chat_destination_label</source>
+        <extracomment>&quot;Chat with an extension&quot;</extracomment>
+        <translation>Chat with an extension</translation>
+    </message>
+    <message>
+        <source>mytel_chat_destination_hint</source>
+        <extracomment>&quot;Extension or number&quot;</extracomment>
+        <translation>Extension or number</translation>
+    </message>
+    <message>
+        <source>mytel_chat_start_action</source>
+        <extracomment>&quot;Start chat&quot;</extracomment>
+        <translation>Start chat</translation>
+    </message>
+    <message>
+        <source>mytel_chat_browse_contacts</source>
+        <extracomment>&quot;Browse contacts&quot;</extracomment>
+        <translation>Browse contacts</translation>
+    </message>
+    <message>
+        <source>mytel_chat_invalid_destination</source>
+        <extracomment>&quot;Invalid number or extension&quot;</extracomment>
+        <translation>Invalid number or extension</translation>
+    </message>
 </context>
 </TS>
