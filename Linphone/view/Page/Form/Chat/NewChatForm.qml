@@ -1,36 +1,26 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls.Basic as Control
-import QtQuick.Effects
 
 import Linphone
 import UtilsCpp
 import SettingsCpp
+import 'qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js' as Utils
 
-// MyTel (owner requirement 2026-11-12, leader design verdict): direct
-// destination entry is the PRIMARY path for starting a chat — type or
-// paste an extension / phone number / SIP URI and press Enter or
-// "Start chat". No contact list is displayed by default; browsing the
-// directory stays behind the explicit "Browse contacts" toggle below.
+// MyTel (owner requirement 2026-11-12): direct destination entry is the
+// PRIMARY path — type an extension and press Enter or "Start chat".
 CreationFormLayout {
 	id: mainItem
 
 	//: Nouveau groupe
 	startGroupButtonText: qsTr("chat_start_group_chat_title")
-
-	// MyTel: hide the baked-in contact search + list of the base layout
 	searchBarVisible: false
 	contactListVisible: false
 
 	property string destinationError: ""
 
-	// Emitted with the (normalized) destination; the consumer (ChatPage)
-	// feeds it into remoteAddress -> UtilsCpp.getChatForAddress which uses
-	// the SDK-aware ToolModel::interpretUrl and the existing room lookup.
 	signal chatDestinationRequested(string destination)
 
-	// Iranian telephone normalization for plain numbers (mirrors the call
-	// pre-dial normalizer); explicit SIP URIs are passed through untouched
 	function normalizeInput(raw) {
 		var s = raw.trim()
 		if (s.toLowerCase().startsWith("sip:")) return s
@@ -47,46 +37,48 @@ CreationFormLayout {
 		return digits
 	}
 
-	function startChat(raw) {
+	function startChat() {
 		destinationError = ""
-		var destination = normalizeInput(raw)
+		var destination = normalizeInput(destinationField.text)
 		if (destination.length === 0) {
-			//: "Invalid number or extension"
 			destinationError = qsTr("mytel_chat_invalid_destination")
 			return
 		}
-		console.log("[MyTel] Start chat requested with [" + raw + "] -> [" + destination + "]")
+		console.log("[MyTel] Start chat with [" + destination + "]")
 		chatDestinationRequested(destination)
 	}
 
 	topContent: [
 		ColumnLayout {
-			id: directEntry
 			Layout.fillWidth: true
 			spacing: Utils.getSizeWithScreenRatio(10)
 
 			Text {
 				Layout.fillWidth: true
-				//: "Chat with an extension"
 				text: qsTr("mytel_chat_destination_label")
 				color: DefaultStyle.main2_700
 				font.pixelSize: Typography.p1.pixelSize
 				font.weight: Typography.p1.weight
 			}
 
-			SearchBar {
-				id: destinationInput
+			// Simple TextField (no SearchBar machinery — direct entry only)
+			Control.TextField {
+				id: destinationField
 				Layout.fillWidth: true
+				Layout.preferredHeight: Utils.getSizeWithScreenRatio(48)
 				Layout.rightMargin: mainItem.searchBarRightMaring
 				focus: true
-				delaySearch: false
-				magnifierVisible: false
-				//: "Extension or number"
 				placeholderText: qsTr("mytel_chat_destination_hint")
-
-				Keys.onReturnPressed: {
-					if (text.length > 0) mainItem.startChat(text)
+				font.pixelSize: Utils.getSizeWithScreenRatio(18)
+				color: DefaultStyle.main2_900
+				background: Rectangle {
+					radius: height / 2
+					color: DefaultStyle.grey_100
+					border.width: destinationField.activeFocus ? 2 : 0
+					border.color: DefaultStyle.main1_500_main
 				}
+				onAccepted: mainItem.startChat()
+				Keys.onReturnPressed: mainItem.startChat()
 			}
 
 			Text {
@@ -102,14 +94,12 @@ CreationFormLayout {
 				Layout.fillWidth: true
 				spacing: Utils.getSizeWithScreenRatio(12)
 
-				Button {
+				Control.Button {
 					id: startChatButton
 					Layout.preferredWidth: Utils.getSizeWithScreenRatio(220)
 					Layout.preferredHeight: Utils.getSizeWithScreenRatio(44)
-					padding: 0
-					enabled: destinationInput.text.length > 0
-					onClicked: mainItem.startChat(destinationInput.text)
-					Accessible.name: qsTr("mytel_chat_start_action")
+					enabled: destinationField.text.length > 0
+					onClicked: mainItem.startChat()
 					background: Rectangle {
 						anchors.fill: parent
 						radius: height / 2
@@ -118,7 +108,6 @@ CreationFormLayout {
 							: DefaultStyle.main1_200
 					}
 					contentItem: Text {
-						//: "Start chat"
 						text: qsTr("mytel_chat_start_action")
 						color: DefaultStyle.grey_0
 						horizontalAlignment: Text.AlignHCenter
@@ -130,7 +119,7 @@ CreationFormLayout {
 					}
 				}
 
-				Button {
+				Control.Button {
 					id: browseButton
 					Layout.preferredHeight: Utils.getSizeWithScreenRatio(44)
 					leftPadding: Utils.getSizeWithScreenRatio(16)
@@ -147,7 +136,6 @@ CreationFormLayout {
 						border.width: 1
 					}
 					contentItem: Text {
-						//: "Browse contacts"
 						text: qsTr("mytel_chat_browse_contacts")
 						color: DefaultStyle.main2_700
 						anchors.centerIn: parent
@@ -155,9 +143,7 @@ CreationFormLayout {
 					}
 				}
 
-				Item {
-					Layout.fillWidth: true
-				}
+				Item { Layout.fillWidth: true }
 			}
 		}
 	]

@@ -8485,5 +8485,13 @@ Error in the chat</extracomment>
         <extracomment>&quot;Invalid number or extension&quot;</extracomment>
         <translation>Invalid number or extension</translation>
     </message>
+    <message>
+        <source>mytel_call_destination_label</source>
+        <translation>Call an extension</translation>
+    </message>
+    <message>
+        <source>mytel_call_action</source>
+        <translation>Call</translation>
+    </message>
 </context>
 </TS>
