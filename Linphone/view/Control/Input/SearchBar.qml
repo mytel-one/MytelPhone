@@ -6,16 +6,20 @@ import CustomControls 1.0
 import 'qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js' as Utils
 import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 
-FocusScope {
-	id: mainItem
-	property bool magnifierVisible: true
-	property var validator: RegularExpressionValidator{}
-	property var numericPadPopup
-	property alias numericPadButton: dialerButton
-	readonly property bool hasActiveFocus: textField.activeFocus
-	property alias color: backgroundItem.color
-	property bool delaySearch: true	// Wait some idle time after typing to start searching
-	property bool handleNumericPadPopupButtonsPressed: true
+	FocusScope {
+		id: mainItem
+		property bool magnifierVisible: true
+		property var validator: RegularExpressionValidator{}
+		property var numericPadPopup
+		property alias numericPadButton: dialerButton
+		readonly property bool hasActiveFocus: textField.activeFocus
+		property alias color: backgroundItem.color
+		property bool delaySearch: true	// Wait some idle time after typing to start searching
+		property bool handleNumericPadPopupButtonsPressed: true
+
+		// MyTel (owner 2026-11-13): Enter in the search bar triggers a
+		// validated signal so the Calls page can dial the typed number
+		signal validated(string text)
     // Border properties
 	property color borderColor: "transparent"
 	property color focusedBorderColor: DefaultStyle.main2_500_main
@@ -110,6 +114,12 @@ FocusScope {
 			event.accepted = false
 			if (mainItem.numericPadPopup && mainItem.numericPadPopup.opened && (event.modifiers & Qt.KeypadModifier || event.key === Qt.Key_Return)) {
 				mainItem.numericPadPopup.keyPadKeyPressed(event)
+				event.accepted = true
+			}
+			// MyTel: Enter/Return triggers validated so the consumer can
+			// dial the typed number (owner requirement 2026-11-13)
+			else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+				mainItem.validated(textField.text)
 				event.accepted = true
 			}
 		}

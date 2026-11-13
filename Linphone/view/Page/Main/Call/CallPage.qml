@@ -24,6 +24,182 @@ AbstractMainPage {
         goToCallHistory()
     }
 
+    // ── MyTel floating dial pad (owner 2026-11-13) ──
+    // Prominent green FAB opens an instant dial popup — always visible
+    // on the Calls page, no navigation needed.
+    function mytelNormalizeDial(raw) {
+        var s = raw.trim()
+        if (s.toLowerCase().startsWith("sip:")) return s
+        var d = s.replace(/[\s\-\.\(\)]/g, "")
+        if (/^\+98/.test(d)) d = "0" + d.slice(3)
+        else if (/^0098/.test(d)) d = "0" + d.slice(4)
+        else if (/^098/.test(d)) d = "0" + d.slice(3)
+        return d
+    }
+
+    function mytelPlaceCall() {
+        var dest = mytelNormalizeDial(mytelDialNumber.text)
+        if (dest.length === 0) return
+        console.log("[MyTel Dial] Calling [" + dest + "]")
+        mytelDialPopup.close()
+        UtilsCpp.createCall(dest)
+    }
+
+    // Green floating dial button (bottom-right of Calls page)
+    Rectangle {
+        id: mytelDialFab
+        z: 1000
+        width: Utils.getSizeWithScreenRatio(56)
+        height: Utils.getSizeWithScreenRatio(56)
+        radius: width / 2
+        anchors.right: parent.right
+        anchors.rightMargin: Utils.getSizeWithScreenRatio(24)
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Utils.getSizeWithScreenRatio(24)
+        color: mytelDialFabMouse.containsPress ? "#16a34a" : "#22C55E"
+        visible: true
+
+        MouseArea {
+            id: mytelDialFabMouse
+            anchors.fill: parent
+            onClicked: {
+                mytelDialPopup.open()
+                mytelDialNumber.text = ""
+            }
+        }
+
+        EffectImage {
+            anchors.centerIn: parent
+            width: Utils.getSizeWithScreenRatio(24)
+            height: Utils.getSizeWithScreenRatio(24)
+            imageSource: AppIcons.phone
+            colorizationColor: "#FFFFFF"
+        }
+    }
+
+    // Dial pad popup
+    Control.Popup {
+        id: mytelDialPopup
+        anchors.centerIn: parent
+        width: Math.min(parent.width * 0.9, 400)
+        height: Math.min(parent.height * 0.9, 560)
+        modal: true
+        focus: true
+        closePolicy: Control.Popup.CloseOnEscape | Control.Popup.CloseOnPressOutside
+
+        background: Rectangle {
+            color: "#FFFFFF"
+            radius: 16
+            border.width: 1
+            border.color: "#E0E0E0"
+        }
+
+        contentItem: ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 20
+            spacing: 8
+
+            // Number display
+            Control.TextField {
+                id: mytelDialNumber
+                Layout.fillWidth: true
+                Layout.preferredHeight: 56
+                font.pixelSize: 26
+                color: "#1a1a2e"
+                horizontalAlignment: TextInput.AlignHCenter
+                verticalAlignment: TextInput.AlignVCenter
+                placeholderText: qsTr("mytel_chat_destination_hint")
+                background: Rectangle {
+                    radius: height / 2
+                    color: "#F5F5F5"
+                    border.width: mytelDialNumber.activeFocus ? 2 : 1
+                    border.color: mytelDialNumber.activeFocus ? "#0A67FF" : "#E0E0E0"
+                }
+                onAccepted: mainItem.mytelPlaceCall()
+            }
+
+            // Keypad
+            GridLayout {
+                columns: 3
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 8
+                columnSpacing: 14
+                rowSpacing: 10
+
+                Repeater {
+                    model: ["1","2","3","4","5","6","7","8","9","*","0","#"]
+                    delegate: Rectangle {
+                        required property string modelData
+                        required property int index
+                        width: 72; height: 72; radius: width / 2
+                        color: mytelKeyMouse.containsPress ? "#E0E0E0" : "#F5F5F5"
+                        border.width: 1; border.color: "#E0E0E0"
+
+                        MouseArea {
+                            id: mytelKeyMouse
+                            anchors.fill: parent
+                            onClicked: {
+                                mytelDialNumber.text += modelData
+                                mytelDialNumber.cursorPosition = mytelDialNumber.text.length
+                            }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: modelData
+                            font.pixelSize: 24; font.weight: Font.DemiBold
+                            color: "#1a1a2e"
+                        }
+                    }
+                }
+            }
+
+            // Bottom: [Call] [Backspace]
+            RowLayout {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 12
+                spacing: 28
+
+                Rectangle {
+                    width: 72; height: 72; radius: width / 2
+                    color: mytelCallMouse.containsPress ? "#16a34a" : "#22C55E"
+                    MouseArea {
+                        id: mytelCallMouse
+                        anchors.fill: parent
+                        onClicked: mainItem.mytelPlaceCall()
+                    }
+                    EffectImage {
+                        anchors.centerIn: parent
+                        width: 30; height: 30
+                        imageSource: AppIcons.phone
+                        colorizationColor: "#FFFFFF"
+                    }
+                }
+
+                Rectangle {
+                    width: 56; height: 56; radius: width / 2
+                    color: mytelBackMouse.containsPress ? "#E0E0E0" : "#F5F5F5"
+                    MouseArea {
+                        id: mytelBackMouse
+                        anchors.fill: parent
+                        onClicked: {
+                            if (mytelDialNumber.text.length > 0)
+                                mytelDialNumber.text = mytelDialNumber.text.slice(0, -1)
+                        }
+                        onPressAndHold: mytelDialNumber.text = ""
+                    }
+                    Text {
+                        anchors.centerIn: parent
+                        text: "⌫"; font.pixelSize: 22; color: "#666"
+                    }
+                }
+            }
+
+            Item { Layout.fillHeight: true }
+        }
+    }
+    // ── End MyTel floating dial pad ──
+
     /**
      * Focus on the first pertinent element in the page (LINQT-2202)
      * @override
@@ -42,6 +218,16 @@ AbstractMainPage {
                                           == LinphoneEnums.RegistrationState.Ok : false
     property int selectedParticipantsCount
     signal createCallFromSearchBarRequested
+    // MyTel (owner 2026-11-13): Enter in the search bar / numeric-pad Call
+    // button actually places a call to the typed number — the handler was
+    // lost when the old NewCallForm was replaced
+    onCreateCallFromSearchBarRequested: {
+        var dest = mytelNormalizeDial(searchBar.text)
+        if (dest.length > 0) {
+            console.log("[MyTel] Search-bar call to [" + dest + "]")
+            UtilsCpp.createCall(dest)
+        }
+    }
     signal createContactRequested(string name, string address)
     signal openNumPadRequest
 
@@ -334,72 +520,200 @@ AbstractMainPage {
 
     Component {
         id: newCallItem
+        // MyTel (owner 2026-11-13): completely rewritten dial pad —
+        // professional phone-dialer UI, no contact picker, no
+        // CreationFormLayout dependencies, no topLayoutVisible bugs
+        // Sizes use the PARENT dimensions, not getSizeWithScreenRatio
+        // (which uses Screen.width on multi-monitor and overflows).
         FocusScope {
             objectName: "newCallItem"
             width: parent?.width
             height: parent?.height
-            Control.StackView.onActivated: {
-                if(!numericPadPopupItem.visible){
-		            const focusReason = FocusNavigator.doesLastFocusWasKeyboard() ? Qt.TabFocusReason : Qt.OtherFocusReason
-                   callContactsList.forceActiveFocus(focusReason)
-                }
+
+            // Responsive sizing based on the actual available space
+            readonly property real dialUnit: Math.min(width, height * 1.2) / 10
+
+            function normalizeDial(raw) {
+                var s = raw.trim()
+                if (s.toLowerCase().startsWith("sip:")) return s
+                var d = s.replace(/[\s\-\.\(\)]/g, "")
+                d = d.replace(/[\u06F0-\u06F9]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x06F0 + 0x30))
+                d = d.replace(/[\u0660-\u0669]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x0660 + 0x30))
+                if (/^\+98/.test(d)) d = "0" + d.slice(3)
+                else if (/^0098/.test(d)) d = "0" + d.slice(4)
+                else if (/^098/.test(d)) d = "0" + d.slice(3)
+                return d
             }
+
+            function placeCall() {
+                var dest = normalizeDial(numberDisplay.text)
+                if (dest.length === 0) return
+                console.log("[MyTel Dial] Calling [" + dest + "]")
+                UtilsCpp.createCall(dest)
+            }
+
             ColumnLayout {
                 anchors.fill: parent
-                spacing: 0
+                spacing: dialUnit * 0.1
+
+                // ── Header: Back + Title ──
                 RowLayout {
-                    spacing: Utils.getSizeWithScreenRatio(10)
+                    spacing: dialUnit * 0.12
                     Button {
-                        icon.width: Utils.getSizeWithScreenRatio(24)
-                        icon.height: Utils.getSizeWithScreenRatio(24)
-                        Layout.preferredWidth: Utils.getSizeWithScreenRatio(30)
-                        Layout.preferredHeight: Utils.getSizeWithScreenRatio(30)
+                        icon.width: dialUnit * 0.3
+                        icon.height: dialUnit * 0.3
+                        Layout.preferredWidth: dialUnit * 0.38
+                        Layout.preferredHeight: dialUnit * 0.38
                         style: ButtonStyle.noBackground
                         icon.source: AppIcons.leftArrow
-                        focus: true
-                        KeyNavigation.down: listStackView
-                        //: Return to call history
-                        Accessible.name: qsTr("return_to_call_history_accessible_name")
-                        onClicked: {
-                            console.debug(
-                                        "[CallPage]User: return to call history")
-                            listStackView.pop()
-                            listStackView.forceActiveFocus()
-                        }
+                        onClicked: listStackView.pop()
                     }
                     Text {
-                        Layout.fillWidth: true
-                        //: "Nouvel appel"
                         text: qsTr("call_action_start_new_call")
                         color: DefaultStyle.main2_700
-                        font.pixelSize: Typography.h2.pixelSize
-                        font.weight: Typography.h2.weight
+                        font.pixelSize: Typography.h2m.pixelSize
+                        font.weight: Typography.h2m.weight
                     }
-                    Item {
-                        Layout.fillWidth: true
-                    }
+                    Item { Layout.fillWidth: true }
                 }
-                NewCallForm {
-                    id: callContactsList
-                    Layout.topMargin: Utils.getSizeWithScreenRatio(18)
+
+                // ── Number Display ──
+                Control.TextField {
+                    id: numberDisplay
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    numPadPopup: numericPadPopupItem
-                    searchBarColor: DefaultStyle.grey_100
-                    onContactClicked: contact => {
-                        mainWindow.startCallWithContact(contact, false, callContactsList)
+                    Layout.preferredHeight: dialUnit * 0.8
+                    Layout.maximumWidth: dialUnit * 5.2
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.topMargin: dialUnit * 0.2
+                    font.pixelSize: Math.max(16, dialUnit * 0.35)
+                    color: DefaultStyle.main2_900
+                    horizontalAlignment: TextInput.AlignHCenter
+                    verticalAlignment: TextInput.AlignVCenter
+                    placeholderText: qsTr("mytel_chat_destination_hint")
+                    background: Rectangle {
+                        radius: height / 2
+                        color: DefaultStyle.grey_100
+                        border.width: numberDisplay.activeFocus ? 2 : 1
+                        border.color: numberDisplay.activeFocus
+                            ? DefaultStyle.main1_500_main
+                            : DefaultStyle.grey_200
                     }
-                    onGroupCreationRequested: {
-                        console.log("groupe call requetsed")
-                        listStackView.push(groupCallItem)
-                    }
-                    Connections {
-                        target: mainItem
-                        function onCreateCallFromSearchBarRequested() {
-                            UtilsCpp.createCall(callContactsList.searchBar.text)
+                    onAccepted: placeCall()
+                    Keys.onReturnPressed: placeCall()
+                }
+
+                // ── Keypad 4×3 ──
+                GridLayout {
+                    columns: 3
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.topMargin: dialUnit * 0.15
+                    columnSpacing: dialUnit * 0.18
+                    rowSpacing: dialUnit * 0.12
+
+                    Repeater {
+                        model: [
+                            { label: "1", sub: "" },   { label: "2", sub: "ABC" },
+                            { label: "3", sub: "DEF" }, { label: "4", sub: "GHI" },
+                            { label: "5", sub: "JKL" }, { label: "6", sub: "MNO" },
+                            { label: "7", sub: "PQRS" },{ label: "8", sub: "TUV" },
+                            { label: "9", sub: "WXYZ" },{ label: "*", sub: "" },
+                            { label: "0", sub: "+" },   { label: "#", sub: "" }
+                        ]
+                        delegate: Rectangle {
+                            required property var modelData
+                            width: dialUnit
+                            height: dialUnit
+                            radius: width / 2
+                            color: dialMouse.containsPress ? DefaultStyle.grey_200 : DefaultStyle.grey_100
+                            border.width: 1
+                            border.color: DefaultStyle.grey_200
+
+                            MouseArea {
+                                id: dialMouse
+                                anchors.fill: parent
+                                onClicked: {
+                                    numberDisplay.text += modelData.label
+                                    numberDisplay.cursorPosition = numberDisplay.text.length
+                                }
+                            }
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 0
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: modelData.label
+                                    font.pixelSize: Math.max(14, dialUnit * 0.32)
+                                    font.weight: Font.DemiBold
+                                    color: DefaultStyle.main2_900
+                                }
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: modelData.sub
+                                    font.pixelSize: Math.max(6, dialUnit * 0.1)
+                                    color: DefaultStyle.main2_400
+                                    visible: modelData.sub.length > 0
+                                }
+                            }
                         }
                     }
                 }
+
+                // ── Bottom row: [space] [Call] [Backspace] ──
+                RowLayout {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.topMargin: dialUnit * 0.15
+                    spacing: dialUnit * 0.35
+
+                    // Green Call button
+                    Rectangle {
+                        width: dialUnit
+                        height: dialUnit
+                        radius: width / 2
+                        color: callMouse.containsPress ? "#16a34a" : "#22C55E"
+
+                        MouseArea {
+                            id: callMouse
+                            anchors.fill: parent
+                            onClicked: placeCall()
+                        }
+
+                        EffectImage {
+                            anchors.centerIn: parent
+                            width: dialUnit * 0.38
+                            height: dialUnit * 0.38
+                            imageSource: AppIcons.phone
+                            colorizationColor: "#FFFFFF"
+                        }
+                    }
+
+                    // Backspace button
+                    Rectangle {
+                        width: dialUnit * 0.7
+                        height: dialUnit * 0.7
+                        radius: width / 2
+                        color: backspaceMouse.containsPress ? DefaultStyle.grey_200 : DefaultStyle.grey_100
+
+                        MouseArea {
+                            id: backspaceMouse
+                            anchors.fill: parent
+                            onClicked: {
+                                if (numberDisplay.text.length > 0)
+                                    numberDisplay.text = numberDisplay.text.slice(0, -1)
+                            }
+                            onPressAndHold: numberDisplay.text = ""
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "⌫"
+                            font.pixelSize: Math.max(12, dialUnit * 0.28)
+                            color: DefaultStyle.main2_600
+                        }
+                    }
+                }
+
+                Item { Layout.fillHeight: true }
             }
         }
     }
