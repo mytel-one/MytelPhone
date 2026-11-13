@@ -24,7 +24,11 @@ CreationFormLayout {
 
     property string dialError: ""
 
-    topLayoutVisible: mainItem.displayCurrentCalls && callList.count > 0
+    // CRITICAL FIX (owner 2026-11-13): the entire dial UI lives inside
+    // topContent, which was invisible because the upstream binding
+    // required displayCurrentCalls (only true in the transfer window).
+    // Force it visible — the dial field IS the primary content here.
+    topLayoutVisible: true
 
     function normalizeInput(raw) {
         var s = raw.trim()
