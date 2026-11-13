@@ -63,8 +63,9 @@ AbstractMainPage {
             id: mytelDialFabMouse
             anchors.fill: parent
             onClicked: {
-                mytelDialPopup.open()
-                mytelDialNumber.text = ""
+                // Owner 2026-11-13: use the built-in big numeric pad
+                searchBar.text = ""
+                numericPadPopupItem.open()
             }
         }
 
@@ -394,19 +395,28 @@ AbstractMainPage {
                         //: Create new call
                         Accessible.name: qsTr("create_new_call_accessible_name")
                         onClicked: {
-                            console.debug("[CallPage]User: create new call")
-                            listStackView.push(newCallItem)
+                            // Owner 2026-11-13: open the big numeric pad
+                            // directly — the newCallItem page was redundant
+                            console.debug("[CallPage]User: create new call — opening numeric pad")
+                            searchBar.text = ""
+                            numericPadPopupItem.open()
                         }
                     }
                 }
                 SearchBar {
                     id: searchBar
+                    // CRITICAL FIX (owner 2026-11-13): wire the numeric pad
+                    // popup to the search bar so digits pressed on the pad
+                    // actually land in this field — without this, the pad's
+                    // digits go nowhere and Call sends an empty number
+                    numericPadPopup: numericPadPopupItem
                     Layout.fillWidth: true
                     Layout.topMargin: Utils.getSizeWithScreenRatio(18)
                     Layout.rightMargin: Utils.getSizeWithScreenRatio(39)
                     //: "Rechercher un appel"
                     placeholderText: qsTr("call_search_in_history")
-                    visible: historyListView.count !== 0 || text.length !== 0
+                    // Always visible so numeric-pad digits are seen by the user
+                    visible: historyListView.count !== 0 || text.length !== 0 || numericPadPopupItem.visible
                     focus: true
                     KeyNavigation.up: newCallButton
                     KeyNavigation.down: historyListView
