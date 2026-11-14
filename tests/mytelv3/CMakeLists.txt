@@ -38,3 +38,12 @@ add_executable(mytel-friend-addresses-test friend_addresses_test.cpp)
 target_link_libraries(mytel-friend-addresses-test PRIVATE Qt6::Core)
 target_include_directories(mytel-friend-addresses-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 add_test(NAME mytel-friend-addresses-test COMMAND mytel-friend-addresses-test)
+
+extract_production_method("Linphone/core/friend/FriendCore.cpp"
+    "void FriendCore::removeAddress(int index) {" "remove_address_production.inc")
+extract_production_method("Linphone/core/friend/FriendCore.cpp"
+    "void FriendCore::removePhoneNumber(int index) {" "remove_phone_production.inc")
+add_executable(mytel-friend-removal-test friend_removal_test.cpp)
+target_link_libraries(mytel-friend-removal-test PRIVATE Qt6::Core)
+target_include_directories(mytel-friend-removal-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+add_test(NAME mytel-friend-removal-test COMMAND mytel-friend-removal-test)

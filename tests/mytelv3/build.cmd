@@ -13,4 +13,6 @@ if errorlevel 1 exit /b 1
 "%TESTBUILD%\mytel-login-attempt-test.exe"
 if errorlevel 1 exit /b 1
 "%TESTBUILD%\mytel-friend-addresses-test.exe"
+if errorlevel 1 exit /b 1
+"%TESTBUILD%\mytel-friend-removal-test.exe"
 exit /b %ERRORLEVEL%
