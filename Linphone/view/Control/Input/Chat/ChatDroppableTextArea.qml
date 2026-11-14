@@ -11,13 +11,13 @@ import 'qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js' as Utils
 
 Control.Control {
 	id: mainItem
-		
+
 	// property alias placeholderText: sendingTextArea.placeholderText
 	property string text
 	property var textArea
 	property int selectedFilesCount: 0
 	// property alias cursorPosition: sendingTextArea.cursorPosition
-	
+
 	readonly property bool fileTransferAvailable: SettingsCpp.fileTransferServer.length > 0
 	property bool dropEnabled: fileTransferAvailable
 	property bool isEphemeral : false
@@ -26,16 +26,16 @@ Control.Control {
 	// disable record button if call ongoing
 	property bool callOngoing: false
 	property bool isEditing: false
-	// Do not auto resize text area automatically if 
+	// Do not auto resize text area automatically if
 	// the user set the height explicitly
 	property bool textAreaHeightSetByUser: false
 
     property ChatGui chat
 
 	signal focusTextArea()
-	
+
 	// ---------------------------------------------------------------------------
-	
+
 	signal dropped (var files)
 	signal validText (string text)
 	signal sendMessage()
@@ -43,7 +43,7 @@ Control.Control {
 	signal composing()
 
 	// ---------------------------------------------------------------------------
-	
+
 	function _emitFiles (files) {
 		if (!mainItem.fileTransferAvailable) return
 		// Filtering files, other urls are forbidden.
@@ -51,7 +51,7 @@ Control.Control {
 			if (file.toString().startsWith("file:")) {
 				files.push(Utils.getSystemPathFromUri(file))
 			}
-			
+
 			return files
 		}, [])
 		if (files.length > 0) {
@@ -71,7 +71,7 @@ Control.Control {
 	rightPadding: Utils.getSizeWithScreenRatio(15)
 	topPadding: Utils.getSizeWithScreenRatio(16)
 	bottomPadding: Utils.getSizeWithScreenRatio(16)
-	
+
 	background: Rectangle {
 		anchors.fill: parent
 		color: DefaultStyle.grey_100
@@ -146,6 +146,7 @@ Control.Control {
 							Layout.fillWidth: true
 							Layout.alignment: Qt.AlignCenter
 							contentHeight: sendingTextArea.contentHeight
+							contentWidth: width
 
 							onContentHeightChanged: {
 								if (sendingTextArea.contentHeight > mainItem.height - (mainItem.topPadding + mainItem.bottomPadding + sendingControl.topPadding + sendingControl.bottomPadding)
@@ -177,7 +178,7 @@ Control.Control {
 								onTextChanged: {
 									mainItem.text = text
 								}
-								
+
 								Component.onCompleted: {
 									mainItem.textArea = sendingTextArea
 									sendingTextArea.text = mainItem.text
@@ -353,7 +354,7 @@ Control.Control {
 		anchors.fill: parent
 		keys: [ 'text/uri-list' ]
 		visible: mainItem.dropEnabled
-		
+
 		onDropped: (drop) => {
 			state = ''
 			if (drop.hasUrls) {
@@ -362,7 +363,7 @@ Control.Control {
 		}
 		onEntered: state = 'hover'
 		onExited: state = ''
-		
+
 		states: State {
 			name: 'hover'
 			PropertyChanges { target: hoverContent; visible: true }

@@ -39,7 +39,7 @@ CreationFormLayout {
         dialError = ""
         var destination = normalizeInput(dialField.text)
         if (destination.length === 0) {
-            dialError = qsTr("mytel_chat_invalid_destination")
+            dialError = qsTr("Enter a valid extension, number or SIP address.")
             return
         }
         if (displayCurrentCalls)
@@ -84,7 +84,7 @@ CreationFormLayout {
             Text {
                 Layout.fillWidth: true
                 //: "Call an extension"
-                text: qsTr("mytel_call_destination_label")
+                text: qsTr("Call an extension or outside number")
                 color: DefaultStyle.main2_700
                 font.pixelSize: 14
                 font.weight: Typography.p1.weight
@@ -97,7 +97,8 @@ CreationFormLayout {
                 Layout.rightMargin: 0
                 focus: true
                 //: "Extension or number"
-                placeholderText: qsTr("mytel_chat_destination_hint")
+                placeholderTextColor: DefaultStyle.main2_600
+                placeholderText: qsTr("Extension, number or SIP address")
                 font.pixelSize: Utils.getSizeWithScreenRatio(18)
                 color: DefaultStyle.main2_900
                 background: Rectangle {
@@ -138,7 +139,7 @@ CreationFormLayout {
                     }
                     contentItem: Text {
                         //: "Call"
-                        text: mainItem.displayCurrentCalls ? qsTr("Transfer") : qsTr("mytel_call_action")
+                        text: mainItem.displayCurrentCalls ? qsTr("Transfer") : qsTr("Call")
                         color: DefaultStyle.grey_0
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter

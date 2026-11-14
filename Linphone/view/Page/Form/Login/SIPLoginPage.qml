@@ -104,6 +104,7 @@ Rectangle {
                     Layout.fillWidth: true
                     enabled: !mainItem.connecting
                     placeholderText: "301"
+                    placeholderTextColor: DefaultStyle.main2_600
                     Accessible.name: qsTr("Extension")
                     focus: true
                     onAccepted: passwordEdit.forceActiveFocus()
@@ -124,6 +125,7 @@ Rectangle {
                     enabled: !mainItem.connecting
                     initialText: SettingsCpp.assistantThirdPartySipAccountDomain
                     placeholderText: "pbx.example.com:5060"
+                    placeholderTextColor: DefaultStyle.main2_600
                     Accessible.name: qsTr("Server address")
                     onAccepted: mainItem.connectAccount()
                 }

@@ -29,7 +29,7 @@ CreationFormLayout {
 		destinationError = ""
 		var destination = normalizeInput(destinationField.text)
 		if (destination.length === 0) {
-			destinationError = qsTr("mytel_chat_invalid_destination")
+			destinationError = qsTr("Enter a valid extension, number or SIP address.")
 			return
 		}
 		console.log("[MyTel] Start chat with [" + destination + "]")
@@ -43,7 +43,7 @@ CreationFormLayout {
 
 			Text {
 				Layout.fillWidth: true
-				text: qsTr("mytel_chat_destination_label")
+				text: qsTr("Message an extension")
 				color: DefaultStyle.main2_700
 				font.pixelSize: 14
 				font.weight: Typography.p1.weight
@@ -56,7 +56,8 @@ CreationFormLayout {
 				Layout.preferredHeight: Utils.getSizeWithScreenRatio(48)
 				Layout.rightMargin: 0
 				focus: true
-				placeholderText: qsTr("mytel_chat_destination_hint")
+				placeholderTextColor: DefaultStyle.main2_600
+                placeholderText: qsTr("Extension or SIP address")
 				font.pixelSize: Utils.getSizeWithScreenRatio(18)
 				color: DefaultStyle.main2_900
 				background: Rectangle {
@@ -96,7 +97,7 @@ CreationFormLayout {
 							: DefaultStyle.main1_200
 					}
 					contentItem: Text {
-						text: qsTr("mytel_chat_start_action")
+						text: qsTr("Start chat")
 						color: DefaultStyle.grey_0
 						horizontalAlignment: Text.AlignHCenter
 						verticalAlignment: Text.AlignVCenter

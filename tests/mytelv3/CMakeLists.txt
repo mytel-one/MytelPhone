@@ -47,3 +47,8 @@ add_executable(mytel-friend-removal-test friend_removal_test.cpp)
 target_link_libraries(mytel-friend-removal-test PRIVATE Qt6::Core)
 target_include_directories(mytel-friend-removal-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 add_test(NAME mytel-friend-removal-test COMMAND mytel-friend-removal-test)
+
+add_executable(mytel-chat-layout-test chat_layout_test.cpp)
+target_link_libraries(mytel-chat-layout-test PRIVATE Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick)
+target_compile_definitions(mytel-chat-layout-test PRIVATE MYTEL_SOURCE_ROOT="${MYTEL_SOURCE_ROOT}")
+add_test(NAME mytel-chat-layout-test COMMAND mytel-chat-layout-test)

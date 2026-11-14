@@ -24,6 +24,7 @@ the user's request. Credentials and user configuration are excluded.
 | Drop an attachment with no sharing service | 1 of 3 cases failed | No attachment is submitted without an explicitly configured service |
 | Choose contact destinations | Exact production method compiled: only 4 of 7 cases passed | SIP usernames take precedence over matching phone numbers; unrelated numbers/order and original lists stay intact (7/7 pass) |
 | Remove contact numbers/addresses | Exact methods in isolated child processes: 3/10 passed; invalid indexes crashed or marked unchanged contacts dirty | Negative, at-size and empty-list removals do nothing; valid removals notify once, mark unsaved, and clear only a removed default address (10/10 pass) |
+| Open/reset an empty conversation | Four production binding/handler cases threw on missing chat/message objects | All four null-state cases pass |
 
 The Qt harness instantiates the production `DefaultStyle.qml`, `Themes.qml`,
 `AppIcons.qml` and `buttonStyle.js`. It switches light → dark → light → dark,
@@ -37,11 +38,16 @@ class seams. It reproduced the discarded `std::remove_if` return value causing
 duplicates and moved-from blank entries. `QList::removeIf` fixes that behavior.
 The removal harness likewise compiles the exact production bodies and runs each
 case in a child process, so an access violation is reported as a failed case.
+The chat layout harness instantiates the exact production composing-header and
+editor blocks with small view-dependency seams. The old editor block from
+`096571c` produces a `contentWidth` binding-loop warning; the corrected editor
+and composing header produce zero warnings in the harness. Whole application
+logs and visible behavior still require separate runtime acceptance.
 
 Additional production-function tests check that dialing uses the current input
 rather than the history debounce, rejects invalid values without closing the
 keypad, and clears both displayed/search values immediately. The final Node suite
-contains 126 passing cases. Changed QML files were checked with Qt 6.10
+contains 130 passing cases. Changed QML files were checked with Qt 6.10
 `qmlformat`: zero syntax failures.
 
 ## Limits

@@ -30,7 +30,7 @@ import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 	property real keyboardFocusedBorderWidth: Utils.getSizeWithScreenRatio(3)
 	// Text properties
 	property string placeholderText: ""
-	property color placeholderTextColor: DefaultStyle.main2_400
+	property color placeholderTextColor: DefaultStyle.main2_600
     property real textInputWidth: Utils.getSizeWithScreenRatio(350)
 	property string text: textField.searchText
 

@@ -38,7 +38,7 @@ AbstractMainPage {
         var destination = mytelNormalizeDial(raw === undefined ? dialSearchBar?.inputText : raw)
         if (!destination) {
             UtilsCpp.showInformationPopup(qsTr("information_popup_error_title"),
-                                          qsTr("mytel_chat_invalid_destination"), false)
+                                          qsTr("Enter a valid extension, number or SIP address."), false)
             return
         }
         numericPadPopupItem.close()
@@ -460,7 +460,7 @@ AbstractMainPage {
                     color: DefaultStyle.main2_900
                     horizontalAlignment: TextInput.AlignHCenter
                     verticalAlignment: TextInput.AlignVCenter
-                    placeholderText: qsTr("mytel_chat_destination_hint")
+                    placeholderText: qsTr("Extension or SIP address")
                     background: Rectangle {
                         radius: height / 2
                         color: DefaultStyle.grey_100

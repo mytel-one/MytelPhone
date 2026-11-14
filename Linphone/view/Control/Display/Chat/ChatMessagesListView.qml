@@ -94,7 +94,7 @@ ListView {
         function onUnreadMessagesCountChanged() {
             if (mainItem.atYEnd){
                 if (mainWindow.active) {
-                    mainItem.chat.core.lMarkAsRead()
+                    mainItem.chat?.core?.lMarkAsRead()
                 }
             }
         }
@@ -102,7 +102,7 @@ ListView {
     Connections {
         target: mainWindow
         function onActiveChanged() {
-            if (mainWindow.active && mainItem.atYEnd) mainItem.chat.core.lMarkAsRead()
+            if (mainWindow.active && mainItem.atYEnd) mainItem.chat?.core?.lMarkAsRead()
         }
     }
 
@@ -125,7 +125,7 @@ ListView {
             var itemToSelect = mainItem.itemAtIndex(index)
             mainItem.positionViewAtIndex(index, ListView.Beginning)
             var lastMessage = itemAtIndex(0)
-            mainItem.lastItemVisible = lastMessage.isFullyVisible
+            mainItem.lastItemVisible = lastMessage?.isFullyVisible || false
             eventLogProxy.markIndexAsRead(index)
         }
         onEventInsertedByUser: (index) => {
@@ -141,7 +141,7 @@ ListView {
                 if (mainItem.lastIndexFoundWithFilter !== index) {
                     //: Find message
                     UtilsCpp.showInformationPopup(qsTr("popup_info_find_message_title"),
-                    mainItem.searchForward 
+                    mainItem.searchForward
                         //: Last result reached
                         ? qsTr("info_popup_last_result_message")
                         //: First result reached
@@ -233,7 +233,7 @@ ListView {
     header: Control.Control {
         visible: composeLayout.composingName !== "" && composeLayout.composingName !== undefined
         width: mainItem.width
-        height: visible ? composeLayout.height + topPadding + bottomPadding : 0
+        height: visible ? composeLayout.implicitHeight + topPadding + bottomPadding : 0
         z: mainItem.z + 2
         topPadding: Utils.getSizeWithScreenRatio(5)
         bottomPadding: Utils.getSizeWithScreenRatio(5)
@@ -244,7 +244,6 @@ ListView {
         contentItem: RowLayout {
             id: composeLayout
             property var composingName: mainItem.chat?.core.composingName
-            height: childrenRect.height
             Avatar {
                 Layout.preferredWidth: Utils.getSizeWithScreenRatio(20)
                 Layout.preferredHeight: Utils.getSizeWithScreenRatio(20)
@@ -273,7 +272,7 @@ ListView {
         indicatorColor: DefaultStyle.main1_500_main
     }
 
-    
+
 	Dialog {
         id: messageDeletionDialog
         width: Utils.getSizeWithScreenRatio(637)
@@ -297,7 +296,7 @@ ListView {
 				}
 				MediumButton {
 					id: secondButtonId
-					visible: messageDeletionDialog.chatMessage.core.isOutgoing && messageDeletionDialog.chatMessage.core.isRetractable && !messageDeletionDialog.chatMessage.core.isRetracted
+                    visible: !!messageDeletionDialog.chatMessage?.core?.isOutgoing && messageDeletionDialog.chatMessage.core.isRetractable && !messageDeletionDialog.chatMessage.core.isRetracted
 					text: qsTr("conversation_dialog_delete_for_everyone_label")
 					style: ButtonStyle.main
 					onClicked: {
@@ -319,7 +318,7 @@ ListView {
 				}
 			}
     }
-    
+
     delegate: DelegateChooser {
         role: "eventType"
         DelegateChoice {
@@ -345,8 +344,8 @@ ListView {
                 maxWidth: Math.round(mainItem.width * (3/4))
                 width: mainItem.width
                 property var previousIndex: index - 1
-                property ChatMessageGui nextChatMessage: index <= 0 
-                    ? null 
+                property ChatMessageGui nextChatMessage: index <= 0
+                    ? null
                     : eventLogProxy.getEventAtIndex(index-1)
                         ? eventLogProxy.getEventAtIndex(index-1).core.chatMessageGui
                         : null
@@ -420,7 +419,7 @@ ListView {
                 }
             }
         }
-        
+
 		DelegateChoice {
             roleValue: "ephemeralEvent"
             delegate: Item {
