@@ -22,12 +22,18 @@ the user's request. Credentials and user configuration are excluded.
 | Type on an open dial pad | 5 of 8 keyboard cases failed | Top-row digits and `#` work; Ctrl shortcuts remain available |
 | Type a transfer destination | 1 of 3 cases failed: it placed a second call | Transfer requests target the active call; ordinary call mode is preserved |
 | Drop an attachment with no sharing service | 1 of 3 cases failed | No attachment is submitted without an explicitly configured service |
+| Choose contact destinations | Exact production method compiled: only 4 of 7 cases passed | SIP usernames take precedence over matching phone numbers; unrelated numbers/order and original lists stay intact (7/7 pass) |
 
 The Qt harness instantiates the production `DefaultStyle.qml`, `Themes.qml`,
 `AppIcons.qml` and `buttonStyle.js`. It switches light → dark → light → dark,
 checks real QML property notifications/bindings, and measures ordinary text on
 the application surface: 6.46:1 light and 10.90:1 dark. Accent labels remain white.
 It uses isolated test preferences.
+
+The contact harness compiles the exact `FriendCore::getAllAddresses()` and
+`Utils::getUsername()` bodies extracted at configure time, using small Qt-only
+class seams. It reproduced the discarded `std::remove_if` return value causing
+duplicates and moved-from blank entries. `QList::removeIf` fixes that behavior.
 
 Additional production-function tests check that dialing uses the current input
 rather than the history debounce, rejects invalid values without closing the

@@ -239,7 +239,7 @@ void FriendCore::setSelf(QSharedPointer<FriendCore> me) {
 			    });
 			mCoreModelConnection->makeConnectToCore(&FriendCore::saved, [this]() {
 				mCoreModelConnection->invokeToModel(
-				    [this, f = mFriendModel->getFriend()]() { emit CoreModel::getInstance()->friendUpdated(f); });
+				    [this, f = mFriendModel->getFriend()]() { emit CoreModel::getInstance() -> friendUpdated(f); });
 			});
 
 		} else { // Create
@@ -452,8 +452,8 @@ QList<QVariant> FriendCore::getAllAddresses() const {
 	auto phoneNumbers = mPhoneNumberList;
 	while (addressIt != mAddressList.end()) {
 		auto username = Utils::getUsername(addressIt->toMap()["address"].toString());
-		std::remove_if(phoneNumbers.begin(), phoneNumbers.end(),
-		               [username](const QVariant &data) { return data.toMap()["address"].toString() == username; });
+		phoneNumbers.removeIf(
+		    [username](const QVariant &data) { return data.toMap()["address"].toString() == username; });
 		++addressIt;
 	}
 	addresses << phoneNumbers;
@@ -667,7 +667,7 @@ void FriendCore::save() { // Save Values to model
 						thisCopy->writeIntoModel(mFriendModel);
 						thisCopy->deleteLater();
 						mVCardString = mFriendModel->getVCardAsString();
-						emit CoreModel::getInstance()->friendUpdated(contact);
+						emit CoreModel::getInstance() -> friendUpdated(contact);
 						mCoreModelConnection->invokeToCore([this] {
 							setIsSaved(true);
 							emit saved();
@@ -694,7 +694,7 @@ void FriendCore::save() { // Save Values to model
 							if (listWhereToAddFriend->getType() == linphone::FriendList::Type::CardDAV) {
 								listWhereToAddFriend->synchronizeFriendsFromServer();
 							}
-							emit CoreModel::getInstance()->friendCreated(contact);
+							emit CoreModel::getInstance() -> friendCreated(contact);
 						}
 						mCoreModelConnection->invokeToCore([this, created]() {
 							if (created) setSelf(mCoreModelConnection->mCore);
