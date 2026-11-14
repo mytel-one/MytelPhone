@@ -364,6 +364,14 @@ void Notifier::notifyReceivedCall(const shared_ptr<linphone::Call> &call) {
 		map["call"].setValue(gui);
 
 		CREATE_NOTIFICATION(AbstractNotificationBackend::ReceivedCall, map)
+#ifdef Q_OS_WIN
+		// Keep manual answer/reject controls reachable when Windows suppresses
+		// the optional toast. Account/global DND guards above still apply.
+		if (model->getState() == LinphoneEnums::CallState::IncomingReceived &&
+		    !App::getInstance()->getSessionLocked()) {
+			Utils::openCallsWindow(gui);
+		}
+#endif
 	});
 }
 

@@ -33,6 +33,7 @@ the user's request. Credentials and user configuration are excluded.
 | Restore the vertical navigation after Back | Actual Qt StackView push/pop collapsed all tab Y positions to zero | A vertical Container keeps tab placement stable over repeated push/pop cycles; model availability remains independent of ancestor visibility |
 | Traverse popup focus with hidden options | 9/10 cases failed, including unbounded recursive wrap | A bounded loop excludes hidden/disabled options and null-safe keyboard callers handle empty menus (10/10 pass) |
 | Keep the selected history peer after a new call | 6/10 production-handler reset scenarios failed, including numeric-index drift to another peer | A stable peer address restores selection after queued model reset; removed peers clear selection, filters remain unchanged, pagination stops on no progress, and no call is created (10/10 pass) |
+| Answer Windows calls independently of OS banner presentation | The Windows callback only submitted an OS toast | An allowed, unlocked, still-ringing call opens the existing manual call window; DND, disabled account notifications, ended calls and background preference remain respected (7/7 routing/lifecycle scenarios pass) |
 
 The Qt harness instantiates the production `DefaultStyle.qml`, `Themes.qml`,
 `AppIcons.qml` and `buttonStyle.js`. It switches light → dark → light → dark,
@@ -64,6 +65,10 @@ test seam. Production uses only the public direction-key event and bindable
 width API; private Qt headers are excluded from the application. Destination
 fields request Latin input without rejecting Persian digits. Chat composition
 retains its existing direction handling.
+The incoming-call harness executes the exact production GUI callback/DND macro
+and window open/show/close helper bodies against real Qt windows. SDK account
+notification gating is checked at the unchanged source boundary. Live SIP
+answer/reject and call-state propagation still require device acceptance.
 
 Additional production-function tests check that dialing uses the current input
 rather than the history debounce, rejects invalid values without closing the
