@@ -11,4 +11,6 @@ if errorlevel 1 exit /b 1
 "%TESTBUILD%\mytel-theme-test.exe"
 if errorlevel 1 exit /b 1
 "%TESTBUILD%\mytel-login-attempt-test.exe"
+if errorlevel 1 exit /b 1
+"%TESTBUILD%\mytel-friend-addresses-test.exe"
 exit /b %ERRORLEVEL%
