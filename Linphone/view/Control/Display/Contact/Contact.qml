@@ -178,7 +178,12 @@ Control.Control{
             icon.height: Utils.getSizeWithScreenRatio(24)
 			visible: !SettingsCpp.hideAccountSettings
 			//: Account settings of %1
-			Accessible.name: qsTr("account_settings_name_accessible_name")
+            Accessible.name: {
+                var core = mainItem.account?.core
+                var name = String(core?.displayName || "").trim()
+                if (!name) name = UtilsCpp.getUsername(core?.identityAddress || "")
+                return name ? qsTr("account_settings_name_accessible_name").arg(name) : qsTr("Account settings")
+            }
 			onClicked: {
 				mainItem.edit()
 			}

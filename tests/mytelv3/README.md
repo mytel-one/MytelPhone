@@ -65,7 +65,7 @@ retains its existing direction handling.
 Additional production-function tests check that dialing uses the current input
 rather than the history debounce, rejects invalid values without closing the
 keypad, and clears both displayed/search values immediately. The final Node suite
-contains 189 passing cases. Changed QML files were checked with Qt 6.10
+contains 195 passing cases. Changed QML files were checked with Qt 6.10
 `qmlformat`: zero syntax failures.
 
 ## Limits
