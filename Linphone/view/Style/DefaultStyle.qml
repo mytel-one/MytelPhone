@@ -16,6 +16,15 @@ QtObject {
     readonly property color surface: dark ? "#142030" : "#FFFFFF"
     readonly property color background: dark ? "#0D1623" : "#F5F8FC"
 
+    // Media surfaces stay dark so white call labels and controls remain
+    // readable over avatars/video in either application appearance.
+    readonly property color callBackground: "#0D1623"
+    readonly property color callSurface: "#22334D"
+    readonly property color callControlSurface: "#334861"
+    readonly property color callControlHovered: "#496480"
+    readonly property color callControlDisabled: "#26364A"
+    readonly property color callForeground: "#F5F8FD"
+
 
 	property var currentTheme: Themes.themes.hasOwnProperty(SettingsCpp.themeMainColor)
 							  ? Themes.themes[SettingsCpp.themeMainColor]

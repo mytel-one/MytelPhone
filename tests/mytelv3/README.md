@@ -25,12 +25,17 @@ the user's request. Credentials and user configuration are excluded.
 | Choose contact destinations | Exact production method compiled: only 4 of 7 cases passed | SIP usernames take precedence over matching phone numbers; unrelated numbers/order and original lists stay intact (7/7 pass) |
 | Remove contact numbers/addresses | Exact methods in isolated child processes: 3/10 passed; invalid indexes crashed or marked unchanged contacts dirty | Negative, at-size and empty-list removals do nothing; valid removals notify once, mark unsaved, and clear only a removed default address (10/10 pass) |
 | Open/reset an empty conversation | Four production binding/handler cases threw on missing chat/message objects | All four null-state cases pass |
+| Read call labels and controls after switching theme | 8 of 12 production color-binding cases failed in the old palette | Dedicated media surfaces keep white call labels and icons readable in both modes (12/12 pass) |
 
 The Qt harness instantiates the production `DefaultStyle.qml`, `Themes.qml`,
 `AppIcons.qml` and `buttonStyle.js`. It switches light → dark → light → dark,
 checks real QML property notifications/bindings, and measures ordinary text on
 the application surface: 6.46:1 light and 10.90:1 dark. Accent labels remain white.
 It uses isolated test preferences.
+The harness also instantiates a Qt Quick button with the production call style:
+text contrast stays 9.37:1 on controls, 6.14:1 on hover, 18.16:1 on the stage,
+and 12.74:1 on participant tiles across all four theme switches. Actual video
+rendering and call-window appearance remain part of device acceptance.
 
 The contact harness compiles the exact `FriendCore::getAllAddresses()` and
 `Utils::getUsername()` bodies extracted at configure time, using small Qt-only
@@ -47,7 +52,7 @@ logs and visible behavior still require separate runtime acceptance.
 Additional production-function tests check that dialing uses the current input
 rather than the history debounce, rejects invalid values without closing the
 keypad, and clears both displayed/search values immediately. The final Node suite
-contains 130 passing cases. Changed QML files were checked with Qt 6.10
+contains 142 passing cases. Changed QML files were checked with Qt 6.10
 `qmlformat`: zero syntax failures.
 
 ## Limits

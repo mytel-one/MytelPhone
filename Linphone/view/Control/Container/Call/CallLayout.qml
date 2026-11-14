@@ -160,7 +160,7 @@ Item {
 	Component {
 		id: waitingForOthersComponent
 		Rectangle {
-			color: DefaultStyle.grey_600
+			color: DefaultStyle.callSurface
             radius: Utils.getSizeWithScreenRatio(15)
 			ColumnLayout {
 				anchors.centerIn: parent

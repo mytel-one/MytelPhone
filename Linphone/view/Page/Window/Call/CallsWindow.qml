@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import QtQuick.Controls.Basic as Control
 import Linphone
+import Linphone as AppUi
 import EnumsToStringCpp
 import UtilsCpp
 import SettingsCpp
@@ -15,6 +16,10 @@ AbstractWindow {
     flags: Qt.Window
     minimumWidth: Utils.getSizeWithScreenRatio(1020)
     minimumHeight: Utils.getSizeWithScreenRatio(700)
+
+    component CallControlButton: AppUi.CheckableButton {
+        style: ButtonStyle.callControl
+    }
 
     // modality: Qt.WindowModal
     property CallGui call
@@ -257,7 +262,7 @@ AbstractWindow {
         checkable: true
         background: Rectangle {
             anchors.fill: parent
-            color: bottomButton.enabled ? disabledIcon ? DefaultStyle.grey_500 : bottomButton.pressed || bottomButton.checked ? DefaultStyle.main2_400 : DefaultStyle.grey_500 : DefaultStyle.grey_600
+            color: bottomButton.enabled ? disabledIcon ? DefaultStyle.callControlSurface : bottomButton.pressed || bottomButton.checked ? DefaultStyle.callControlHovered : DefaultStyle.callControlSurface : DefaultStyle.callControlDisabled
             radius: Utils.getSizeWithScreenRatio(71)
         }
         icon.source: disabledIcon
@@ -332,7 +337,7 @@ AbstractWindow {
     /************************* CONTENT ********************************/
     Rectangle {
         anchors.fill: parent
-        color: DefaultStyle.grey_900
+        color: DefaultStyle.callBackground
 
         ColumnLayout {
             anchors.fill: parent
@@ -627,7 +632,7 @@ AbstractWindow {
                     bottomPadding: Utils.getSizeWithScreenRatio(6)
                     background: Rectangle {
                         anchors.fill: parent
-                        color: DefaultStyle.grey_500
+                        color: DefaultStyle.callControlSurface
                         radius: Utils.getSizeWithScreenRatio(10)
                     }
                     contentItem: RowLayout {
@@ -1500,7 +1505,7 @@ AbstractWindow {
                     spacing: Utils.getSizeWithScreenRatio(10)
 
                     // Pause call button
-                    CheckableButton {
+                    CallControlButton {
                         id: pauseButton
                         Layout.preferredWidth: Utils.getSizeWithScreenRatio(55)
                         Layout.preferredHeight: Utils.getSizeWithScreenRatio(55)
@@ -1521,9 +1526,9 @@ AbstractWindow {
                                  || (!mainWindow.conference
                                      && mainWindow.callState
                                      == LinphoneEnums.CallState.PausedByRemote)
-                        color: enabled ? DefaultStyle.grey_500 : DefaultStyle.grey_600
-                        pressedColor: enabled ? DefaultStyle.success_500_main : DefaultStyle.grey_600
-                        hoveredColor: enabled ? DefaultStyle.main2_400 : DefaultStyle.grey_600
+                        color: enabled ? DefaultStyle.callControlSurface : DefaultStyle.callControlDisabled
+                        pressedColor: enabled ? DefaultStyle.success_500_main : DefaultStyle.callControlDisabled
+                        hoveredColor: enabled ? DefaultStyle.callControlHovered : DefaultStyle.callControlDisabled
                         onClicked: {
                             mainWindow.call.core.lSetPaused(!mainWindow.call.core.paused)
                         }
@@ -1531,7 +1536,7 @@ AbstractWindow {
                     }
 
                     // Transfert call button
-                    CheckableButton {
+                    CallControlButton {
                         id: transferCallButton
                         visible: !mainWindow.conference
                         icon.source: AppIcons.transferCall
@@ -1555,7 +1560,7 @@ AbstractWindow {
                     }
 
                     // New call button
-                    CheckableButton {
+                    CallControlButton {
                         id: newCallButton
                         checkable: true
                         icon.source: AppIcons.newCall
@@ -1578,7 +1583,7 @@ AbstractWindow {
                     }
 
                     // Call list button
-                    CheckableButton {
+                    CallControlButton {
                         id: callListButton
                         Layout.preferredWidth: Utils.getSizeWithScreenRatio(55)
                         Layout.preferredHeight: Utils.getSizeWithScreenRatio(55)
@@ -1611,7 +1616,7 @@ AbstractWindow {
                     spacing: Utils.getSizeWithScreenRatio(10)
 
                     // Video camera button
-                    CheckableButton {
+                    CallControlButton {
                         id: videoCameraButton
                         visible: SettingsCpp.videoEnabled
                         enabled: mainWindow.conferenceInfo
@@ -1633,7 +1638,7 @@ AbstractWindow {
                     }
 
                     // Audio microphone button
-                    CheckableButton {
+                    CallControlButton {
                         id: audioMicrophoneButton
                         iconUrl: AppIcons.microphone
                         checkedIconUrl: AppIcons.microphoneSlash
@@ -1654,7 +1659,7 @@ AbstractWindow {
                     }
 
                     // Screen cast button
-                    CheckableButton {
+                    CallControlButton {
                         id: screencastPanelButton
                         iconUrl: AppIcons.screencast
                         visible: !!mainWindow.conference
@@ -1677,7 +1682,7 @@ AbstractWindow {
                     }
 
                     // Chat panel button
-                    CheckableButton {
+                    CallControlButton {
                         id: chatPanelButton
                         visible: !SettingsCpp.disableChatFeature && (!mainWindow.conference || mainWindow.conference.core.isChatEnabled)
                         iconUrl: AppIcons.chatTeardropText
@@ -1707,7 +1712,7 @@ AbstractWindow {
                     }
 
                     // Raise hand button
-                    CheckableButton {
+                    CallControlButton {
                         id: raiseHandButton
                         visible: false
                         checkable: false
@@ -1722,7 +1727,7 @@ AbstractWindow {
                     }
 
                     // Reaction button
-                    CheckableButton {
+                    CallControlButton {
                         id: reactionButton
                         visible: false
                         iconUrl: AppIcons.smiley
@@ -1736,7 +1741,7 @@ AbstractWindow {
                     }
 
                     // Participant list button
-                    CheckableButton {
+                    CallControlButton {
                         id: participantListButton
                         //: "Gérer les participants"
                         ToolTip.text: qsTr("call_manage_participants_hint")
@@ -1769,7 +1774,7 @@ AbstractWindow {
                         popup.bottomPadding: Utils.getSizeWithScreenRatio(20)
                         popup.leftPadding: Utils.getSizeWithScreenRatio(10)
                         popup.rightPadding: Utils.getSizeWithScreenRatio(10)
-                        style: ButtonStyle.checkable
+                        style: ButtonStyle.callControl
                         icon.width: Utils.getSizeWithScreenRatio(32)
                         icon.height: Utils.getSizeWithScreenRatio(32)
                         KeyNavigation.tab: connectedCallButtons.visible ? pauseButton : nextItemInFocusChain()

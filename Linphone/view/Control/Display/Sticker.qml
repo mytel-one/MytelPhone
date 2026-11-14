@@ -26,7 +26,7 @@ Item {
 	property bool displayBorder : participantDevice && participantDevice.core.isSpeaking
 	property alias displayPresence: avatar.displayPresence
 	property alias secured: avatar.secured
-	property color color: DefaultStyle.grey_600
+	property color color: DefaultStyle.callSurface
     property real radius: Utils.getSizeWithScreenRatio(15)
 	property var securityLevel: avatar.securityLevel
 	property bool remoteIsPaused: participantDevice
@@ -95,7 +95,7 @@ Item {
 						|| mainItem.callState === LinphoneEnums.CallState.OutgoingEarlyMedia
 						|| mainItem.callState === LinphoneEnums.CallState.IncomingReceived)
 				BusyIndicator {
-					indicatorColor: DefaultStyle.main2_100
+					indicatorColor: DefaultStyle.callForeground
 					Layout.alignment: Qt.AlignHCenter
                     indicatorHeight: Utils.getSizeWithScreenRatio(42)
                     indicatorWidth: Utils.getSizeWithScreenRatio(42)
@@ -125,7 +125,7 @@ Item {
 					visible: mainItem.participantDevice && (mainItem.participantDevice.core.state == LinphoneEnums.ParticipantDeviceState.Joining || mainItem.participantDevice.core.state == LinphoneEnums.ParticipantDeviceState.Alerting) || false
 					BusyIndicator {
                         Layout.preferredHeight: Utils.getSizeWithScreenRatio(42)
-						indicatorColor: DefaultStyle.main2_100
+						indicatorColor: DefaultStyle.callForeground
 						Layout.alignment: Qt.AlignHCenter
                         indicatorHeight: Utils.getSizeWithScreenRatio(42)
                         indicatorWidth: Utils.getSizeWithScreenRatio(42)

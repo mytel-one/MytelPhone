@@ -61,14 +61,23 @@ int main(int argc, char **argv) {
 	QQmlComponent component(&engine);
 	component.setData(R"(
         import QtQuick
+        import QtQuick.Controls.Basic as Control
         import Linphone
         import "qrc:/qt/qml/Linphone/view/Style/buttonStyle.js" as ButtonStyle
-        QtObject {
+        Control.Button {
             property color direct: DefaultStyle.surface
             property string debug: String(ButtonStyle.numericPad.color.normal) + "/" + String(ButtonStyle.numericPad.text.normal)
             property color buttonSurface: ButtonStyle.numericPad.color.normal
             property color buttonText: ButtonStyle.numericPad.text.normal
             property color accentText: ButtonStyle.main.text.normal
+            property var mediaStyle: ButtonStyle.callControl
+            property color mediaSurface: mediaStyle.color.normal
+            property color mediaHovered: mediaStyle.color.hovered
+            property color mediaText: mediaStyle.text.normal
+            property color callBackground: DefaultStyle.callBackground
+            property color participantSurface: DefaultStyle.callSurface
+            background: Rectangle { color: parent.mediaSurface }
+            contentItem: Text { text: "Microphone"; color: parent.mediaText }
         }
     )",
 	                  QUrl());
@@ -96,7 +105,16 @@ int main(int argc, char **argv) {
 		                      binding->property("buttonText").value<QColor>() == text;
 		const double ratio = contrast(text, surface);
 		const bool whiteAccent = binding->property("accentText").value<QColor>() == QColor("#FFFFFF");
-		const bool passed = reactive && whiteAccent && ratio >= 4.5;
+		const QColor mediaText = binding->property("mediaText").value<QColor>();
+		const double mediaRatio = contrast(mediaText, binding->property("mediaSurface").value<QColor>());
+		const double hoveredRatio = contrast(mediaText, binding->property("mediaHovered").value<QColor>());
+		const double callRatio = contrast(mediaText, binding->property("callBackground").value<QColor>());
+		const double participantRatio = contrast(mediaText, binding->property("participantSurface").value<QColor>());
+		const bool readableMedia =
+		    mediaRatio >= 4.5 && hoveredRatio >= 4.5 && callRatio >= 4.5 && participantRatio >= 4.5;
+		const bool passed = reactive && whiteAccent && ratio >= 4.5 && readableMedia;
+		std::printf("media contrast: controls=%.2f hovered=%.2f stage=%.2f participant=%.2f\n", mediaRatio,
+		            hoveredRatio, callRatio, participantRatio);
 		std::printf("%s theme: surface=%s text=%s contrast=%.2f liveBindings=%d -> %s\n", mode,
 		            qPrintable(surface.name()), qPrintable(text.name()), ratio, reactive, passed ? "PASS" : "FAIL");
 		if (!passed) failures++;

@@ -401,3 +401,17 @@
 			get pressed() { return Linphone.DefaultStyle.main2_100 }
 		}
 	}
+
+// Controls on the media stage use stable dark surfaces in both themes.
+var callControl = {
+    color: {
+        get normal() { return Linphone.DefaultStyle.callControlSurface },
+        get hovered() { return Linphone.DefaultStyle.callControlHovered },
+        get pressed() { return Linphone.DefaultStyle.callControlHovered }
+    },
+    text: checkable.text,
+    image: checkable.image,
+    borderColor: {
+        get keybaordFocused() { return Linphone.DefaultStyle.callForeground }
+    }
+}
