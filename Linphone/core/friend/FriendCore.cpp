@@ -358,7 +358,8 @@ void FriendCore::setPhoneNumberAt(int index, const QString &label, const QString
 }
 
 void FriendCore::removePhoneNumber(int index) {
-	if (index != -1) mPhoneNumberList.remove(index);
+	if (index < 0 || index >= mPhoneNumberList.size()) return;
+	mPhoneNumberList.remove(index);
 	emit phoneNumberChanged();
 	setIsSaved(false);
 }
@@ -409,7 +410,7 @@ void FriendCore::setAddressAt(int index, QString label, QString address) {
 }
 
 void FriendCore::removeAddress(int index) {
-	if (index < 0 && index >= mAddressList.size()) return;
+	if (index < 0 || index >= mAddressList.size()) return;
 	auto map = mAddressList[index].toMap();
 	if (map["address"].toString() == mDefaultFullAddress) mDefaultFullAddress.clear();
 	if (map["address"].toString() == mDefaultAddress) mDefaultAddress.clear();

@@ -23,6 +23,7 @@ the user's request. Credentials and user configuration are excluded.
 | Type a transfer destination | 1 of 3 cases failed: it placed a second call | Transfer requests target the active call; ordinary call mode is preserved |
 | Drop an attachment with no sharing service | 1 of 3 cases failed | No attachment is submitted without an explicitly configured service |
 | Choose contact destinations | Exact production method compiled: only 4 of 7 cases passed | SIP usernames take precedence over matching phone numbers; unrelated numbers/order and original lists stay intact (7/7 pass) |
+| Remove contact numbers/addresses | Exact methods in isolated child processes: 3/10 passed; invalid indexes crashed or marked unchanged contacts dirty | Negative, at-size and empty-list removals do nothing; valid removals notify once, mark unsaved, and clear only a removed default address (10/10 pass) |
 
 The Qt harness instantiates the production `DefaultStyle.qml`, `Themes.qml`,
 `AppIcons.qml` and `buttonStyle.js`. It switches light → dark → light → dark,
@@ -34,6 +35,8 @@ The contact harness compiles the exact `FriendCore::getAllAddresses()` and
 `Utils::getUsername()` bodies extracted at configure time, using small Qt-only
 class seams. It reproduced the discarded `std::remove_if` return value causing
 duplicates and moved-from blank entries. `QList::removeIf` fixes that behavior.
+The removal harness likewise compiles the exact production bodies and runs each
+case in a child process, so an access violation is reported as a failed case.
 
 Additional production-function tests check that dialing uses the current input
 rather than the history debounce, rejects invalid values without closing the
