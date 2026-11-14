@@ -29,6 +29,19 @@ qt_add_resources(mytel-combo-palette-test "mytel-combo-helpers"
     BASE "${MYTEL_SOURCE_ROOT}/Linphone/view/Control/Tool/Helper"
     FILES "${MYTEL_SOURCE_ROOT}/Linphone/view/Control/Tool/Helper/utils.js")
 add_test(NAME mytel-combo-palette-test COMMAND mytel-combo-palette-test)
+find_package(Qt6 REQUIRED COMPONENTS Test)
+add_executable(mytel-secondary-contrast-test secondary_contrast_test.cpp)
+target_link_libraries(mytel-secondary-contrast-test PRIVATE Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::Test)
+target_compile_definitions(mytel-secondary-contrast-test PRIVATE MYTEL_SOURCE_ROOT="${MYTEL_SOURCE_ROOT}")
+qt_add_resources(mytel-secondary-contrast-test "mytel-secondary-helpers"
+    PREFIX "/qt/qml/Linphone/view/Control/Tool/Helper"
+    BASE "${MYTEL_SOURCE_ROOT}/Linphone/view/Control/Tool/Helper"
+    FILES "${MYTEL_SOURCE_ROOT}/Linphone/view/Control/Tool/Helper/utils.js")
+qt_add_resources(mytel-secondary-contrast-test "mytel-secondary-style"
+    PREFIX "/qt/qml/Linphone/view/Style"
+    BASE "${MYTEL_SOURCE_ROOT}/Linphone/view/Style"
+    FILES "${MYTEL_SOURCE_ROOT}/Linphone/view/Style/buttonStyle.js")
+add_test(NAME mytel-secondary-contrast-test COMMAND mytel-secondary-contrast-test)
 find_package(Qt6 REQUIRED COMPONENTS Svg)
 add_executable(mytel-login-attempt-test login_attempt_test.cpp)
 target_include_directories(mytel-login-attempt-test PRIVATE "${MYTEL_SOURCE_ROOT}/Linphone")

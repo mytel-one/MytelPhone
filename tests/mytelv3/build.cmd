@@ -14,6 +14,8 @@ if errorlevel 1 exit /b 1
 if errorlevel 1 exit /b 1
 "%TESTBUILD%\mytel-combo-palette-test.exe"
 if errorlevel 1 exit /b 1
+"%TESTBUILD%\mytel-secondary-contrast-test.exe"
+if errorlevel 1 exit /b 1
 "%TESTBUILD%\mytel-icon-cache-test.exe"
 if errorlevel 1 exit /b 1
 "%TESTBUILD%\mytel-notification-brand-test.exe"

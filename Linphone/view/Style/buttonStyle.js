@@ -37,11 +37,13 @@
 			get keybaordFocused() { return Linphone.DefaultStyle.main2_900 }
 		},
 		text: {
-			get normal() { return Linphone.DefaultStyle.main1_500_main },
+			get normal() { return Linphone.DefaultStyle.dark ? Linphone.DefaultStyle.main2_700 : Linphone.DefaultStyle.main1_500_main },
+			get hovered() { return Linphone.DefaultStyle.dark ? Linphone.DefaultStyle.main2_700 : Linphone.DefaultStyle.main1_600 },
 			get pressed() { return Linphone.DefaultStyle.grey_0 }
 		},
 		image: {
-			get normal() { return Linphone.DefaultStyle.main1_500_main },
+			get normal() { return Linphone.DefaultStyle.dark ? Linphone.DefaultStyle.main2_700 : Linphone.DefaultStyle.main1_500_main },
+			get hovered() { return Linphone.DefaultStyle.dark ? Linphone.DefaultStyle.main2_700 : Linphone.DefaultStyle.main1_600 },
 			get pressed() { return Linphone.DefaultStyle.grey_0 }
 		}
 	}
