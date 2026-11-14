@@ -21,4 +21,6 @@ if errorlevel 1 exit /b 1
 "%TESTBUILD%\mytel-dial-input-test.exe"
 if errorlevel 1 exit /b 1
 "%TESTBUILD%\mytel-tab-layout-test.exe"
+if errorlevel 1 exit /b 1
+"%TESTBUILD%\mytel-incoming-call-test.exe"
 exit /b %ERRORLEVEL%
