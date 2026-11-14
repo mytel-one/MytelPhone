@@ -32,7 +32,7 @@
     <entry name="protocols" overwrite="true">stun,ice</entry>
   </section>
   <section name="misc">
-    <entry name="file_transfer_server_url" overwrite="true">https://files.linphone.org:443/http-file-transfer-server/hft.php</entry>
+    <entry name="file_transfer_server_url" overwrite="false"></entry>
   </section>
   <section name="sip">
     <entry name="rls_uri" overwrite="true"></entry>

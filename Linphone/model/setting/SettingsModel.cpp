@@ -19,6 +19,7 @@
  */
 
 #include "SettingsModel.hpp"
+#include <QUrl>
 #include <linphone/linphonecore.h> // for LINPHONE_VOLUME_DB_LOWEST
 
 #include "core/App.hpp"
@@ -1100,6 +1101,7 @@ void SettingsModel::notifyConfigReady(){
 	DEFINE_NOTIFY_CONFIG_READY(assistantHideThirdPartyAccount, AssistantHideThirdPartyAccount)
 	DEFINE_NOTIFY_CONFIG_READY(hideSipAddresses, HideSipAddresses)
 	DEFINE_NOTIFY_CONFIG_READY(darkModeAllowed, DarkModeAllowed)
+	DEFINE_NOTIFY_CONFIG_READY(fileTransferServer, FileTransferServer)
     DEFINE_NOTIFY_CONFIG_READY(assistantGoDirectlyToThirdPartySipAccountLogin,
                                AssistantGoDirectlyToThirdPartySipAccountLogin)
 	DEFINE_NOTIFY_CONFIG_READY(assistantThirdPartySipAccountDomain, AssistantThirdPartySipAccountDomain)
@@ -1265,3 +1267,19 @@ DEFINE_GETSET_CONFIG_STRING(SettingsModel,
 							"theme_about_picture_url",
 							"")
 // clang-format on
+
+QString SettingsModel::getFileTransferServer() const {
+	return Utils::coreStringToAppString(CoreModel::getInstance()->getCore()->getFileTransferServer());
+}
+
+void SettingsModel::setFileTransferServer(const QString &value) {
+	const QString normalized = value.trimmed();
+	const QUrl url(normalized);
+	if (!normalized.isEmpty() &&
+	    (!url.isValid() || url.scheme().compare("https", Qt::CaseInsensitive) != 0 || url.host().isEmpty())) {
+		emit fileTransferServerChanged(getFileTransferServer());
+		return;
+	}
+	CoreModel::getInstance()->getCore()->setFileTransferServer(Utils::appStringToCoreString(normalized));
+	emit fileTransferServerChanged(normalized);
+}

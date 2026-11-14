@@ -57,6 +57,12 @@ AbstractSettingsLayout {
             id: column
             Layout.fillWidth: true
             spacing: Utils.getSizeWithScreenRatio(20)
+			SmallButton {
+				text: qsTr("Stop reconnecting")
+				visible: account && (account.core.registrationState === LinphoneEnums.RegistrationState.Progress
+				         || account.core.registrationState === LinphoneEnums.RegistrationState.Refreshing)
+				onClicked: account.core.lSetRegisterEnabled(false)
+			}
             DecoratedTextField {
                 id: mwiServerAddressField
                 propertyName: "mwiServerAddress"

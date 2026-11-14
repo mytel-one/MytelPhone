@@ -222,6 +222,7 @@ public:
 	int getEphemeralNotReadLifetime();
 
 	// UI
+	DECLARE_GETSET(QString, fileTransferServer, FileTransferServer)
 	DECLARE_GETSET(bool, disableChatFeature, DisableChatFeature)
 	DECLARE_GETSET(bool, hideNotificationCounter, HideNotificationCounter)
 	DECLARE_GETSET(bool, disableBroadcastFeature, DisableBroadcastFeature)

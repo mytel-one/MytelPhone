@@ -43,6 +43,22 @@ AbstractSettingsLayout {
 		id: attachedFilesParamComp
 		ColumnLayout {
             spacing: Utils.getSizeWithScreenRatio(20)
+			DecoratedTextField {
+				Layout.fillWidth: true
+				title: qsTr("File-sharing service (optional)")
+				propertyName: "fileTransferServer"
+				propertyOwner: SettingsCpp
+				placeHolder: "https://files.example.com/upload"
+				useTitleAsPlaceHolder: false
+				toValidate: true
+				isValid: function(value) { return value.length === 0 || /^https:\/\/[^\s/]+(?:\/[^\s]*)?$/i.test(value) }
+			}
+			Text {
+				Layout.fillWidth: true
+				text: qsTr("Attachments and voice messages use this service. Leave it empty to disable uploads. Text chat and calls work without it.")
+				font.pixelSize: 13
+				wrapMode: Text.WordWrap
+			}
 			SwitchSetting {
 				//: "Automatic download"
 				titleText: qsTr("settings_chat_attached_files_auto_download_title")

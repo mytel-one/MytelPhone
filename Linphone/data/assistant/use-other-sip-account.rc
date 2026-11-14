@@ -28,6 +28,9 @@
     <entry name="stun_server" overwrite="true"></entry>
     <entry name="protocols" overwrite="true"></entry>
   </section>
+  <section name="misc">
+    <entry name="file_transfer_server_url" overwrite="false"></entry>
+  </section>
   <section name="sip">
     <entry name="use_rls_presence" overwrite="true"></entry>
     <entry name="rls_uri" overwrite="true"></entry>

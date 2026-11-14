@@ -19,6 +19,9 @@ the user's request. Credentials and user configuration are excluded.
 | Switch theme without restarting | JS style test failed after palette change | Style accessors update live QML bindings |
 | Read the connection state | Both contrast tests failed | Online/offline text has at least 4.5:1 white-text contrast |
 | Cancel while registration completes | Required production attempt gate was missing (C1083 compile RED) | Shared atomic gate admits acceptance or cancellation; 502 ordering/race scenarios pass |
+| Type on an open dial pad | 5 of 8 keyboard cases failed | Top-row digits and `#` work; Ctrl shortcuts remain available |
+| Type a transfer destination | 1 of 3 cases failed: it placed a second call | Transfer requests target the active call; ordinary call mode is preserved |
+| Drop an attachment with no sharing service | 1 of 3 cases failed | No attachment is submitted without an explicitly configured service |
 
 The Qt harness instantiates the production `DefaultStyle.qml`, `Themes.qml`,
 `AppIcons.qml` and `buttonStyle.js`. It switches light → dark → light → dark,
@@ -28,8 +31,9 @@ It uses isolated test preferences.
 
 Additional production-function tests check that dialing uses the current input
 rather than the history debounce, rejects invalid values without closing the
-keypad, and clears both displayed/search values immediately. QML syntax for all
-22 changed/new QML files was checked with Qt 6.10 `qmlformat`: zero failures.
+keypad, and clears both displayed/search values immediately. The final Node suite
+contains 126 passing cases. Changed QML files were checked with Qt 6.10
+`qmlformat`: zero syntax failures.
 
 ## Limits
 

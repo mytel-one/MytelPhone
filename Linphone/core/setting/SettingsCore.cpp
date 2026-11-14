@@ -52,6 +52,7 @@ SettingsCore::SettingsCore(QObject *parent) : QObject(parent) {
 	mNoiseSuppressionEnabled = settingsModel->getNoiseSuppressionEnabled();
 	mAutoDownloadReceivedFiles = settingsModel->getAutoDownloadReceivedFiles();
 	mDisplayNotificationContent = settingsModel->getDisplayNotificationContent();
+	mFileTransferServer = settingsModel->getFileTransferServer();
 	mAutomaticallyRecordCallsEnabled = settingsModel->getAutomaticallyRecordCallsEnabled();
 	mAutoAnswerEnabled = settingsModel->getAutoAnswerEnabled();
 	mAutoAnswerActive = mAutoAnswerEnabled;
@@ -658,6 +659,8 @@ void SettingsCore::setSelf(QSharedPointer<SettingsCore> me) {
 	                           hideSipAddresses, HideSipAddresses)
 	DEFINE_CORE_GETSET_CONNECT(mSettingsModelConnection, SettingsCore, SettingsModel, settingsModel, bool,
 	                           darkModeAllowed, DarkModeAllowed)
+	DEFINE_CORE_GETSET_CONNECT(mSettingsModelConnection, SettingsCore, SettingsModel, settingsModel, QString,
+	                           fileTransferServer, FileTransferServer)
 	DEFINE_CORE_GETSET_CONNECT(mSettingsModelConnection, SettingsCore, SettingsModel, settingsModel, int, maxAccount,
 	                           MaxAccount)
 	DEFINE_CORE_GETSET_CONNECT(mSettingsModelConnection, SettingsCore, SettingsModel, settingsModel, bool,

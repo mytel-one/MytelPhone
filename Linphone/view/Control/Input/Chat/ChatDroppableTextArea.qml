@@ -4,6 +4,7 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import Linphone
 import UtilsCpp
+import SettingsCpp
 
 import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 import 'qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js' as Utils
@@ -17,7 +18,8 @@ Control.Control {
 	property int selectedFilesCount: 0
 	// property alias cursorPosition: sendingTextArea.cursorPosition
 	
-	property bool dropEnabled: true
+	readonly property bool fileTransferAvailable: SettingsCpp.fileTransferServer.length > 0
+	property bool dropEnabled: fileTransferAvailable
 	property bool isEphemeral : false
 	property bool emojiVisible: false
 
@@ -43,6 +45,7 @@ Control.Control {
 	// ---------------------------------------------------------------------------
 	
 	function _emitFiles (files) {
+		if (!mainItem.fileTransferAvailable) return
 		// Filtering files, other urls are forbidden.
 		files = files.reduce(function (files, file) {
 			if (file.toString().startsWith("file:")) {
@@ -109,6 +112,8 @@ Control.Control {
 				BigButton {
 					style: ButtonStyle.noBackground
 					icon.source: AppIcons.paperclip
+					enabled: mainItem.fileTransferAvailable
+					ToolTip.text: qsTr("Configure a file-sharing service in Settings > Chats to send attachments.")
 					onClicked: {
 						fileDialog.open()
 					}
@@ -126,7 +131,7 @@ Control.Control {
 						id: inputBackground
 						anchors.fill: parent
 						radius: Utils.getSizeWithScreenRatio(35)
-						color: DefaultStyle.grey_0
+						color: DefaultStyle.surface
 						MouseArea {
 							anchors.fill: parent
 							onPressed: sendingTextArea.forceActiveFocus()
@@ -219,8 +224,9 @@ Control.Control {
 								ToolTip.visible: !enabled && hovered
 								Layout.preferredWidth: width
 								//: Cannot record a message while a call is ongoing
-								ToolTip.text: qsTr("cannot_record_while_in_call_tooltip")
-								enabled: !mainItem.callOngoing
+								ToolTip.text: mainItem.fileTransferAvailable ? qsTr("cannot_record_while_in_call_tooltip")
+								              : qsTr("Configure a file-sharing service in Settings > Chats to send voice messages.")
+								enabled: !mainItem.callOngoing && mainItem.fileTransferAvailable
 								visible: !mainItem.callOngoing && sendingTextArea.text.length === 0 && mainItem.selectedFilesCount === 0 && !mainItem.isEditing
 								style: ButtonStyle.noBackground
 								hoverEnabled: true
