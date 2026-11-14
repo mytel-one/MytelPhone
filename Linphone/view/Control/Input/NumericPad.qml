@@ -85,6 +85,10 @@ FocusScope {
 			keypadKeyPressedAtIndex(9)
 			event.accepted = true
 		}
+		if (event.key === Qt.Key_NumberSign) {
+			keypadKeyPressedAtIndex(11)
+			event.accepted = true
+		}
 		if (event.key === Qt.Key_Plus) {
 			mainItem.buttonPressed("+")
 			event.accepted = true
@@ -97,7 +101,7 @@ FocusScope {
 
 	Keys.onPressed: (event) => {
 		event.accepted = false
-		if (event.modifiers & Qt.KeypadModifier || event.key === Qt.Key_Return) {
+		if (!(event.modifiers & (Qt.ControlModifier | Qt.AltModifier))) {
 			handleKeyPadEvent(event)
 		}
 		if (event.key === Qt.Key_Backspace) {
