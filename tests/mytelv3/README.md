@@ -73,7 +73,7 @@ answer/reject and call-state propagation still require device acceptance.
 Additional production-function tests check that dialing uses the current input
 rather than the history debounce, rejects invalid values without closing the
 keypad, and clears both displayed/search values immediately. The final Node suite
-contains 220 passing cases. Changed QML files were checked with Qt 6.10
+contains 225 passing cases. Changed QML files were checked with Qt 6.10
 `qmlformat`: zero syntax failures.
 
 ## Limits
