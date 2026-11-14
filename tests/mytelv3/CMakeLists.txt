@@ -68,3 +68,8 @@ target_include_directories(mytel-dial-input-test PRIVATE
     "${qt_gui_include}/${Qt6Gui_VERSION}" "${qt_gui_include}/${Qt6Gui_VERSION}/QtGui"
     "${qt_core_include}/${Qt6Core_VERSION}" "${qt_core_include}/${Qt6Core_VERSION}/QtCore")
 add_test(NAME mytel-dial-input-test COMMAND mytel-dial-input-test)
+
+add_executable(mytel-tab-layout-test tab_layout_test.cpp)
+target_link_libraries(mytel-tab-layout-test PRIVATE Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick)
+target_compile_definitions(mytel-tab-layout-test PRIVATE MYTEL_SOURCE_ROOT="${MYTEL_SOURCE_ROOT}")
+add_test(NAME mytel-tab-layout-test COMMAND mytel-tab-layout-test)
