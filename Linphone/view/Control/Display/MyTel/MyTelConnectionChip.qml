@@ -15,8 +15,8 @@ Item {
     readonly property bool connected: registered && AppCpp.networkReachable
     readonly property string connectedLabel: "Online"
     readonly property string disconnectedLabel: "Offline"
-    readonly property color connectedColor: "#22C55E"
-    readonly property color disconnectedColor: "#EF4444"
+    readonly property color connectedColor: "#15803D"
+    readonly property color disconnectedColor: "#B91C1C"
 
     // Consumer positions the chip; content sizes itself.
     width: chipRow.width + 24
@@ -50,14 +50,4 @@ Item {
         }
     }
 
-    // Blinking makes the failure state obvious at a glance; the 0.6 floor
-    // keeps the text legible and reduced motion disables the blink (leader
-    // correction). Connected state restores full opacity.
-    SequentialAnimation on opacity {
-        running: root.visible && !root.connected && !UtilsCpp.isReduceMotionEnabled()
-        loops: Animation.Infinite
-        NumberAnimation { to: 0.6; duration: 600 }
-        NumberAnimation { to: 1; duration: 600 }
-    }
-    onConnectedChanged: if (connected) opacity = 1
 }

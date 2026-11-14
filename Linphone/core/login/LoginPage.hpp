@@ -23,8 +23,13 @@
 
 #include "tool/AbstractObject.hpp"
 #include "tool/LinphoneEnums.hpp"
+#include "tool/LoginAttempt.hpp"
 #include <QObject>
+#include <QPointer>
+#include <QTimer>
 #include <linphone++/linphone.hh>
+
+class AccountManager;
 
 class LoginPage : public QObject, public AbstractObject {
 	Q_OBJECT
@@ -45,6 +50,7 @@ public:
 	                       QString registrarUri = QString(),
 	                       QString outboundProxyAddress = QString(),
 	                       QString connectionId = QString());
+	Q_INVOKABLE bool cancelLogin();
 
 	linphone::RegistrationState getRegistrationState() const;
 	void setRegistrationState(linphone::RegistrationState status);
@@ -61,6 +67,10 @@ private:
 	linphone::RegistrationState mRegistrationState = linphone::RegistrationState::None;
 	QString mErrorMessage;
 	bool mBadIds = false;
+	quint64 mLoginAttempt = 0;
+	QPointer<AccountManager> mPendingLogin;
+	QTimer mLoginTimeout;
+	std::shared_ptr<LoginAttempt> mAttemptState;
 
 	DECLARE_ABSTRACT_OBJECT
 };

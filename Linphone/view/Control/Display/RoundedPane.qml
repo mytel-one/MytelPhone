@@ -6,7 +6,7 @@ import "qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js" as Utils
 Control.Control {
 	id: mainItem
     // width: Utils.getSizeWithScreenRatio(360)
-	property color backgroundColor: DefaultStyle.grey_0
+	property color backgroundColor: DefaultStyle.surface
     padding: Utils.getSizeWithScreenRatio(10)
 	background: Rectangle {
 		anchors.fill: parent

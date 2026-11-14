@@ -29,10 +29,24 @@ DEFINE_ABSTRACT_OBJECT(LoginPage)
 
 LoginPage::LoginPage(QObject *parent) : QObject(parent) {
 	mustBeInMainThread(getClassName());
+	mLoginTimeout.setSingleShot(true);
+	mLoginTimeout.setInterval(20000);
+	connect(&mLoginTimeout, &QTimer::timeout, this, [this]() {
+		if (cancelLogin()) setErrorMessage(tr("Connection timed out. Check the server address and try again."));
+	});
 }
 
 LoginPage::~LoginPage() {
 	mustBeInMainThread("~" + getClassName());
+	mLoginTimeout.stop();
+	if (mAttemptState) mAttemptState->cancel();
+	auto manager = mPendingLogin;
+	App::postModelAsync([manager]() {
+		if (manager) {
+			manager->cancelLogin();
+			manager->deleteLater();
+		}
+	});
 }
 
 linphone::RegistrationState LoginPage::getRegistrationState() const {
@@ -68,56 +82,109 @@ void LoginPage::login(const QString &username,
                       QString registrarUri,
                       QString outboundProxyAddress,
                       QString connectionId) {
+	if (mRegistrationState == linphone::RegistrationState::Progress ||
+	    mRegistrationState == linphone::RegistrationState::Refreshing)
+		return;
 	setErrorMessage("");
-	App::postModelAsync([=]() {
-		// Create on Model thread.
-		AccountManager *accountManager = new AccountManager();
-		connect(accountManager, &AccountManager::registrationStateChanged, this,
-		        [accountManager, this](linphone::RegistrationState state, linphone::Reason reason,
-		                               QString message) mutable {
-			        // View thread
-			        setRegistrationState(state);
-			        mBadIds = reason == linphone::Reason::Forbidden;
-			        emit reasonChanged();
-			        switch (state) {
-				        case linphone::RegistrationState::Failed: {
-					        if (message.isEmpty())
-						        //: Erreur durant la connexion, veuillez vérifier vos paramètres
-						        setErrorMessage(tr("default_account_connection_state_error_toast"));
-					        else setErrorMessage(message);
-					        if (accountManager) {
-						        accountManager->deleteLater();
-						        accountManager = nullptr;
-					        }
-					        break;
-				        }
-				        case linphone::RegistrationState::Ok: {
-					        // setErrorMessage("");
-					        if (accountManager) {
-						        accountManager->deleteLater();
-						        accountManager = nullptr;
-					        }
-					        break;
-				        }
-				        case linphone::RegistrationState::Cleared: {
-					        if (accountManager) {
-						        accountManager->deleteLater();
-						        accountManager = nullptr;
-					        }
-					        break;
-				        }
-				        case linphone::RegistrationState::None:
-				        case linphone::RegistrationState::Progress:
-				        case linphone::RegistrationState::Refreshing:
-					        break;
-			        }
-		        });
-
+	mBadIds = false;
+	emit reasonChanged();
+	const quint64 attempt = ++mLoginAttempt;
+	setRegistrationState(linphone::RegistrationState::Progress);
+	mLoginTimeout.start();
+	mAttemptState = std::make_shared<LoginAttempt>();
+	const auto token = mAttemptState;
+	const QPointer<LoginPage> page(this);
+	App::postModelAsync([page, token, attempt, username, password, displayName, domain, transportType, registrarUri,
+	                     outboundProxyAddress, connectionId]() {
+		if (!page || token->isCancelled()) return;
+		QPointer<AccountManager> manager = new AccountManager();
+		QObject::connect(page.data(), &QObject::destroyed, manager.data(), [manager, token]() {
+			if (token->cancel() && manager) manager->cancelLogin();
+			if (manager) manager->deleteLater();
+		});
+		QObject::connect(
+		    manager.data(), &AccountManager::registrationStateChanged, manager.data(),
+		    [manager](linphone::RegistrationState state) {
+			    if (state == linphone::RegistrationState::Failed || state == linphone::RegistrationState::Ok ||
+			        state == linphone::RegistrationState::Cleared || state == linphone::RegistrationState::None)
+				    if (manager) manager->deleteLater();
+		    });
+		if (!page || token->isCancelled()) {
+			manager->deleteLater();
+			return;
+		}
+		QMetaObject::invokeMethod(
+		    page.data(),
+		    [page, manager, attempt]() {
+			    if (!page) return;
+			    if (attempt == page->mLoginAttempt) page->mPendingLogin = manager;
+			    else
+				    App::postModelAsync([manager]() {
+					    if (manager) {
+						    manager->cancelLogin();
+						    manager->deleteLater();
+					    }
+				    });
+		    },
+		    Qt::QueuedConnection);
+		QObject::connect(
+		    manager.data(), &AccountManager::registrationStateChanged, page.data(),
+		    [page, manager, attempt](linphone::RegistrationState state, linphone::Reason reason, QString message) {
+			    if (!page || attempt != page->mLoginAttempt) return;
+			    page->setRegistrationState(state);
+			    page->mBadIds = reason == linphone::Reason::Forbidden;
+			    emit page->reasonChanged();
+			    if (state == linphone::RegistrationState::Failed || state == linphone::RegistrationState::Ok ||
+			        state == linphone::RegistrationState::Cleared || state == linphone::RegistrationState::None) {
+				    page->mLoginTimeout.stop();
+				    page->mPendingLogin = nullptr;
+				    page->mAttemptState.reset();
+				    if (state == linphone::RegistrationState::Failed)
+					    page->setErrorMessage(message.isEmpty() ? tr("default_account_connection_state_error_toast")
+					                                            : message);
+			    }
+		    });
 		QString error;
-		if (!accountManager->login(username, password, displayName, domain, LinphoneEnums::toLinphone(transportType),
-		                           &error, registrarUri, outboundProxyAddress, connectionId)) {
-			setErrorMessage(error);
-			emit accountManager->registrationStateChanged(linphone::RegistrationState::None, linphone::Reason::None);
+		if (!manager->login(username, password, displayName, domain, LinphoneEnums::toLinphone(transportType), &error,
+		                    registrarUri, outboundProxyAddress, connectionId, token)) {
+			manager->cancelLogin();
+			manager->deleteLater();
+			if (page)
+				QMetaObject::invokeMethod(
+				    page.data(),
+				    [page, attempt, error]() {
+					    if (!page || attempt != page->mLoginAttempt) return;
+					    page->mLoginTimeout.stop();
+					    page->mPendingLogin = nullptr;
+					    page->mAttemptState.reset();
+					    page->setRegistrationState(linphone::RegistrationState::None);
+					    page->setErrorMessage(error);
+				    },
+				    Qt::QueuedConnection);
+		} else if (token->isCancelled()) {
+			manager->cancelLogin();
+			manager->deleteLater();
 		}
 	});
+}
+
+bool LoginPage::cancelLogin() {
+	mustBeInMainThread(log().arg(Q_FUNC_INFO));
+	mLoginTimeout.stop();
+	// If SDK acceptance won the race, preserve that success and let its
+	// already-queued notification finish the transition to the main page.
+	if (mAttemptState && !mAttemptState->cancel()) return false;
+	mAttemptState.reset();
+	++mLoginAttempt;
+	auto manager = mPendingLogin;
+	mPendingLogin = nullptr;
+	setRegistrationState(linphone::RegistrationState::None);
+	setErrorMessage("");
+	App::postModelAsync([manager]() {
+		if (manager) {
+			manager->cancelLogin();
+			manager->deleteLater();
+		}
+	});
+	return true;
 }

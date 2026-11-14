@@ -15,7 +15,7 @@ Rectangle {
 	id: mainItem
 	property alias titleContent : titleLayout.children
 	property alias centerContent : centerLayout.children
-	color: "#F6F9FD"
+	color: DefaultStyle.background
 
 	component AboutLine: RowLayout {
 		id: line
@@ -189,7 +189,7 @@ Rectangle {
 				}
 				Text {
 					text: "MytellPhone"
-					color: "#001622"
+					color: DefaultStyle.main2_900
 					font.pixelSize: 24
 					font.weight: Font.Bold
 				}
@@ -234,4 +234,4 @@ Rectangle {
 	}
 
 }
- 
+

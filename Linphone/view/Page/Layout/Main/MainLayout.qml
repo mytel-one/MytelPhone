@@ -179,7 +179,7 @@ Item {
                         "icon": AppIcons.chatTeardropText,
                         "selectedIcon": AppIcons.chatTeardropTextSelected,
                         //: "Conversations"
-                        "label": qsTr("bottom_navigation_conversations_label"),
+                        "label": qsTr("Chats"),
                         //: "Open conversations page"
                         "accessibilityLabel": qsTr("open_conversations_page_accessible_name"),
                         "visible": !SettingsCpp.disableChatFeature
@@ -219,7 +219,7 @@ Item {
                 onSpacePressed: {
                     focusPageOnNextLoad = true
                 }
-                
+
                 Component.onCompleted: {
                     if (SettingsCpp.shortcutCount > 0) {
                         var shortcuts = SettingsCpp.shortcuts;
@@ -270,7 +270,7 @@ Item {
                                 magicSearchBar.clearText();
                             }
                         }
-                        
+
                         onTextChanged: {
                             if (text.length != 0)
                                 listPopup.open();

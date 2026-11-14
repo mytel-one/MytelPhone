@@ -22,7 +22,7 @@ AbstractSettingsMenu {
         //: "Réunions"
         {title: qsTr("settings_meetings_title"), layout: "MeetingsSettingsLayout", visible: !SettingsCpp.disableMeetingsFeature},
         //: "Affichage"
-        //{title: qsTr("settings_user_interface_title"), layout: "DisplaySettingsLayout"},
+        {title: qsTr("Appearance"), layout: "DisplaySettingsLayout"},
         //: "Security"
         // {title: qsTr("settings_security_title"), layout: "SecuritySettingsLayout"},
         //: "Réseau"
@@ -32,7 +32,7 @@ AbstractSettingsMenu {
 	]
 
 	onGoBackRequested: mainItem.goBack()
-	
+
 	Component.onCompleted: {
 		SettingsCpp.isSaved = true
 	}

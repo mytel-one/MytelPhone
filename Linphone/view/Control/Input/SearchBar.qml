@@ -12,6 +12,8 @@ import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 		property var validator: RegularExpressionValidator{}
 		property var numericPadPopup
 		property alias numericPadButton: dialerButton
+		property alias inputText: textField.text
+		property bool hidden: false
 		readonly property bool hasActiveFocus: textField.activeFocus
 		property alias color: backgroundItem.color
 		property bool delaySearch: true	// Wait some idle time after typing to start searching
@@ -28,29 +30,36 @@ import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 	property real keyboardFocusedBorderWidth: Utils.getSizeWithScreenRatio(3)
 	// Text properties
 	property string placeholderText: ""
-	property color placeholderTextColor: DefaultStyle.main2_400									
+	property color placeholderTextColor: DefaultStyle.main2_400
     property real textInputWidth: Utils.getSizeWithScreenRatio(350)
 	property string text: textField.searchText
-	
+
 	signal openNumericPadRequested()// Useful for redirection before displaying numeric pad.
-	
+
 	function clearText() {
+		delayTimer.stop()
 		textField.text = ""
+		textField.searchText = ""
 	}
 
 	Connections {
 		enabled: numericPadPopup != undefined && handleNumericPadPopupButtonsPressed
 		target: numericPadPopup ? numericPadPopup : null
 		function onButtonPressed(text) {
-			textField.text += text
+			textField.insert(textField.cursorPosition, text)
 		}
-		function onWipe(){ textField.text = textField.text.slice(0, -1)}
+		function onWipe() {
+            if (textField.selectionStart !== textField.selectionEnd)
+                textField.remove(textField.selectionStart, textField.selectionEnd)
+            else if (textField.cursorPosition > 0)
+                textField.remove(textField.cursorPosition - 1, textField.cursorPosition)
+        }
 	}
 
 
 	implicitWidth: mainItem.textInputWidth
     implicitHeight: Utils.getSizeWithScreenRatio(50)
-	
+
 	Rectangle{
 		id: backgroundItem
 		anchors.fill: parent
@@ -77,7 +86,7 @@ import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 		anchors.right: clearTextButton.left
 		anchors.verticalCenter: parent.verticalCenter
 		property bool keyboardFocus: FocusHelper.keyboardFocus
-		
+
 		property string searchText
 		//: Search bar : %1
 		Accessible.name: qsTr("search_bar_accessible_name").arg(placeholderText)
@@ -130,13 +139,13 @@ import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 		checked: numericPadPopup?.visible || false
 		style: ButtonStyle.noBackground
 		icon.source: AppIcons.dialer
-		contentImageColor: checked ? DefaultStyle.main1_500_main : DefaultStyle.main2_600 
+		contentImageColor: checked ? DefaultStyle.main1_500_main : DefaultStyle.main2_600
 		hoveredImageColor: contentImageColor
         width: Utils.getSizeWithScreenRatio(30)
         height: Utils.getSizeWithScreenRatio(30)
 		icon.width: Utils.getSizeWithScreenRatio(24)
 		icon.height: Utils.getSizeWithScreenRatio(24)
-		anchors.verticalCenter: parent.verticalCenter 
+		anchors.verticalCenter: parent.verticalCenter
 		anchors.right: parent.right
         anchors.rightMargin: Utils.getSizeWithScreenRatio(20)
 		//: "Open dialer"
@@ -162,7 +171,7 @@ import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 		//: "Clear text input"
 		Accessible.name: qsTr("clear_text_input_acccessibility_label")
 		onClicked: {
-			textField.clear()
+			mainItem.clearText()
 		}
 	}
 }

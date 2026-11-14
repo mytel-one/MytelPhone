@@ -263,7 +263,7 @@ void ChatCore::setSelf(const QSharedPointer<ChatCore> &me) {
 		    lInfo() << log().arg("Chat message sent in chatroom") << this << mChatModel->getTitle();
 		    QList<QSharedPointer<EventLogCore>> list;
 		    if (eventLog) {
-			    emit CoreModel::getInstance()->messageSent(CoreModel::getInstance()->getCore(), chatRoom, eventLog);
+			    emit CoreModel::getInstance() -> messageSent(CoreModel::getInstance()->getCore(), chatRoom, eventLog);
 		    } else {
 			    lWarning() << log().arg("message sent : event log is null");
 		    }
@@ -301,6 +301,7 @@ void ChatCore::setSelf(const QSharedPointer<ChatCore> &me) {
 		if (Utils::isEmptyMessage(message)) return;
 		mChatModelConnection->invokeToModel([this, message]() {
 			auto linMessage = mChatModel->createTextMessageFromText(message);
+			if (!linMessage) return;
 			linMessage->send();
 			auto eventLog = linMessage->getEventLog();
 			auto chatRoom = mChatModel->getMonitor();
@@ -324,6 +325,7 @@ void ChatCore::setSelf(const QSharedPointer<ChatCore> &me) {
 		}
 		mChatModelConnection->invokeToModel([this, message, filesContent]() {
 			auto linMessage = mChatModel->createMessage(message, filesContent);
+			if (!linMessage) return;
 			linMessage->send();
 			auto eventLog = linMessage->getEventLog();
 			auto chatRoom = mChatModel->getMonitor();

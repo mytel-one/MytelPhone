@@ -14,7 +14,7 @@ Rectangle {
 	property var contentModel
 	property var topbarOptionalComponent
 	property var model
-	color: DefaultStyle.grey_0
+	color: DefaultStyle.surface
 	property var container
     // property real contentHeight: contentListView.contentHeight
     property real minimumWidthForSwitchintToRowLayout: Utils.getSizeWithScreenRatio(981)
@@ -44,7 +44,7 @@ Rectangle {
 		z: 1
 		background: Rectangle {
 			anchors.fill: parent
-			color: DefaultStyle.grey_0
+			color: DefaultStyle.surface
 		}
 		contentItem: ColumnLayout {
 			RowLayout {
@@ -195,7 +195,7 @@ Rectangle {
 				}
 			}
 		}
-		
+
 		Connections {
 			target: FocusNavigator
 

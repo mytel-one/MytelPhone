@@ -29,7 +29,7 @@ ColumnLayout {
 			Rectangle {
 				id: bg
 				anchors.fill: parent
-				color: DefaultStyle.grey_0
+				color: DefaultStyle.surface
 			}
 			MultiEffect {
 				anchors.fill: bg

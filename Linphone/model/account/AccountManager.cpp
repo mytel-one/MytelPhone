@@ -65,8 +65,11 @@ bool AccountManager::login(QString username,
                            QString *errorMessage,
                            QString registrarUri,
                            QString outboundProxyAddress,
-                           QString connectionId) {
+                           QString connectionId,
+                           std::shared_ptr<LoginAttempt> attempt) {
 	mustBeInLinphoneThread(log().arg(Q_FUNC_INFO));
+	mLoginAttempt = std::move(attempt);
+	if (mLoginAttempt && mLoginAttempt->isCancelled()) return false;
 	auto core = CoreModel::getInstance()->getCore();
 	auto factory = linphone::Factory::get();
 	QString assistantFile = (!QString::compare(domain, "sip.linphone.org", Qt::CaseInsensitive) || domain.isEmpty())
@@ -162,6 +165,7 @@ bool AccountManager::login(QString username,
 	                                        identity->getDomain()                       // Domain.
 	);
 	core->addAuthInfo(authInfo);
+	mLoginAuthInfo = authInfo;
 	mAccountModel = Utils::makeQObject_ptr<AccountModel>(account);
 	mAccountModel->setSelf(mAccountModel);
 	connect(mAccountModel.get(), &AccountModel::registrationStateChanged, this,
@@ -170,6 +174,8 @@ bool AccountManager::login(QString username,
 		        QString errorMessage = QString::fromStdString(message);
 		        if (mAccountModel && account == mAccountModel->getAccount()) {
 			        if (state == linphone::RegistrationState::Failed) {
+				        core->removeAuthInfo(authInfo);
+				        mLoginAuthInfo = nullptr;
 				        connect(
 				            mAccountModel.get(), &AccountModel::removed, this, [this]() { mAccountModel = nullptr; },
 				            Qt::SingleShotConnection);
@@ -181,6 +187,11 @@ bool AccountManager::login(QString username,
 				        AccessibilityHelper::announceMessage(errorMessage);
 				        mAccountModel->removeAccount();
 			        } else if (state == linphone::RegistrationState::Ok) {
+				        if (mLoginAttempt && !mLoginAttempt->tryAccept()) {
+					        cancelLogin();
+					        emit registrationStateChanged(linphone::RegistrationState::Cleared, linphone::Reason::None);
+					        return;
+				        }
 				        core->setDefaultAccount(account);
 				        emit mAccountModel->removeListener();
 				        mAccountModel = nullptr;
@@ -197,6 +208,19 @@ bool AccountManager::login(QString username,
 		return false;
 	}
 	return true;
+}
+
+void AccountManager::cancelLogin() {
+	mustBeInLinphoneThread(log().arg(Q_FUNC_INFO));
+	// This manager owns only the newly-created account for this attempt.
+	// Completed/existing accounts must survive cancelling a later login.
+	if (mAccountModel) {
+		disconnect(mAccountModel.get(), nullptr, this, nullptr);
+		mAccountModel->removeAccount();
+		mAccountModel = nullptr;
+		if (mLoginAuthInfo) CoreModel::getInstance()->getCore()->removeAuthInfo(mLoginAuthInfo);
+	}
+	mLoginAuthInfo = nullptr;
 }
 
 void AccountManager::registerNewAccount(const QString &username,

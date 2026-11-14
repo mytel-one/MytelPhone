@@ -215,12 +215,16 @@ ChatModel::createForwardMessage(const std::shared_ptr<linphone::ChatMessage> &me
 }
 
 std::shared_ptr<linphone::ChatMessage> ChatModel::createTextMessageFromText(QString text) {
-	return mMonitor->createMessageFromUtf8(Utils::appStringToCoreString(text));
+	auto message = mMonitor->createMessageFromUtf8(Utils::appStringToCoreString(text));
+	if (message) message->setToBeStored(true);
+	return message;
 }
 
 std::shared_ptr<linphone::ChatMessage>
 ChatModel::createMessage(QString text, QList<std::shared_ptr<ChatMessageContentModel>> filesContent) {
 	auto message = mMonitor->createEmptyMessage();
+	if (!message) return nullptr;
+	message->setToBeStored(true);
 	for (auto &content : filesContent) {
 		message->addFileContent(content->getContent());
 	}

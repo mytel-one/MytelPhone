@@ -45,7 +45,7 @@ CreationFormLayout {
 				Layout.fillWidth: true
 				text: qsTr("mytel_chat_destination_label")
 				color: DefaultStyle.main2_700
-				font.pixelSize: Typography.p1.pixelSize
+				font.pixelSize: 14
 				font.weight: Typography.p1.weight
 			}
 
@@ -54,7 +54,7 @@ CreationFormLayout {
 				id: destinationField
 				Layout.fillWidth: true
 				Layout.preferredHeight: Utils.getSizeWithScreenRatio(48)
-				Layout.rightMargin: mainItem.searchBarRightMaring
+				Layout.rightMargin: 0
 				focus: true
 				placeholderText: qsTr("mytel_chat_destination_hint")
 				font.pixelSize: Utils.getSizeWithScreenRatio(18)
@@ -66,7 +66,7 @@ CreationFormLayout {
 					border.color: DefaultStyle.main1_500_main
 				}
 				onAccepted: mainItem.startChat()
-				Keys.onReturnPressed: mainItem.startChat()
+
 			}
 
 			Text {
@@ -74,7 +74,7 @@ CreationFormLayout {
 				visible: mainItem.destinationError.length > 0
 				text: mainItem.destinationError
 				color: DefaultStyle.danger_500_main
-				font.pixelSize: Typography.p1.pixelSize
+				font.pixelSize: 14
 				wrapMode: Text.Wrap
 			}
 
@@ -84,7 +84,7 @@ CreationFormLayout {
 
 				Control.Button {
 					id: startChatButton
-					Layout.preferredWidth: Utils.getSizeWithScreenRatio(220)
+					Layout.fillWidth: true
 					Layout.preferredHeight: Utils.getSizeWithScreenRatio(44)
 					enabled: destinationField.text.length > 0
 					onClicked: mainItem.startChat()
@@ -110,8 +110,8 @@ CreationFormLayout {
 				Control.Button {
 					id: browseButton
 					Layout.preferredHeight: Utils.getSizeWithScreenRatio(44)
-					leftPadding: Utils.getSizeWithScreenRatio(16)
-					rightPadding: Utils.getSizeWithScreenRatio(16)
+					leftPadding: 12
+					rightPadding: 12
 					onClicked: {
 						mainItem.searchBarVisible = !mainItem.searchBarVisible
 						mainItem.contactListVisible = !mainItem.contactListVisible
@@ -124,10 +124,10 @@ CreationFormLayout {
 						border.width: 1
 					}
 					contentItem: Text {
-						text: qsTr("mytel_chat_browse_contacts")
+						text: qsTr("Contacts")
 						color: DefaultStyle.main2_700
 						anchors.centerIn: parent
-						font.pixelSize: Typography.p1.pixelSize
+						font.pixelSize: 14
 					}
 				}
 

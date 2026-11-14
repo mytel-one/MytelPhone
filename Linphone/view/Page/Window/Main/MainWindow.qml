@@ -20,7 +20,7 @@ AbstractWindow {
         initialHeight = height
     }
 
-	color: DefaultStyle.grey_0
+	color: DefaultStyle.surface
     minimumWidth: Utils.getSizeWithScreenRatio(1020)
     minimumHeight: Utils.getSizeWithScreenRatio(700)
 
@@ -83,7 +83,7 @@ AbstractWindow {
             else mainStackViewLoader.item.replace(sipLoginPage, StackView.Immediate)
         }
     }
-	
+
 	function goToLogin() {
 		// MyTel product decision: always the third-party SIP login form
 		mainStackViewLoader.item.replace(sipLoginPage)
@@ -111,7 +111,7 @@ AbstractWindow {
 
 	function reauthenticateAccount(identity, domain, callback){
 		if (authenticationPopupOpened) return
-		if (mainStackViewLoader.item?.currentItem.objectName === "loginPage" 
+		if (mainStackViewLoader.item?.currentItem.objectName === "loginPage"
 		|| mainStackViewLoader.item?.currentItem.objectName === "sipLoginPage")
 			return
 		console.log("Showing authentication dialog")
@@ -486,7 +486,7 @@ AbstractWindow {
 	Component {
 		id: ssoPage
 		Rectangle {
-			color: DefaultStyle.grey_0
+			color: DefaultStyle.surface
 			Image {
 				id: logoImage
 				anchors.centerIn: parent
@@ -638,10 +638,20 @@ AbstractWindow {
 				anchors.left: parent.left
 				anchors.right: parent.right
 				anchors.bottom: parent.bottom
-				height: Utils.getSizeWithScreenRatio(36)
-				color: DefaultStyle.grey_0
+				height: 46
+				color: DefaultStyle.surface
 
-				// Owner requirement: unmistakable connection indicator
+				SmallButton {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 16
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: DefaultStyle.dark ? qsTr("Light theme") : qsTr("Dark theme")
+                    textSize: 13
+                    style: ButtonStyle.noBackground
+                    onClicked: DefaultStyle.themeMode = DefaultStyle.dark ? "light" : "dark"
+                }
+
+                // Owner requirement: unmistakable connection indicator
 				// (reusable component; the GUI test loads the SAME file).
 				MyTelConnectionChip {
 					id: connectionChip

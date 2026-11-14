@@ -18,7 +18,7 @@ Rectangle {
 	Layout.topMargin: Utils.getSizeWithScreenRatio(9)
 	Layout.leftMargin: Utils.getSizeWithScreenRatio(17)
 	Layout.rightMargin: Utils.getSizeWithScreenRatio(10)
-	color: DefaultStyle.grey_0
+	color: DefaultStyle.surface
 	height: participantAddColumn.implicitHeight
 	signal done()
 	property bool isDone: false
@@ -27,7 +27,7 @@ Rectangle {
 		enabled: chatGui !== null
 		target: chatGui.core
 		function onParticipantAddressesChanged(success) {
-			if (!success) UtilsCpp.showInformationPopup(qsTr("info_popup_error_title"), 
+			if (!success) UtilsCpp.showInformationPopup(qsTr("info_popup_error_title"),
 			//: Error while setting participants !
 			qsTr("info_popup_manage_participant_error_message"), false)
 			else {

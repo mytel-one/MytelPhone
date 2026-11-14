@@ -13,7 +13,7 @@ AbstractMainPage {
     //: "Nouvelle conversation"
     noItemButtonText: qsTr("chat_start_title")
     //: "Aucune conversation"
-    emptyListText: qsTr("chat_empty_title")
+    emptyListText: qsTr("Your conversations, together")
     newItemIconSource: AppIcons.plusCircle
 
     /**
@@ -86,18 +86,13 @@ AbstractMainPage {
     // Only play on the visible property of the right panel as there is only one item pushed
     // and the sending TextArea must be instantiated only once, otherwise it looses focus
     // when the chat list order is updated
-    rightPanelStackView.visible: false//listStackView.currentItem && listStackView.currentItem.objectName === "chatListItem" && selectedChatGui !== null
+    rightPanelStackView.visible: mainItem.selectedChatGui !== null
 
     onNoItemButtonPressed: goToNewChat()
     signal newChatItemOpen()
 
-    showDefaultItem: mainItem.selectedChatGui == null
-                     && listStackView.currentItem
-                     && listStackView.currentItem.objectName == "chatListItem"
-                     && listStackView.currentItem.listView.count === 0
-                     && !listStackView.currentItem.listView.loading
-                     || false
-
+    showDefaultItem: mainItem.selectedChatGui === null
+    emptyListDescription: qsTr("Select a conversation or start a chat with an extension.")
 
     function goToNewChat() {
         if (listStackView.currentItem
@@ -399,7 +394,7 @@ AbstractMainPage {
                                 //: "Vous n'etes pas connecté"
                                 qsTr("group_call_error_not_connected"), false)
                     hasError = true
-                } 
+                }
                 if (hasError) return
                 console.log("Create group chat")
                 //: Creation de la conversation en cours …

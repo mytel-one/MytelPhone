@@ -318,13 +318,9 @@ bool ToolModel::createCall(const QString &sipAddress,
 	if (waitRegistrationForCall) {
 		std::shared_ptr<linphone::Account> currentAccount = core->getDefaultAccount();
 		if (!currentAccount || currentAccount->getState() != linphone::RegistrationState::Ok) {
-			connect(
-			    CoreModel::getInstance().get(), &CoreModel::accountRegistrationStateChanged,
-			    CoreModel::getInstance().get(),
-			    [sipAddress, options, prepareTransfertAddress, headers, mediaEncryption]() {
-				    ToolModel::createCall(sipAddress, options, prepareTransfertAddress, headers, mediaEncryption);
-			    },
-			    Qt::SingleShotConnection);
+			// Never queue a hidden call that might fire after a later
+			// reconnect. The user can retry once registration is healthy.
+			if (errorMessage) *errorMessage = tr("Your account is offline. Reconnect before placing a call.");
 			return false;
 		}
 	}

@@ -91,6 +91,7 @@ void CoreModel::start() {
 
 	mCore->enableVideoPreview(false); // SDK doesn't write the state in configuration if not ready.
 	auto config = mCore->getConfig();
+	config->setInt("misc", "hide_empty_chat_rooms", 0);
 	QString userAgent = ToolModel::computeUserAgent(config);
 	mCore->setUserAgent(Utils::appStringToCoreString(userAgent), LINPHONESDK_VERSION);
 	mCore->start();

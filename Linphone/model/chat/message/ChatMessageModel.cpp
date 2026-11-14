@@ -103,7 +103,7 @@ bool ChatMessageModel::isRead() const {
 void ChatMessageModel::markAsRead() {
 	mMonitor->markAsRead();
 	emit messageRead(mMonitor);
-	emit CoreModel::getInstance()->messageReadInChatRoom(mMonitor->getChatRoom());
+	emit CoreModel::getInstance() -> messageReadInChatRoom(mMonitor->getChatRoom());
 }
 
 void ChatMessageModel::deleteMessageFromChatRoom(bool deletedByUser) {
@@ -131,6 +131,7 @@ void ChatMessageModel::removeReaction() {
 }
 
 void ChatMessageModel::send() {
+	mMonitor->setToBeStored(true);
 	mMonitor->send();
 }
 

@@ -27,7 +27,7 @@ FocusScope {
     property AccountGui currentAccount: AppCpp.currentAccount
     property bool showEncryptedInfo: currentAccount && currentAccount.core.limeServerUrl !== "" && currentAccount.core.conferenceFactoryAddress !== ""
     enum PanelType { MessageReactions, SharedFiles, Medias, ImdnStatus, ForwardToList, ManageParticipants, EphemeralSettings, None}
-    
+
     signal oneOneCall(bool video)
     signal groupCall()
     signal backButtonPressed()
@@ -53,7 +53,7 @@ FocusScope {
         else
             UtilsCpp.createCall(mainItem.chat?.core.peerAddress, {'localVideoEnabled':video})
     }
-    
+
     onGroupCall: {
         mainWindow.showConfirmationLambdaPopup("",
         qsTr("chat_view_group_call_toast_message"),
@@ -88,7 +88,7 @@ FocusScope {
             id: splitPanel
             Layout.fillWidth: true
             Layout.fillHeight: true
-            panelColor: DefaultStyle.grey_0
+            panelColor: DefaultStyle.surface
             header.visible: !mainItem.call
             clip: true
             header.leftPadding: Utils.getSizeWithScreenRatio(32)
@@ -403,7 +403,7 @@ FocusScope {
                             anchors.bottom: chatMessagesListView.bottom
                             anchors.left: chatMessagesListView.left
                             anchors.right: chatMessagesListView.right
-                            
+
                             background: Item {
                                 anchors.fill: parent
                                 Rectangle {
@@ -454,7 +454,7 @@ FocusScope {
                         bottomPadding: Utils.getSizeWithScreenRatio(12)
                         leftPadding: Utils.getSizeWithScreenRatio(19)
                         rightPadding: Utils.getSizeWithScreenRatio(19)
-                        
+
                         Button {
                             anchors.top: parent.top
                             anchors.right: parent.right
@@ -638,7 +638,7 @@ FocusScope {
             }
 
             background: Rectangle {
-                color: DefaultStyle.grey_0
+                color: DefaultStyle.surface
                 anchors.fill: parent
                 RoundButton {
                     visible: contentLoader.panelType === SelectedChatView.PanelType.None
@@ -722,10 +722,10 @@ FocusScope {
                 id: sharedFilesComponent
                 MessageSharedFilesInfos {
                     chatGui: mainItem.chat
-                    showAsSquare: contentLoader.panelType === SelectedChatView.PanelType.Medias 
-                    title: contentLoader.panelType === SelectedChatView.PanelType.Medias 
+                    showAsSquare: contentLoader.panelType === SelectedChatView.PanelType.Medias
+                    title: contentLoader.panelType === SelectedChatView.PanelType.Medias
                         //: Shared medias
-                        ? qsTr("shared_medias_title") 
+                        ? qsTr("shared_medias_title")
                         //: Shared documents
                         : qsTr("shared_documents_title")
                     filter: contentLoader.panelType === SelectedChatView.PanelType.Medias ? ChatMessageFileProxy.FilterContentType.Medias : ChatMessageFileProxy.FilterContentType.Documents
@@ -735,7 +735,7 @@ FocusScope {
                     }
                 }
             }
-            
+
             Component {
                 id: manageParticipantsComponent
                 ManageParticipants {
@@ -743,7 +743,7 @@ FocusScope {
                     onDone: contentLoader.panelType = SelectedChatView.PanelType.None
                 }
             }
-            
+
             Component {
                 id: ephemeralSettingsComponent
                 EphemeralSettings {
@@ -836,7 +836,7 @@ FocusScope {
                                 }
                             }
                         }
-                    } 
+                    }
                 }
             }
         }

@@ -49,9 +49,14 @@ int main(int argc, char **argv) {
 	qmlRegisterSingletonInstance("SettingsCpp", 1, 0, "SettingsCpp", &settings);
 	const QString styleRoot = QStringLiteral(MYTEL_SOURCE_ROOT "/Linphone/view/Style/");
 	qmlRegisterSingletonType(QUrl::fromLocalFile(styleRoot + "Themes.qml"), "Linphone", 1, 0, "Themes");
+	qmlRegisterSingletonType(QUrl::fromLocalFile(styleRoot + "AppIcons.qml"), "Linphone", 1, 0, "AppIcons");
 	const int styleId =
 	    qmlRegisterSingletonType(QUrl::fromLocalFile(styleRoot + "DefaultStyle.qml"), "Linphone", 1, 0, "DefaultStyle");
 	QQmlEngine engine;
+	QObject::connect(&engine, &QQmlEngine::warnings, [](const QList<QQmlError> &warnings) {
+		for (const auto &warning : warnings)
+			std::fprintf(stderr, "QML: %s\n", qPrintable(warning.toString()));
+	});
 	engine.rootContext()->setContextProperty("AppCpp", &appContext);
 	QQmlComponent component(&engine);
 	component.setData(R"(
@@ -59,6 +64,8 @@ int main(int argc, char **argv) {
         import Linphone
         import "qrc:/qt/qml/Linphone/view/Style/buttonStyle.js" as ButtonStyle
         QtObject {
+            property color direct: DefaultStyle.surface
+            property string debug: String(ButtonStyle.numericPad.color.normal) + "/" + String(ButtonStyle.numericPad.text.normal)
             property color buttonSurface: ButtonStyle.numericPad.color.normal
             property color buttonText: ButtonStyle.numericPad.text.normal
             property color accentText: ButtonStyle.main.text.normal
@@ -79,6 +86,12 @@ int main(int argc, char **argv) {
 		app.processEvents();
 		const QColor surface = style->property("surface").value<QColor>();
 		const QColor text(style->property("main2_600").toString());
+		std::printf(" debug=%s direct=%s bound surface=%s text=%s accent=%s\n",
+		            qPrintable(binding->property("debug").toString()),
+		            qPrintable(binding->property("direct").value<QColor>().name()),
+		            qPrintable(binding->property("buttonSurface").value<QColor>().name()),
+		            qPrintable(binding->property("buttonText").value<QColor>().name()),
+		            qPrintable(binding->property("accentText").value<QColor>().name()));
 		const bool reactive = binding->property("buttonSurface").value<QColor>() == surface &&
 		                      binding->property("buttonText").value<QColor>() == text;
 		const double ratio = contrast(text, surface);

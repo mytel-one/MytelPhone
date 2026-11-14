@@ -14,7 +14,7 @@ ApplicationWindow {
     x: 0
     y: 0
     width: Math.min(Utils.getSizeWithScreenRatio(1512), Screen.desktopAvailableWidth)
-    height: Math.min(Utils.getSizeWithScreenRatio(982), Screen.desktopAvailableHeight)
+    height: Math.min(Utils.getSizeWithScreenRatio(982), Screen.desktopAvailableHeight - 48)
 
     onActiveChanged: {
         if (active) UtilsCpp.setLastActiveWindow(this)
@@ -61,26 +61,7 @@ ApplicationWindow {
     // MyTel: Iranian phone number normalization (+98/0098/098/98 → 0)
     // Matches the Android MyTelNumberNormalizer rules (leader-approved).
     function mytelNormalizeNumber(raw) {
-        var s = String(raw).trim()
-        if (!s || s.indexOf("sip:") === 0 || s.indexOf("@") >= 0) return s
-        if (s.indexOf("*") === 0 || s.indexOf("#") === 0) return s
-        // Persian/Arabic digits → ASCII
-        s = s.replace(/[۰-۹]/g, function(d) { return String.fromCharCode(d.charCodeAt(0) - 0x06F0 + 48) })
-        s = s.replace(/[٠-٩]/g, function(d) { return String.fromCharCode(d.charCodeAt(0) - 0x0660 + 48) })
-        // Remove visual separators
-        s = s.replace(/[\s\-().\/]/g, "")
-        if (!s) return raw
-        // Longest applicable prefix first
-        var prefixes = ["0098", "+98", "098", "98"]
-        var prefix = null
-        for (var i = 0; i < prefixes.length; i++) {
-            if (s.indexOf(prefixes[i]) === 0) { prefix = prefixes[i]; break }
-        }
-        if (!prefix) return s
-        var rest = s.substring(prefix.length)
-        if (rest.length === 10) return "0" + rest
-        if (rest.length === 11 && rest.charAt(0) === "0") return rest
-        return s
+        return Utils.normalizeSipDestination(raw)
     }
 
     // MyTel: Pre-dial edit popup — shows the normalized number, allows editing,

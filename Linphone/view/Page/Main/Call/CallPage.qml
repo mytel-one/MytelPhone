@@ -31,169 +31,47 @@ AbstractMainPage {
         return Utils.normalizeSipDestination(raw)
     }
 
-    function mytelPlaceCall() {
-        var dest = mytelNormalizeDial(mytelDialNumber.text)
-        if (dest.length === 0) return
-        console.log("[MyTel Dial] Calling [" + dest + "]")
-        mytelDialPopup.close()
-        UtilsCpp.createCall(dest)
+    readonly property var dialSearchBar: listStackView.currentItem?.objectName === "historyListItem"
+                                            ? listStackView.currentItem.dialSearchBar : null
+
+    function placeDialedCall(raw) {
+        var destination = mytelNormalizeDial(raw === undefined ? dialSearchBar?.inputText : raw)
+        if (!destination) {
+            UtilsCpp.showInformationPopup(qsTr("information_popup_error_title"),
+                                          qsTr("mytel_chat_invalid_destination"), false)
+            return
+        }
+        numericPadPopupItem.close()
+        UtilsCpp.createCall(destination)
     }
 
-    // Green floating dial button (bottom-right of Calls page)
-    Rectangle {
-        id: mytelDialFab
-        z: 1000
-        width: Utils.getSizeWithScreenRatio(56)
-        height: Utils.getSizeWithScreenRatio(56)
-        radius: width / 2
-        anchors.right: parent.right
-        anchors.rightMargin: Utils.getSizeWithScreenRatio(24)
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: Utils.getSizeWithScreenRatio(24)
-        color: mytelDialFabMouse.containsPress ? "#16a34a" : "#22C55E"
-        visible: true
-
-        MouseArea {
-            id: mytelDialFabMouse
-            anchors.fill: parent
-            onClicked: {
-                // Owner 2026-11-13: use the built-in big numeric pad
-                searchBar.text = ""
+    function openDialPad() {
+        goToCallHistory()
+        Qt.callLater(function() {
+            if (mainItem.dialSearchBar) {
+                mainItem.dialSearchBar.clearText()
                 numericPadPopupItem.open()
             }
-        }
-
-        EffectImage {
-            anchors.centerIn: parent
-            width: Utils.getSizeWithScreenRatio(24)
-            height: Utils.getSizeWithScreenRatio(24)
-            imageSource: AppIcons.phone
-            colorizationColor: "#FFFFFF"
-        }
+        })
     }
 
-    // Dial pad popup
-    Control.Popup {
-        id: mytelDialPopup
-        anchors.centerIn: parent
-        width: Math.min(parent.width * 0.9, 400)
-        height: Math.min(parent.height * 0.9, 560)
-        modal: true
-        focus: true
-        closePolicy: Control.Popup.CloseOnEscape | Control.Popup.CloseOnPressOutside
-
-        background: Rectangle {
-            color: "#FFFFFF"
-            radius: 16
-            border.width: 1
-            border.color: "#E0E0E0"
-        }
-
-        contentItem: ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 20
-            spacing: 8
-
-            // Number display
-            Control.TextField {
-                id: mytelDialNumber
-                Layout.fillWidth: true
-                Layout.preferredHeight: 56
-                font.pixelSize: 26
-                color: "#1a1a2e"
-                horizontalAlignment: TextInput.AlignHCenter
-                verticalAlignment: TextInput.AlignVCenter
-                placeholderText: qsTr("mytel_chat_destination_hint")
-                background: Rectangle {
-                    radius: height / 2
-                    color: "#F5F5F5"
-                    border.width: mytelDialNumber.activeFocus ? 2 : 1
-                    border.color: mytelDialNumber.activeFocus ? "#0A67FF" : "#E0E0E0"
-                }
-                onAccepted: mainItem.mytelPlaceCall()
-            }
-
-            // Keypad
-            GridLayout {
-                columns: 3
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 8
-                columnSpacing: 14
-                rowSpacing: 10
-
-                Repeater {
-                    model: ["1","2","3","4","5","6","7","8","9","*","0","#"]
-                    delegate: Rectangle {
-                        required property string modelData
-                        required property int index
-                        width: 72; height: 72; radius: width / 2
-                        color: mytelKeyMouse.containsPress ? "#E0E0E0" : "#F5F5F5"
-                        border.width: 1; border.color: "#E0E0E0"
-
-                        MouseArea {
-                            id: mytelKeyMouse
-                            anchors.fill: parent
-                            onClicked: {
-                                mytelDialNumber.text += modelData
-                                mytelDialNumber.cursorPosition = mytelDialNumber.text.length
-                            }
-                        }
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: modelData
-                            font.pixelSize: 24; font.weight: Font.DemiBold
-                            color: "#1a1a2e"
-                        }
-                    }
-                }
-            }
-
-            // Bottom: [Call] [Backspace]
-            RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 12
-                spacing: 28
-
-                Rectangle {
-                    width: 72; height: 72; radius: width / 2
-                    color: mytelCallMouse.containsPress ? "#16a34a" : "#22C55E"
-                    MouseArea {
-                        id: mytelCallMouse
-                        anchors.fill: parent
-                        onClicked: mainItem.mytelPlaceCall()
-                    }
-                    EffectImage {
-                        anchors.centerIn: parent
-                        width: 30; height: 30
-                        imageSource: AppIcons.phone
-                        colorizationColor: "#FFFFFF"
-                    }
-                }
-
-                Rectangle {
-                    width: 56; height: 56; radius: width / 2
-                    color: mytelBackMouse.containsPress ? "#E0E0E0" : "#F5F5F5"
-                    MouseArea {
-                        id: mytelBackMouse
-                        anchors.fill: parent
-                        onClicked: {
-                            if (mytelDialNumber.text.length > 0)
-                                mytelDialNumber.text = mytelDialNumber.text.slice(0, -1)
-                        }
-                        onPressAndHold: mytelDialNumber.text = ""
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        text: "⌫"; font.pixelSize: 22; color: "#666"
-                    }
-                }
-            }
-
-            Item { Layout.fillHeight: true }
-        }
+    Button {
+        id: mytelDialFab
+        z: 1000
+        width: 56
+        height: 56
+        radius: 28
+        anchors.right: parent.right
+        anchors.rightMargin: 24
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 24
+        style: ButtonStyle.phoneGreen
+        icon.source: AppIcons.dialer
+        icon.width: 26
+        icon.height: 26
+        Accessible.name: qsTr("open_dialer_acccessibility_label")
+        onClicked: mainItem.openDialPad()
     }
-    // ── End MyTel floating dial pad ──
 
     /**
      * Focus on the first pertinent element in the page (LINQT-2202)
@@ -216,13 +94,7 @@ AbstractMainPage {
     // MyTel (owner 2026-11-13): Enter in the search bar / numeric-pad Call
     // button actually places a call to the typed number — the handler was
     // lost when the old NewCallForm was replaced
-    onCreateCallFromSearchBarRequested: {
-        var dest = mytelNormalizeDial(searchBar.text)
-        if (dest.length > 0) {
-            console.log("[MyTel] Search-bar call to [" + dest + "]")
-            UtilsCpp.createCall(dest)
-        }
-    }
+    onCreateCallFromSearchBarRequested: mainItem.placeDialedCall()
     signal createContactRequested(string name, string address)
     signal openNumPadRequest
 
@@ -256,9 +128,7 @@ AbstractMainPage {
                      && listStackView.currentItem.listView.count === 0 || false
 
     function goToNewCall() {
-        if (listStackView.currentItem
-                && listStackView.currentItem.objectName != "newCallItem")
-            listStackView.push(newCallItem)
+        openDialPad()
     }
     function goToCallHistory() {
         if (listStackView.currentItem
@@ -317,11 +187,12 @@ AbstractMainPage {
         }
     }
 
-    Component {                 
+    Component {
         id: historyListItem
         FocusScope {
             objectName: "historyListItem"
             property alias listView: historyListView
+            property alias dialSearchBar: searchBar
             property alias newCallButton: newCallButton
 
             ColumnLayout {
@@ -392,8 +263,7 @@ AbstractMainPage {
                             // Owner 2026-11-13: open the big numeric pad
                             // directly — the newCallItem page was redundant
                             console.debug("[CallPage]User: create new call — opening numeric pad")
-                            searchBar.text = ""
-                            numericPadPopupItem.open()
+                            mainItem.openDialPad()
                         }
                     }
                 }
@@ -404,6 +274,7 @@ AbstractMainPage {
                     // actually land in this field — without this, the pad's
                     // digits go nowhere and Call sends an empty number
                     numericPadPopup: numericPadPopupItem
+                    magnifierVisible: !numericPadPopupItem.visible
                     Layout.fillWidth: true
                     Layout.topMargin: Utils.getSizeWithScreenRatio(18)
                     Layout.rightMargin: Utils.getSizeWithScreenRatio(39)
@@ -420,11 +291,7 @@ AbstractMainPage {
                         when: searchBar.text.length != 0
                         value: false
                     }
-                    Keys.onPressed: (event) => {
-                        if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
-                            mainItem.createCallFromSearchBarRequested()
-                        }
-                    }
+                    onValidated: (text) => mainItem.placeDialedCall(text)
                 }
                 Button {
                     visible: SettingsCpp.callForwardToAddress.length > 0 && !SettingsCpp.disableCallForward
@@ -517,7 +384,7 @@ AbstractMainPage {
                         policy: Control.ScrollBar.AsNeeded
                     }
                 }
-                
+
             }
         }
     }

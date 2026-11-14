@@ -29,6 +29,7 @@
 #include "AccountManagerServicesRequestModel.hpp"
 #include "AccountModel.hpp"
 #include "tool/AbstractObject.hpp"
+#include "tool/LoginAttempt.hpp"
 
 class AccountManager : public QObject, public AbstractObject {
 	Q_OBJECT
@@ -44,9 +45,11 @@ public:
 	           QString *errorMessage = nullptr,
 	           QString registrarUri = QString(),
 	           QString outboundProxyAddress = QString(),
-	           QString connectionId = QString());
+	           QString connectionId = QString(),
+	           std::shared_ptr<LoginAttempt> attempt = nullptr);
 
 	std::shared_ptr<linphone::Account> createAccount(const QString &assistantFile);
+	void cancelLogin();
 
 	enum RegisterType { PhoneNumber = 0, Email = 1 };
 	void registerNewAccount(const QString &username,
@@ -70,6 +73,8 @@ signals:
 
 private:
 	std::shared_ptr<AccountModel> mAccountModel;
+	std::shared_ptr<linphone::AuthInfo> mLoginAuthInfo;
+	std::shared_ptr<LoginAttempt> mLoginAttempt;
 	std::shared_ptr<AccountManagerServicesModel> mAccountManagerServicesModel;
 	QTimer timer;
 	QString mCreatedSipAddress;

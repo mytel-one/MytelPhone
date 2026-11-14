@@ -83,7 +83,7 @@ CreationFormLayout {
                 //: "Call an extension"
                 text: qsTr("mytel_call_destination_label")
                 color: DefaultStyle.main2_700
-                font.pixelSize: Typography.p1.pixelSize
+                font.pixelSize: 14
                 font.weight: Typography.p1.weight
             }
 
@@ -91,7 +91,7 @@ CreationFormLayout {
                 id: dialField
                 Layout.fillWidth: true
                 Layout.preferredHeight: Utils.getSizeWithScreenRatio(48)
-                Layout.rightMargin: mainItem.searchBarRightMaring
+                Layout.rightMargin: 0
                 focus: true
                 //: "Extension or number"
                 placeholderText: qsTr("mytel_chat_destination_hint")
@@ -104,7 +104,7 @@ CreationFormLayout {
                     border.color: DefaultStyle.main1_500_main
                 }
                 onAccepted: mainItem.placeCall()
-                Keys.onReturnPressed: mainItem.placeCall()
+
             }
 
             Text {
@@ -112,7 +112,7 @@ CreationFormLayout {
                 visible: mainItem.dialError.length > 0
                 text: mainItem.dialError
                 color: DefaultStyle.danger_500_main
-                font.pixelSize: Typography.p1.pixelSize
+                font.pixelSize: 14
                 wrapMode: Text.Wrap
             }
 
@@ -122,7 +122,7 @@ CreationFormLayout {
 
                 Control.Button {
                     id: placeCallButton
-                    Layout.preferredWidth: Utils.getSizeWithScreenRatio(180)
+                    Layout.fillWidth: true
                     Layout.preferredHeight: Utils.getSizeWithScreenRatio(44)
                     enabled: dialField.text.length > 0
                     onClicked: mainItem.placeCall()
@@ -149,8 +149,8 @@ CreationFormLayout {
                 Control.Button {
                     id: browseContactsBtn
                     Layout.preferredHeight: Utils.getSizeWithScreenRatio(44)
-                    leftPadding: Utils.getSizeWithScreenRatio(16)
-                    rightPadding: Utils.getSizeWithScreenRatio(16)
+                    leftPadding: 12
+                    rightPadding: 12
                     onClicked: {
                         mainItem.searchBarVisible = !mainItem.searchBarVisible
                         mainItem.contactListVisible = !mainItem.contactListVisible
@@ -163,10 +163,10 @@ CreationFormLayout {
                         border.width: 1
                     }
                     contentItem: Text {
-                        text: qsTr("mytel_chat_browse_contacts")
+                        text: qsTr("Contacts")
                         color: DefaultStyle.main2_700
                         anchors.centerIn: parent
-                        font.pixelSize: Typography.p1.pixelSize
+                        font.pixelSize: 14
                     }
                 }
 

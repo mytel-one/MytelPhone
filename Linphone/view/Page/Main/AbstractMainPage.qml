@@ -15,6 +15,7 @@ FocusScope {
 	id: mainItem
 	property string noItemButtonText
 	property string newItemIconSource
+	property string emptyListDescription: ""
 	property string emptyListText
 	property bool showDefaultItem: true
 	property color rightPanelColor: DefaultStyle.grey_100
@@ -40,7 +41,7 @@ FocusScope {
 			// Control.SplitView.fillWidth:false
 			Control.SplitView.fillHeight: true
 			Control.SplitView.preferredWidth: Utils.getSizeWithScreenRatio(404)
-    		Control.SplitView.minimumWidth: Utils.getSizeWithScreenRatio(200)
+			Control.SplitView.minimumWidth: 300
     		Control.SplitView.maximumWidth: Utils.getSizeWithScreenRatio(500)
 		}
 		Rectangle {
@@ -53,52 +54,46 @@ FocusScope {
 			StackLayout {
 				currentIndex: mainItem.showDefaultItem ? 0 : 1
 				anchors.fill: parent
-				ColumnLayout {
-					id: defaultItem
-					
-					RowLayout {
-						Layout.alignment: Qt.AlignHCenter
-						Item {
-							Layout.fillWidth: true
-						}
-						ColumnLayout {
-                            spacing: Utils.getSizeWithScreenRatio(30)
-							Item {
-								Layout.fillHeight: true
-							}
-							Image {
-								Layout.alignment: Qt.AlignHCenter
-								source: AppIcons.noItemImage
-                                Layout.preferredWidth: Utils.getSizeWithScreenRatio(359)
-                                Layout.preferredHeight: Utils.getSizeWithScreenRatio(314)
-								fillMode: Image.PreserveAspectFit
-							}
-							Text {
-								text: mainItem.emptyListText
-								Layout.alignment: Qt.AlignHCenter
-								font {
-                                    pixelSize: Typography.h3.pixelSize
-                                    weight: Typography.h3.weight
-								}
-							}
-							BigButton {
-								Layout.alignment: Qt.AlignHCenter
-								icon.source: mainItem.newItemIconSource
-								style: ButtonStyle.main
-								text: mainItem.noItemButtonText
-                                spacing: Utils.getSizeWithScreenRatio(8)
-								onPressed: mainItem.noItemButtonPressed()
-							}
-							Item {
-								Layout.fillHeight: true
-							}
-						}
-						Item {
-							Layout.fillWidth: true
-						}
-					}
-					
-				}
+                Item {
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        width: Math.min(parent.width - 48, 430)
+                        spacing: 20
+                        Image {
+                            source: "image://internal/mytel_logo.png"
+                            fillMode: Image.PreserveAspectFit
+                            Layout.preferredWidth: 72
+                            Layout.preferredHeight: 72
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        Text {
+                            text: mainItem.emptyListText
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                            wrapMode: Text.WordWrap
+                            font.pixelSize: 24
+                            font.weight: Font.DemiBold
+                            color: DefaultStyle.main2_900
+                        }
+                        Text {
+                            visible: text.length > 0
+                            text: mainItem.emptyListDescription
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                            wrapMode: Text.WordWrap
+                            font.pixelSize: 15
+                            color: DefaultStyle.main2_600
+                        }
+                        BigButton {
+                            Layout.alignment: Qt.AlignHCenter
+                            icon.source: mainItem.newItemIconSource
+                            style: ButtonStyle.main
+                            text: mainItem.noItemButtonText
+                            spacing: 8
+                            onClicked: mainItem.noItemButtonPressed()
+                        }
+                    }
+                }
 				Control.StackView {
 					id: rightPanelStackView
 					Layout.fillWidth: true

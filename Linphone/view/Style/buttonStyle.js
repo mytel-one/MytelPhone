@@ -6,162 +6,162 @@
 // Orange
 	var main = {
 		color: {
-			normal: Linphone.DefaultStyle.main1_500_main,
-			hovered: Linphone.DefaultStyle.main1_600,
-			pressed: Linphone.DefaultStyle.main1_700
+			get normal() { return Linphone.DefaultStyle.main1_500_main },
+			get hovered() { return Linphone.DefaultStyle.main1_600 },
+			get pressed() { return Linphone.DefaultStyle.main1_700 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.grey_0,
-			pressed: Linphone.DefaultStyle.grey_0
+			get normal() { return Linphone.DefaultStyle.grey_0 },
+			get pressed() { return Linphone.DefaultStyle.grey_0 }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.grey_0,
-			pressed: Linphone.DefaultStyle.grey_0
+			get normal() { return Linphone.DefaultStyle.grey_0 },
+			get pressed() { return Linphone.DefaultStyle.grey_0 }
 		}
 	}
 	var mainLightBorder =  Object.assign({
 			borderColor : {
-				keybaordFocused: Linphone.DefaultStyle.main2_0
+				get keybaordFocused() { return Linphone.DefaultStyle.main2_0 }
 			}
 		}, main)
 
 // White with orange border
 	var secondary = {
 		color: {
-			normal: Linphone.DefaultStyle.grey_0,
-			hovered: Linphone.DefaultStyle.main1_100,
-			pressed: Linphone.DefaultStyle.main1_500_main
+			get normal() { return Linphone.DefaultStyle.surface },
+			get hovered() { return Linphone.DefaultStyle.main1_100 },
+			get pressed() { return Linphone.DefaultStyle.main1_500_main }
 		},
 		borderColor: {
-			normal: Linphone.DefaultStyle.main1_500_main,
-			keybaordFocused: Linphone.DefaultStyle.main2_900
+			get normal() { return Linphone.DefaultStyle.main1_500_main },
+			get keybaordFocused() { return Linphone.DefaultStyle.main2_900 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.main1_500_main,
-			pressed: Linphone.DefaultStyle.grey_0
+			get normal() { return Linphone.DefaultStyle.main1_500_main },
+			get pressed() { return Linphone.DefaultStyle.grey_0 }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.main1_500_main,
-			pressed: Linphone.DefaultStyle.grey_0
+			get normal() { return Linphone.DefaultStyle.main1_500_main },
+			get pressed() { return Linphone.DefaultStyle.grey_0 }
 		}
 	}
 
 	// White with orange icon
 	var player = {
 		color: {
-			normal: Linphone.DefaultStyle.grey_0,
-			hovered: Linphone.DefaultStyle.main1_100,
-			pressed: Linphone.DefaultStyle.main1_500_main
+			get normal() { return Linphone.DefaultStyle.surface },
+			get hovered() { return Linphone.DefaultStyle.main1_100 },
+			get pressed() { return Linphone.DefaultStyle.main1_500_main }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.main1_500_main,
-			pressed: Linphone.DefaultStyle.main1_500_main
+			get normal() { return Linphone.DefaultStyle.main1_500_main },
+			get pressed() { return Linphone.DefaultStyle.main1_500_main }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.main1_500_main,
-			pressed: Linphone.DefaultStyle.main1_500_main
+			get normal() { return Linphone.DefaultStyle.main1_500_main },
+			get pressed() { return Linphone.DefaultStyle.main1_500_main }
 		}
 	}
 
 // Light orange
 	var tertiary = {
 		color: {
-			normal: Linphone.DefaultStyle.main1_100,
-			hovered: Linphone.DefaultStyle.main1_200,
-			pressed: Linphone.DefaultStyle.main1_300
+			get normal() { return Linphone.DefaultStyle.main1_100 },
+			get hovered() { return Linphone.DefaultStyle.main1_200 },
+			get pressed() { return Linphone.DefaultStyle.main1_300 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.main1_500_main,
-			pressed: Linphone.DefaultStyle.main1_500_main
+			get normal() { return Linphone.DefaultStyle.main1_500_main },
+			get pressed() { return Linphone.DefaultStyle.main1_500_main }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.main1_500_main,
-			pressed: Linphone.DefaultStyle.main1_500_main
+			get normal() { return Linphone.DefaultStyle.main1_500_main },
+			get pressed() { return Linphone.DefaultStyle.main1_500_main }
 		}
 	}
 
 // Blue-grey
 	var grey = {
 		color: {
-			normal: Linphone.DefaultStyle.main2_200,
-			hovered: Linphone.DefaultStyle.main2_300,
-			pressed: Linphone.DefaultStyle.main2_400
+			get normal() { return Linphone.DefaultStyle.main2_200 },
+			get hovered() { return Linphone.DefaultStyle.main2_300 },
+			get pressed() { return Linphone.DefaultStyle.main2_400 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.main2_500_main,
-			pressed: Linphone.DefaultStyle.main2_700
+			get normal() { return Linphone.DefaultStyle.main2_500_main },
+			get pressed() { return Linphone.DefaultStyle.main2_700 }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.main2_500_main,
-			pressed: Linphone.DefaultStyle.main2_700
+			get normal() { return Linphone.DefaultStyle.main2_500_main },
+			get pressed() { return Linphone.DefaultStyle.main2_700 }
 		}
 	}
 
 // Red phone
 	var phoneRed = {
-		iconSource: Linphone.AppIcons.endCall,
+		get iconSource() { return Linphone.AppIcons.endCall },
 		color: {
-			normal: Linphone.DefaultStyle.danger_500_main,
-			hovered: Linphone.DefaultStyle.danger_700,
-			pressed: Linphone.DefaultStyle.danger_900
+			get normal() { return Linphone.DefaultStyle.danger_500_main },
+			get hovered() { return Linphone.DefaultStyle.danger_700 },
+			get pressed() { return Linphone.DefaultStyle.danger_900 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.grey_0,
-			pressed: Linphone.DefaultStyle.grey_0
+			get normal() { return Linphone.DefaultStyle.grey_0 },
+			get pressed() { return Linphone.DefaultStyle.grey_0 }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.grey_0,
-			pressed: Linphone.DefaultStyle.grey_0
+			get normal() { return Linphone.DefaultStyle.grey_0 },
+			get pressed() { return Linphone.DefaultStyle.grey_0 }
 		}
 	}
 	var phoneRedLightBorder =  Object.assign({
 			borderColor : {
-				keybaordFocused: Linphone.DefaultStyle.main2_0
+				get keybaordFocused() { return Linphone.DefaultStyle.main2_0 }
 			}
 		}, phoneRed)
 
 // Green phone
 	var phoneGreen = {
-		iconSource: Linphone.AppIcons.phone,
+		get iconSource() { return Linphone.AppIcons.phone },
 		color: {
-			normal: Linphone.DefaultStyle.success_500_main,
-			hovered: Linphone.DefaultStyle.success_700,
-			pressed: Linphone.DefaultStyle.success_900
+			get normal() { return Linphone.DefaultStyle.success_500_main },
+			get hovered() { return Linphone.DefaultStyle.success_700 },
+			get pressed() { return Linphone.DefaultStyle.success_900 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.grey_0,
-			pressed: Linphone.DefaultStyle.grey_0
+			get normal() { return Linphone.DefaultStyle.grey_0 },
+			get pressed() { return Linphone.DefaultStyle.grey_0 }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.grey_0,
-			pressed: Linphone.DefaultStyle.grey_0
+			get normal() { return Linphone.DefaultStyle.grey_0 },
+			get pressed() { return Linphone.DefaultStyle.grey_0 }
 		}
 	}
 	var phoneGreenLightBorder =  Object.assign({
 		borderColor : {
-			keybaordFocused: Linphone.DefaultStyle.main2_0
+			get keybaordFocused() { return Linphone.DefaultStyle.main2_0 }
 		}
 	}, phoneGreen)
 
 // Checkable
 	var checkable = {
 		color: {
-			normal: Linphone.DefaultStyle.grey_500,
-			hovered: Linphone.DefaultStyle.grey_600,
-			pressed: Linphone.DefaultStyle.main2_400,
-			hovered: Linphone.DefaultStyle.main2_400
+			get normal() { return Linphone.DefaultStyle.grey_500 },
+			get hovered() { return Linphone.DefaultStyle.grey_600 },
+			get pressed() { return Linphone.DefaultStyle.main2_400 },
+			get hovered() { return Linphone.DefaultStyle.main2_400 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.grey_0,
-			pressed: Linphone.DefaultStyle.grey_0
+			get normal() { return Linphone.DefaultStyle.grey_0 },
+			get pressed() { return Linphone.DefaultStyle.grey_0 }
 		},
 		borderColor: {
-			keybaordFocused: Linphone.DefaultStyle.main2_0
+			get keybaordFocused() { return Linphone.DefaultStyle.main2_0 }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.grey_0,
-			pressed: Linphone.DefaultStyle.grey_0,
-			checked: Linphone.DefaultStyle.grey_0
+			get normal() { return Linphone.DefaultStyle.grey_0 },
+			get pressed() { return Linphone.DefaultStyle.grey_0 },
+			get checked() { return Linphone.DefaultStyle.grey_0 }
 		}
 	}
 
@@ -175,19 +175,19 @@
 		},
 		borderColor: {
 			normal: "#00000000",
-			keybaordFocused: Linphone.DefaultStyle.main2_900
+			get keybaordFocused() { return Linphone.DefaultStyle.main2_900 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.main2_200,
-			hovered: Linphone.DefaultStyle.main2_300,
-            pressed: Linphone.DefaultStyle.main2_400,
-            checked: Linphone.DefaultStyle.main1_500_main
+			get normal() { return Linphone.DefaultStyle.main2_200 },
+			get hovered() { return Linphone.DefaultStyle.main2_300 },
+            get pressed() { return Linphone.DefaultStyle.main2_400 },
+            get checked() { return Linphone.DefaultStyle.main1_500_main }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.main2_200,
-			hovered: Linphone.DefaultStyle.main2_300,
-            pressed: Linphone.DefaultStyle.main2_400,
-            checked: Linphone.DefaultStyle.main1_500_main,
+			get normal() { return Linphone.DefaultStyle.main2_200 },
+			get hovered() { return Linphone.DefaultStyle.main2_300 },
+            get pressed() { return Linphone.DefaultStyle.main2_400 },
+            get checked() { return Linphone.DefaultStyle.main1_500_main },
 		}
 	}
 
@@ -201,24 +201,24 @@
 		},
 		borderColor: {
 			normal: "#00000000",
-			keybaordFocused: Linphone.DefaultStyle.main2_900
+			get keybaordFocused() { return Linphone.DefaultStyle.main2_900 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.main2_600,
-			hovered: Linphone.DefaultStyle.main2_700,
-            pressed: Linphone.DefaultStyle.main2_800,
-            checked: Linphone.DefaultStyle.main1_500_main
+			get normal() { return Linphone.DefaultStyle.main2_600 },
+			get hovered() { return Linphone.DefaultStyle.main2_700 },
+            get pressed() { return Linphone.DefaultStyle.main2_800 },
+            get checked() { return Linphone.DefaultStyle.main1_500_main }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.main2_600,
-			hovered: Linphone.DefaultStyle.main2_700,
-            pressed: Linphone.DefaultStyle.main2_800,
-            checked: Linphone.DefaultStyle.main1_500_main,
+			get normal() { return Linphone.DefaultStyle.main2_600 },
+			get hovered() { return Linphone.DefaultStyle.main2_700 },
+            get pressed() { return Linphone.DefaultStyle.main2_800 },
+            get checked() { return Linphone.DefaultStyle.main1_500_main },
 		}
 	}
 	var noBackgroundLightBorder =  Object.assign({
 			borderColor : {
-				keybaordFocused: Linphone.DefaultStyle.main2_0
+				get keybaordFocused() { return Linphone.DefaultStyle.main2_0 }
 			}
 		}, noBackground)
 
@@ -230,15 +230,15 @@
 			pressed: "#00000000"
 		},
 		text: {
-			normal: Linphone.DefaultStyle.danger_500_main,
-			hovered: Linphone.DefaultStyle.danger_700,
-			pressed: Linphone.DefaultStyle.danger_900
+			get normal() { return Linphone.DefaultStyle.danger_500_main },
+			get hovered() { return Linphone.DefaultStyle.danger_700 },
+			get pressed() { return Linphone.DefaultStyle.danger_900 }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.danger_500_main,
-			hovered: Linphone.DefaultStyle.danger_700,
-			pressed: Linphone.DefaultStyle.danger_900,
-			checked: Linphone.DefaultStyle.danger_900
+			get normal() { return Linphone.DefaultStyle.danger_500_main },
+			get hovered() { return Linphone.DefaultStyle.danger_700 },
+			get pressed() { return Linphone.DefaultStyle.danger_900 },
+			get checked() { return Linphone.DefaultStyle.danger_900 }
 		}
 	}
 
@@ -250,14 +250,14 @@
 			pressed: "#00000000"
 		},
 		text: {
-			normal: Linphone.DefaultStyle.main1_500_main,
-			hovered: Linphone.DefaultStyle.main1_600,
-			pressed: Linphone.DefaultStyle.main1_700
+			get normal() { return Linphone.DefaultStyle.main1_500_main },
+			get hovered() { return Linphone.DefaultStyle.main1_600 },
+			get pressed() { return Linphone.DefaultStyle.main1_700 }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.main1_500_main,
-			hovered: Linphone.DefaultStyle.main1_600,
-			pressed: Linphone.DefaultStyle.main1_700
+			get normal() { return Linphone.DefaultStyle.main1_500_main },
+			get hovered() { return Linphone.DefaultStyle.main1_600 },
+			get pressed() { return Linphone.DefaultStyle.main1_700 }
 		}
 	}
 
@@ -265,18 +265,18 @@
 	var popupButton = {
 		color: {
 			normal: "#00000000",
-			hovered: Linphone.DefaultStyle.grey_100,
-			pressed: Linphone.DefaultStyle.main2_300
+			get hovered() { return Linphone.DefaultStyle.grey_100 },
+			get pressed() { return Linphone.DefaultStyle.main2_300 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.main2_600,
-			hovered: Linphone.DefaultStyle.main2_600,
-			pressed: Linphone.DefaultStyle.main2_600
+			get normal() { return Linphone.DefaultStyle.main2_600 },
+			get hovered() { return Linphone.DefaultStyle.main2_600 },
+			get pressed() { return Linphone.DefaultStyle.main2_600 }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.main2_600,
-			hovered: Linphone.DefaultStyle.main2_600,
-			pressed: Linphone.DefaultStyle.main2_600
+			get normal() { return Linphone.DefaultStyle.main2_600 },
+			get hovered() { return Linphone.DefaultStyle.main2_600 },
+			get pressed() { return Linphone.DefaultStyle.main2_600 }
 		}
 	}
 
@@ -284,18 +284,18 @@
 	var hoveredBackground = {
 		color: {
 			normal: "#00000000",
-			hovered: Linphone.DefaultStyle.main2_100,
-			pressed: Linphone.DefaultStyle.main2_100
+			get hovered() { return Linphone.DefaultStyle.main2_100 },
+			get pressed() { return Linphone.DefaultStyle.main2_100 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.main2_500_main,
-			hovered: Linphone.DefaultStyle.main2_500_main,
-			pressed: Linphone.DefaultStyle.main2_500_main
+			get normal() { return Linphone.DefaultStyle.main2_500_main },
+			get hovered() { return Linphone.DefaultStyle.main2_500_main },
+			get pressed() { return Linphone.DefaultStyle.main2_500_main }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.main2_500_main,
-			hovered: Linphone.DefaultStyle.main2_500_main,
-			pressed: Linphone.DefaultStyle.main2_500_main
+			get normal() { return Linphone.DefaultStyle.main2_500_main },
+			get hovered() { return Linphone.DefaultStyle.main2_500_main },
+			get pressed() { return Linphone.DefaultStyle.main2_500_main }
 		}
 	}
 
@@ -303,101 +303,101 @@
 	var hoveredBackgroundRed = {
 		color: {
 			normal: "#00000000",
-			hovered: Linphone.DefaultStyle.main2_100,
-			pressed: Linphone.DefaultStyle.main2_100
+			get hovered() { return Linphone.DefaultStyle.main2_100 },
+			get pressed() { return Linphone.DefaultStyle.main2_100 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.danger_500_main,
-			hovered: Linphone.DefaultStyle.danger_700,
-			pressed: Linphone.DefaultStyle.danger_900
+			get normal() { return Linphone.DefaultStyle.danger_500_main },
+			get hovered() { return Linphone.DefaultStyle.danger_700 },
+			get pressed() { return Linphone.DefaultStyle.danger_900 }
 		},
 		image: {
-			normal: Linphone.DefaultStyle.danger_500_main,
-			hovered: Linphone.DefaultStyle.danger_700,
-			pressed: Linphone.DefaultStyle.danger_900
+			get normal() { return Linphone.DefaultStyle.danger_500_main },
+			get hovered() { return Linphone.DefaultStyle.danger_700 },
+			get pressed() { return Linphone.DefaultStyle.danger_900 }
 		}
 	}
 
 // Numpad
 	var numericPad = {
 		color: {
-			normal: Linphone.DefaultStyle.grey_0,
-			hovered: Linphone.DefaultStyle.grey_200,
-			pressed: Linphone.DefaultStyle.grey_300
+			get normal() { return Linphone.DefaultStyle.surface },
+			get hovered() { return Linphone.DefaultStyle.grey_200 },
+			get pressed() { return Linphone.DefaultStyle.grey_300 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.main2_600,
-			pressed: Linphone.DefaultStyle.main2_700
+			get normal() { return Linphone.DefaultStyle.main2_600 },
+			get pressed() { return Linphone.DefaultStyle.main2_700 }
 		}
 	}
 
 // Green toast
 	var toast = {
 		color: {
-			normal: Linphone.DefaultStyle.grey_0,
-			hovered: Linphone.DefaultStyle.grey_0,
-			pressed: Linphone.DefaultStyle.grey_0
+			get normal() { return Linphone.DefaultStyle.surface },
+			get hovered() { return Linphone.DefaultStyle.surface },
+			get pressed() { return Linphone.DefaultStyle.surface }
 		},
 		borderColor: {
-			normal: Linphone.DefaultStyle.success_500_main,
-			keybaordFocused: Linphone.DefaultStyle.main2_900
+			get normal() { return Linphone.DefaultStyle.success_500_main },
+			get keybaordFocused() { return Linphone.DefaultStyle.main2_900 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.success_500_main,
-			pressed: Linphone.DefaultStyle.success_700
+			get normal() { return Linphone.DefaultStyle.success_500_main },
+			get pressed() { return Linphone.DefaultStyle.success_700 }
 		}
 	}
 
 // Security blue toast
 	var securityToast = {
 		color: {
-			normal: Linphone.DefaultStyle.grey_0,
-			hovered: Linphone.DefaultStyle.grey_0,
-			pressed: Linphone.DefaultStyle.grey_0
+			get normal() { return Linphone.DefaultStyle.surface },
+			get hovered() { return Linphone.DefaultStyle.surface },
+			get pressed() { return Linphone.DefaultStyle.surface }
 		},
 		borderColor: {
-			normal: Linphone.DefaultStyle.info_500_main,
-			keybaordFocused: Linphone.DefaultStyle.main2_900
+			get normal() { return Linphone.DefaultStyle.info_500_main },
+			get keybaordFocused() { return Linphone.DefaultStyle.main2_900 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.info_500_main,
-			pressed: Linphone.DefaultStyle.info_500_main
+			get normal() { return Linphone.DefaultStyle.info_500_main },
+			get pressed() { return Linphone.DefaultStyle.info_500_main }
 		}
 	}
 
 // Security red toast
 	var securityToastError = {
 		color: {
-			normal: Linphone.DefaultStyle.grey_0,
-			hovered: Linphone.DefaultStyle.grey_0,
-			pressed: Linphone.DefaultStyle.grey_0
+			get normal() { return Linphone.DefaultStyle.surface },
+			get hovered() { return Linphone.DefaultStyle.surface },
+			get pressed() { return Linphone.DefaultStyle.surface }
 		},
 		borderColor: {
-			normal: Linphone.DefaultStyle.danger_500_main,
-			keybaordFocused: Linphone.DefaultStyle.main2_900
+			get normal() { return Linphone.DefaultStyle.danger_500_main },
+			get keybaordFocused() { return Linphone.DefaultStyle.main2_900 }
 		},
 		text: {
-			normal: Linphone.DefaultStyle.danger_500_main,
-			pressed: Linphone.DefaultStyle.danger_500_main
+			get normal() { return Linphone.DefaultStyle.danger_500_main },
+			get pressed() { return Linphone.DefaultStyle.danger_500_main }
 		}
 	}
 
 // White selected
 	var whiteSelected = {
 		color: {
-			normal: Linphone.DefaultStyle.grey_0,
-			hovered: Linphone.DefaultStyle.main2_100,
-			selected: Linphone.DefaultStyle.grey_200,
+			get normal() { return Linphone.DefaultStyle.surface },
+			get hovered() { return Linphone.DefaultStyle.main2_100 },
+			get selected() { return Linphone.DefaultStyle.grey_200 },
 		},
 		borderColor: {
-			keybaordFocused: Linphone.DefaultStyle.main2_900
+			get keybaordFocused() { return Linphone.DefaultStyle.main2_900 }
 		}
 	}
 
 	var hoveredBackgroundBis = {
 		color: {
 			normal: "#00000000",
-			hovered: Linphone.DefaultStyle.main2_100,
-			pressed: Linphone.DefaultStyle.main2_100
+			get hovered() { return Linphone.DefaultStyle.main2_100 },
+			get pressed() { return Linphone.DefaultStyle.main2_100 }
 		}
 	}
