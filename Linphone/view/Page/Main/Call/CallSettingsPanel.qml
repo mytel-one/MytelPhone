@@ -44,12 +44,13 @@ Control.Page {
 			id: headerBackground
 			width: pageHeader.width
 			height: pageHeader.height
-			color: DefaultStyle.grey_0
+			color: DefaultStyle.surface
             radius: Utils.getSizeWithScreenRatio(15)
 			Rectangle {
 				y: pageHeader.height/2
 				height: pageHeader.height/2
 				width: pageHeader.width
+				color: headerBackground.color
 			}
 			RoundButton {
 				id: closeButton

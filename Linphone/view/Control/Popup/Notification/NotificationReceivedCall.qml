@@ -10,7 +10,7 @@ import "qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js" as Utils
 Notification {
 	id: mainItem
     radius: Utils.getSizeWithScreenRatio(10)
-	backgroundColor: DefaultStyle.grey_600
+	backgroundColor: DefaultStyle.callSurface
 	backgroundOpacity: 0.8
     overriddenWidth: Utils.getSizeWithScreenRatio(400)
 	overriddenHeight: content.height

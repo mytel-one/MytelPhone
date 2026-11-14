@@ -84,6 +84,7 @@ PopupButton {
         implicitHeight: Utils.getSizeWithScreenRatio(20) + (setCustomStatus.visible ? Utils.getSizeWithScreenRatio(240) : setPresence.implicitHeight)
         Rectangle {
             anchors.fill: parent
+            color: DefaultStyle.surface
             Presence {
                 id: setPresence
                 visible: !presenceAndRegistrationItem.editCustomStatus

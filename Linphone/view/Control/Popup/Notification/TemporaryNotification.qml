@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls.Basic as Control
 import QtQuick.Effects
 import Linphone
 import "qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js" as Utils
@@ -40,7 +41,7 @@ Control.Control {
 	Behavior on y {NumberAnimation {duration: 1000}}
 	background: Rectangle {
 		anchors.fill: parent
-		color: DefaultStyle.grey_0
+		color: DefaultStyle.surface
 		border.color: mainItem.contentColor
         border.width:  Utils.getSizeWithScreenRatio(1)
         radius: Utils.getSizeWithScreenRatio(50)

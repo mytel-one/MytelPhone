@@ -183,7 +183,7 @@ Button {
             Rectangle {
                 id: popupBackground
                 anchors.fill: parent
-                color: DefaultStyle.grey_0
+                color: DefaultStyle.surface
                 radius: Utils.getSizeWithScreenRatio(16)
             }
             MultiEffect {

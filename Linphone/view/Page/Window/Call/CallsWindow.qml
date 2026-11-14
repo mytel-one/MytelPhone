@@ -858,7 +858,7 @@ AbstractWindow {
                                     }
                                 })
                         }
-                        searchBarColor: DefaultStyle.grey_0
+                        searchBarColor: DefaultStyle.surface
                         searchBarBorderColor: DefaultStyle.grey_200
                         searchBarRightMaring: 0
                         onContactClicked: contact => {
@@ -909,7 +909,7 @@ AbstractWindow {
                         width: parent.width
                         height: rightPanel.contentItemHeight
                         startGroupButtonVisible: false
-                        searchBarColor: DefaultStyle.grey_0
+                        searchBarColor: DefaultStyle.surface
                         searchBarBorderColor: DefaultStyle.grey_200
                         numPadPopup: numericPad
                         onContactClicked: contact => {
@@ -1298,7 +1298,7 @@ AbstractWindow {
                                 id: addParticipantLayout
                                 // height: childrenRect.height
                                 // width: parent.width
-                                searchBarColor: DefaultStyle.grey_0
+                                searchBarColor: DefaultStyle.surface
                                 searchBarBorderColor: DefaultStyle.grey_200
                                 onSelectedParticipantsCountChanged: {
                                     rightPanel.headerSubtitleText = qsTr("group_call_participant_selected", '', selectedParticipantsCount).arg(selectedParticipantsCount)

@@ -15,7 +15,7 @@ DesktopPopup {
     property real overriddenHeight: Utils.getSizeWithScreenRatio(120)
     property real overriddenWidth: Utils.getSizeWithScreenRatio(300)
 	property double radius: 0
-	property color backgroundColor: DefaultStyle.grey_0
+	property color backgroundColor: DefaultStyle.surface
 	property double backgroundOpacity: 1
 	
 	signal deleteNotification (var notification)

@@ -306,7 +306,7 @@ Item {
                                 Rectangle {
                                     id: popupBg
                                     radius: Utils.getSizeWithScreenRatio(16)
-                                    color: DefaultStyle.grey_0
+                                    color: DefaultStyle.surface
                                     anchors.fill: parent
                                     border.color: DefaultStyle.main1_500_main
                                     border.width: contactList.activeFocus ? 2 : 0

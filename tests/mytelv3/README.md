@@ -27,6 +27,7 @@ the user's request. Credentials and user configuration are excluded.
 | Open/reset an empty conversation | Four production binding/handler cases threw on missing chat/message objects | All four null-state cases pass |
 | Read call labels and controls after switching theme | 8 of 12 production color-binding cases failed in the old palette | Dedicated media surfaces keep white call labels and icons readable in both modes (12/12 pass) |
 | Read history/contact detail cards | 12 of 16 color/accessibility cases failed, including the white history card with pale dark-mode labels | Detail cards, contact fields/banner/note and the creation gradient use adaptive surfaces; ordinary and missed-call dates retain text contrast (16/16 pass) |
+| Open call/main options and account popups | 8/16 production surface checks failed; native Qt popup palette failed all four theme switches | Shared popup surfaces and incoming notification contrast pass 16/16; native Qt popup/text-field colors inherit the actual window palette on every switch |
 
 The Qt harness instantiates the production `DefaultStyle.qml`, `Themes.qml`,
 `AppIcons.qml` and `buttonStyle.js`. It switches light → dark → light → dark,
@@ -37,6 +38,10 @@ The harness also instantiates a Qt Quick button with the production call style:
 text contrast stays 9.37:1 on controls, 6.14:1 on hover, 18.16:1 on the stage,
 and 12.74:1 on participant tiles across all four theme switches. Actual video
 rendering and call-window appearance remain part of device acceptance.
+It extracts the production `AbstractWindow` palette bindings into a real Qt
+ApplicationWindow and checks a Basic Popup/Label and TextField: ordinary field
+text measures 6.07:1 light and 12.06:1 dark, and popup surfaces/labels match the
+selected application palette without restarting.
 
 The contact harness compiles the exact `FriendCore::getAllAddresses()` and
 `Utils::getUsername()` bodies extracted at configure time, using small Qt-only
@@ -53,7 +58,7 @@ logs and visible behavior still require separate runtime acceptance.
 Additional production-function tests check that dialing uses the current input
 rather than the history debounce, rejects invalid values without closing the
 keypad, and clears both displayed/search values immediately. The final Node suite
-contains 158 passing cases. Changed QML files were checked with Qt 6.10
+contains 174 passing cases. Changed QML files were checked with Qt 6.10
 `qmlformat`: zero syntax failures.
 
 ## Limits

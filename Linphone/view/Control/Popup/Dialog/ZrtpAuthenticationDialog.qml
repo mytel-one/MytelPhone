@@ -103,7 +103,7 @@ Dialog {
             height: Math.round(parent.height - Utils.getSizeWithScreenRatio(85))
 			x: parent.x
             y: Math.round(parent.y + Utils.getSizeWithScreenRatio(85))
-			color: DefaultStyle.grey_0
+			color: DefaultStyle.surface
 			radius: mainItem.radius
 		}
 		MultiEffect {
@@ -191,7 +191,7 @@ Dialog {
                                 Layout.Layout.preferredHeight: Utils.getSizeWithScreenRatio(70)
                                 width: Utils.getSizeWithScreenRatio(70)
                                 height: Utils.getSizeWithScreenRatio(70)
-								color: DefaultStyle.grey_0
+								color: DefaultStyle.surface
                                 textSize: Utils.getSizeWithScreenRatio(32)
                                 textWeight: Utils.getSizeWithScreenRatio(400)
 								text: modelData
@@ -245,7 +245,7 @@ Dialog {
             Layout.Layout.preferredWidth: Utils.getSizeWithScreenRatio(247)
             //: "Aucune correspondance"
             text: qsTr("call_dialog_zrtp_validate_trust_letters_do_not_match")
-			color: DefaultStyle.grey_0
+			color: DefaultStyle.surface
 			borderColor: DefaultStyle.danger_500_main
 			textColor: DefaultStyle.danger_500_main
 			visible: !mainItem.securityError

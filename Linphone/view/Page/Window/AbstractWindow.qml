@@ -16,6 +16,25 @@ ApplicationWindow {
     width: Math.min(Utils.getSizeWithScreenRatio(1512), Screen.desktopAvailableWidth)
     height: Math.min(Utils.getSizeWithScreenRatio(982), Screen.desktopAvailableHeight - 48)
 
+    // Basic controls inherit their palette through the window, including
+    // menus/popups that are reparented into its overlay.
+    palette.window: DefaultStyle.surface
+    palette.windowText: DefaultStyle.main2_600
+    palette.base: DefaultStyle.background
+    palette.alternateBase: DefaultStyle.main2_100
+    palette.text: DefaultStyle.main2_600
+    palette.button: DefaultStyle.main2_100
+    palette.buttonText: DefaultStyle.main2_600
+    palette.toolTipBase: DefaultStyle.surface
+    palette.toolTipText: DefaultStyle.main2_600
+    palette.placeholderText: DefaultStyle.main2_600
+    palette.highlight: DefaultStyle.main1_500_main
+    palette.highlightedText: DefaultStyle.grey_0
+    palette.accent: DefaultStyle.main1_500_main
+    palette.disabled.text: DefaultStyle.grey_400
+    palette.disabled.windowText: DefaultStyle.grey_400
+    palette.disabled.buttonText: DefaultStyle.grey_400
+
     onActiveChanged: {
         if (active) UtilsCpp.setLastActiveWindow(this)
     }
