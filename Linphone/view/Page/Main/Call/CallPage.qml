@@ -363,12 +363,15 @@ AbstractMainPage {
                                     value: false
                                 }
                                 onCurrentIndexChanged: {
-                                    mainItem.selectedRowHistoryGui = model.getAt(
-                                                currentIndex)
+                                    if (!loading) mainItem.selectedRowHistoryGui = currentIndex >= 0
+                                            ? model.getAt(currentIndex) : null
                                 }
                                 onCountChanged: {
-                                    mainItem.selectedRowHistoryGui = model.getAt(
-                                                currentIndex)
+                                    if (!loading) mainItem.selectedRowHistoryGui = currentIndex >= 0
+                                            ? model.getAt(currentIndex) : null
+                                }
+                                onResultsReceived: {
+                                    mainItem.selectedRowHistoryGui = currentIndex >= 0 ? model.getAt(currentIndex) : null
                                 }
                             }
                         }

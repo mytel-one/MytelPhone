@@ -32,6 +32,7 @@ the user's request. Credentials and user configuration are excluded.
 | Read dial codes under a Persian keyboard | Qt renders neutral `*43` as `43*`; left alignment alone does not change its bidi base | Exact production public-Qt helper corrects four code formats in enabled/disabled fields, preserving raw text, cursor, selection, width binding and subsequent edits (8/8 pass) |
 | Restore the vertical navigation after Back | Actual Qt StackView push/pop collapsed all tab Y positions to zero | A vertical Container keeps tab placement stable over repeated push/pop cycles; model availability remains independent of ancestor visibility |
 | Traverse popup focus with hidden options | 9/10 cases failed, including unbounded recursive wrap | A bounded loop excludes hidden/disabled options and null-safe keyboard callers handle empty menus (10/10 pass) |
+| Keep the selected history peer after a new call | 6/10 production-handler reset scenarios failed, including numeric-index drift to another peer | A stable peer address restores selection after queued model reset; removed peers clear selection, filters remain unchanged, pagination stops on no progress, and no call is created (10/10 pass) |
 
 The Qt harness instantiates the production `DefaultStyle.qml`, `Themes.qml`,
 `AppIcons.qml` and `buttonStyle.js`. It switches light → dark → light → dark,
@@ -67,7 +68,7 @@ retains its existing direction handling.
 Additional production-function tests check that dialing uses the current input
 rather than the history debounce, rejects invalid values without closing the
 keypad, and clears both displayed/search values immediately. The final Node suite
-contains 210 passing cases. Changed QML files were checked with Qt 6.10
+contains 220 passing cases. Changed QML files were checked with Qt 6.10
 `qmlformat`: zero syntax failures.
 
 ## Limits

@@ -21,6 +21,38 @@ ListView {
     property real busyIndicatorSize: Utils.getSizeWithScreenRatio(60)
     property bool keyboardFocus: FocusHelper.keyboardFocus
     property bool lastFocusByNavigationKeyboard: false // Workaround to get the correct focusReason
+    property bool selectionResetPending: false
+    property string selectionPeerAddress: ""
+
+    function rememberSelection() {
+        if (selectionResetPending) return
+        var selected = currentIndex >= 0 && currentIndex < model.count ? model.getAt(currentIndex) : null
+        selectionPeerAddress = selected?.core?.remoteAddress || ""
+        selectionResetPending = true
+    }
+
+    function restoreSelection() {
+        var selectedIndex = -1
+        if (selectionPeerAddress) {
+            var checked = 0
+            while (checked < model.count || model.haveMore) {
+                if (checked >= model.count) {
+                    var previousCount = model.count
+                    model.displayMore()
+                    if (model.count <= previousCount) break
+                }
+                if (model.getAt(checked)?.core?.remoteAddress === selectionPeerAddress) {
+                    selectedIndex = checked
+                    break
+                }
+                ++checked
+            }
+        } else if (model.count > 0) selectedIndex = 0
+        currentIndex = selectedIndex
+        selectionResetPending = false
+        loading = false
+        resultsReceived()
+    }
 
     signal resultsReceived
 
@@ -35,9 +67,12 @@ ListView {
         onFilterTextChanged: maxDisplayItems = initialDisplayItems
         initialDisplayItems: Math.max(20, Math.round(2 * mainItem.height / Utils.getSizeWithScreenRatio(56)))
         displayItemsStep: 3 * initialDisplayItems / 2
-        onModelAboutToBeReset: loading = true
+        onModelAboutToBeReset: {
+            mainItem.rememberSelection()
+            loading = true
+        }
         onModelReset: {
-            mainItem.resultsReceived()
+            Qt.callLater(mainItem.restoreSelection)
         }
     }
     flickDeceleration: 10000
@@ -77,9 +112,9 @@ ListView {
     //         mainItem.cacheBuffer = Math?.max(contentHeight, 0) || 0
     // })
 
-    onActiveFocusChanged: if (activeFocus && currentIndex < 0 && count > 0) currentIndex = 0
+    onActiveFocusChanged: if (!loading && activeFocus && currentIndex < 0 && count > 0) currentIndex = 0
     onCountChanged: {
-        if (currentIndex < 0 && count > 0) {
+        if (!loading && currentIndex < 0 && count > 0) {
             mainItem.currentIndex = 0 // Select first item after loading model
         }
         if (atYBeginning)
