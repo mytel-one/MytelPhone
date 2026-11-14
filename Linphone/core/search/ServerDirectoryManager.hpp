@@ -51,28 +51,29 @@ public:
 	static ServerDirectoryManager *getInstance();
 
 	// Config storage keys (mirrors the Android implementation keys)
-	static QString directoryUrlKey (const QString &identity);
-	static QString directoryCacheKey (const QString &identity, const QString &url);
+	static QString directoryUrlKey(const QString &identity);
+	static QString directoryCacheKey(const QString &identity, const QString &url);
 
-	Q_INVOKABLE void setDirectoryUrl (const QString &identity, const QString &url);
-	Q_INVOKABLE QString getDirectoryUrl (const QString &identity) const;
+	Q_INVOKABLE void setDirectoryUrl(const QString &identity, const QString &url);
+	Q_INVOKABLE QString getDirectoryUrl(const QString &identity) const;
 
 	// Synchronous fetch (IO thread) + parse. Blocking by design: called from
 	// the search worker path. Returns false on failure (cache preserved).
-	Q_INVOKABLE bool refresh (const QString &identity);
+	Q_INVOKABLE bool refresh(const QString &identity);
 
-	QVector<Entry> getEntries (const QString &identity) const;
-	QVector<Entry> searchEntries (const QString &identity, const QString &filter) const;
+	QVector<Entry> getEntries(const QString &identity) const;
+	QVector<Entry> searchEntries(const QString &identity, const QString &filter) const;
 
 signals:
-	void directoryUpdated (const QString &identity, int entryCount);
+	void directoryUpdated(const QString &identity, int entryCount);
 
 private:
-	explicit ServerDirectoryManager ();
+	friend class ServerDirectoryManagerTestAccess;
+	explicit ServerDirectoryManager();
 
-	QString fetchToBuffer (const QString &url, bool *ok);
-	void saveCache (const QString &identity, const QString &url, const QString &body);
-	QString loadCache (const QString &identity, const QString &url) const;
+	QString fetchToBuffer(const QString &url, bool *ok);
+	void saveCache(const QString &identity, const QString &url, const QString &body);
+	QString loadCache(const QString &identity, const QString &url) const;
 
 	QHash<QString, QString> mCaches; // identity+url -> body
 	QHash<QString, QString> mUrls;   // identity -> url
