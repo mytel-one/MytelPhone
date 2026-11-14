@@ -14,6 +14,7 @@ context.Utils = context;
 // Execute each production entry point, including the QML wrapper. No copied
 // normalizer lives in the test: this catches a forgotten call/chat entry point.
 const entryPoints = [
+    ['contact call', 'Linphone/view/Page/Window/AbstractWindow.qml', 'mytelNormalizeNumber'],
     ['call page', 'Linphone/view/Page/Main/Call/CallPage.qml', 'mytelNormalizeDial'],
     ['call form', 'Linphone/view/Page/Form/Call/NewCallForm.qml', 'normalizeInput'],
     ['chat form', 'Linphone/view/Page/Form/Chat/NewChatForm.qml', 'normalizeInput']
