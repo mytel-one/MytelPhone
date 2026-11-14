@@ -30,7 +30,9 @@ function fixture(haveAccount = true) {
     for (const name of ['openMainPage', 'goToLogin']) vm.runInContext(block(`function ${name}(`), context);
     if (source.includes('function leaveSipLogin(')) vm.runInContext(block('function leaveSipLogin('), context);
     context.mainWindow = context;
-    const back = block('onGoBack:', source.slice(source.indexOf('id: sipLoginPage'))).replace('onGoBack:', '');
+    const sip = source.slice(source.indexOf('id: sipLoginPage'));
+    const backLine = sip.match(/onGoBack:\s*([^\r\n]+)/)[1];
+    const back = backLine.startsWith('{') ? block('onGoBack:', sip).replace('onGoBack:', '') : backLine;
     return { pages, main, context, stack, back: () => vm.runInContext(back, context) };
 }
 test('Add account retains the existing main page underneath the login form', () => {
@@ -63,3 +65,18 @@ test('a first profile starts with one editable login page', () => {
     assert.equal(f.stack.depth, 1);
     assert.equal(f.stack.currentItem.objectName, 'sipLoginPage');
 });
+for (const [name, args] of [
+    ['goToNewCall', []], ['goToCallHistory', []], ['displayContactPage', ['sip:301@pbx']],
+    ['displayChatPage', ['sip:302@pbx']], ['openChat', [{ chat: 1 }]],
+    ['createContact', ['Test contact', '301']], ['scheduleMeeting', ['Test', ['301', '302']]]
+]) {
+    test(`main page wrapper forwards ${name} to the retained layout`, () => {
+        const calls = [];
+        const context = vm.createContext({ mainLayout: { [name]: (...values) => calls.push(values) } });
+        const wrapper = source.slice(source.indexOf('id: mainPage'));
+        const method = block(`function ${name}(`, wrapper);
+        vm.runInContext(method, context);
+        context[name](...args);
+        assert.deepEqual(calls, [args]);
+    });
+}

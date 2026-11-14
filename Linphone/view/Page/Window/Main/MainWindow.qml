@@ -37,7 +37,13 @@ AbstractWindow {
 	// }
 
 	function openMainPage(connectionSucceed){
-		if (!mainStackViewLoader.item || !mainStackViewLoader.item.currentItem || mainStackViewLoader.item.currentItem.objectName !== "mainPage") mainStackViewLoader.item.replace(mainPage, StackView.Immediate)
+        var stack = mainStackViewLoader.item
+        if (!stack) return
+        if (stack.currentItem?.objectName !== "mainPage") {
+            var existingMainPage = stack.find(item => item.objectName === "mainPage")
+            if (existingMainPage) stack.pop(existingMainPage, StackView.Immediate)
+            else stack.replace(mainPage, StackView.Immediate)
+        }
         //: "Connexion réussie"
         if (connectionSucceed) mainWindow.showInformationPopup(qsTr("information_popup_connexion_succeed_title"),
                                                                //: "Vous êtes connecté en mode %1"
@@ -86,9 +92,19 @@ AbstractWindow {
     }
 
 	function goToLogin() {
-		// MyTel product decision: always the third-party SIP login form
-		mainStackViewLoader.item.replace(sipLoginPage)
+        var stack = mainStackViewLoader.item
+        if (!stack || stack.currentItem?.objectName === "sipLoginPage") return
+        if (accountProxy?.haveAccount && stack.currentItem?.objectName === "mainPage")
+            stack.push(sipLoginPage)
+        else stack.replace(sipLoginPage)
 	}
+
+    function leaveSipLogin() {
+        var stack = mainStackViewLoader.item
+        if (!stack) return
+        if (stack.depth > 1) stack.pop()
+        else if (accountProxy?.haveAccount) openMainPage()
+    }
 
 	function scheduleMeeting(subject, addresses) {
 		openMainPage()
@@ -538,15 +554,9 @@ AbstractWindow {
 		id: sipLoginPage
 		SIPLoginPage {
 			objectName: "sipLoginPage"
-			onGoBack: {
-				if(SettingsCpp.assistantGoDirectlyToThirdPartySipAccountLogin){
-					openMainPage()
-				}else
-					mainStackViewLoader.item.pop()
-			}
+            onGoBack: leaveSipLogin()
 			onGoToRegister: mainStackViewLoader.item.replace(registerPage)
-            showBackButton: false
-            StackView.onActivated: if (!SettingsCpp.assistantGoDirectlyToThirdPartySipAccountLogin || mainWindow.accountProxy?.haveAccount) showBackButton = true
+            showBackButton: !!mainWindow.accountProxy?.haveAccount || (mainStackViewLoader.item?.depth || 0) > 1
 		}
 	}
 	Component {
@@ -610,6 +620,14 @@ AbstractWindow {
 	Component {
 		id: mainPage
 		Item {
+            objectName: "mainPage"
+            function goToNewCall() { mainLayout.goToNewCall() }
+            function goToCallHistory() { mainLayout.goToCallHistory() }
+            function displayContactPage(address) { mainLayout.displayContactPage(address) }
+            function displayChatPage(address) { mainLayout.displayChatPage(address) }
+            function openChat(chat) { mainLayout.openChat(chat) }
+            function createContact(name, address) { mainLayout.createContact(name, address) }
+            function scheduleMeeting(subject, addresses) { mainLayout.scheduleMeeting(subject, addresses) }
 			// Reserved-footer wrapper (owner requirement 2026-11-12): the
 			// layout consumes the whole page minus a fixed footer row, and
 			// the connection indicator lives right-aligned in that footer —

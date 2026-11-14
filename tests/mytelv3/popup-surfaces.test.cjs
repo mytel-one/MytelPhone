@@ -25,6 +25,7 @@ const surfaces = [
     ['call/main options', 'Control/Button/PopupButton.qml', 'id: popupBackground'],
     ['main search suggestions', 'Page/Layout/Main/MainLayout.qml', 'id: popupBg'],
     ['call settings header', 'Page/Main/Call/CallSettingsPanel.qml', 'id: headerBackground'],
+    ['in-call DTMF input', 'Page/Window/Call/CallsWindow.qml', 'id: searchBar'],
     ['presence account popup', 'Control/Display/Contact/ContactStatusPopup.qml', 'popup.contentItem: FocusScope'],
     ['security dialog body', 'Control/Popup/Dialog/ZrtpAuthenticationDialog.qml', 'y: Math.round(parent.y + Utils.getSizeWithScreenRatio(85))'],
 ];

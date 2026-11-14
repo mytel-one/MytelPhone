@@ -959,7 +959,7 @@ AbstractWindow {
                                 id: searchBar
                                 height: Utils.getSizeWithScreenRatio(45)
                                 magnifierVisible: false
-                                color: DefaultStyle.grey_0
+                                color: DefaultStyle.surface
                                 borderColor: DefaultStyle.grey_200
                                 placeholderText: ""
                                 numericPadPopup: numPad
