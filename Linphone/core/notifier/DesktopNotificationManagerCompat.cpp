@@ -110,7 +110,7 @@ HRESULT RegisterAumidInRegistry(const wchar_t *aumid, const wchar_t *iconPath) {
 	if (res != ERROR_SUCCESS) return HRESULT_FROM_WIN32(res);
 
 	// DisplayName obligatoire pour que Windows affiche la notification
-	const wchar_t *displayName = aumid;
+	const wchar_t *displayName = L"" APPLICATION_NAME;
 	res = ::RegSetValueExW(key, L"DisplayName", 0, REG_SZ, reinterpret_cast<const BYTE *>(displayName),
 	                       static_cast<DWORD>((wcslen(displayName) + 1) * sizeof(wchar_t)));
 

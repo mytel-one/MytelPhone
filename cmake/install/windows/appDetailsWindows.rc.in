@@ -1,4 +1,4 @@
-A ICON MOVEABLE PURE LOADONCALL DISCARDABLE "data/icon.ico"
+A ICON MOVEABLE PURE LOADONCALL DISCARDABLE "${CMAKE_CURRENT_SOURCE_DIR}/data/icon.ico"
 
 # if defined(UNDER_CE)
 #  include <winbase.h>
@@ -25,9 +25,9 @@ VS_VERSION_INFO VERSIONINFO
             BEGIN
                 VALUE "CompanyName", "${APPLICATION_VENDOR}\0"
                 VALUE "FileDescription", "${APPLICATION_NAME} - ${APPLICATION_DESCRIPTION}\0"
-                VALUE "FileVersion", "${FULL_VERSION}"
-				VALUE "ProductVersion", "${version_major}.${version_minor}.${version_patch}\0"
-                VALUE "LegalCopyright", "Copyright (C) ${COPYRIGHT_RANGE_DATE} ${APPLICATION_VENDOR} ${APPLICATION_URL}\0"
+                VALUE "FileVersion", "${LINPHONEAPP_SHORT_VERSION}\0"
+                VALUE "ProductVersion", "${LINPHONEAPP_SHORT_VERSION}\0"
+                VALUE "LegalCopyright", "Copyright (C) ${COPYRIGHT_RANGE_DATE} Belledonne Communications. Distributed by ${APPLICATION_VENDOR}.\0"
                 VALUE "OriginalFilename", "${EXECUTABLE_NAME}.exe\0"
                 VALUE "ProductName", "${APPLICATION_NAME}\0"
             END

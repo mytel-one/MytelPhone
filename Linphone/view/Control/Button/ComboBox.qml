@@ -275,6 +275,7 @@ Control.ComboBox {
             Rectangle {
                 id: cboxBg
                 anchors.fill: parent
+                color: DefaultStyle.surface
                 radius: Utils.getSizeWithScreenRatio(15)
             }
             MultiEffect {

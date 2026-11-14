@@ -51,7 +51,7 @@ Rectangle {
                 }
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: "MytellPhone"
+                    text: applicationName
                     color: "#F4F8FD"
                     font.pixelSize: 34
                     font.weight: Font.Bold

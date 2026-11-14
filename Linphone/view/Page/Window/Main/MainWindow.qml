@@ -294,7 +294,7 @@ AbstractWindow {
 				anchors.topMargin: Utils.getSizeWithScreenRatio(20)
 				anchors.horizontalCenter: parent.horizontalCenter
 				// Leader correction: complete wordmark in soft white
-				text: "MytellPhone"
+				text: applicationName
 				color: "#E8F1FC"
 				font.pixelSize: Utils.getSizeWithScreenRatio(26)
 				font.weight: Font.DemiBold

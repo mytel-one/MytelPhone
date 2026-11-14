@@ -147,7 +147,7 @@ Rectangle {
 				}
 				Text {
 					Layout.alignment: Qt.AlignHCenter
-					text: "MytellPhone"
+					text: applicationName
 					color: "#E8F1FC"
 					font.pixelSize: 32
 					font.weight: Font.Bold
@@ -188,7 +188,7 @@ Rectangle {
 					Layout.preferredHeight: 64
 				}
 				Text {
-					text: "MytellPhone"
+					text: applicationName
 					color: DefaultStyle.main2_900
 					font.pixelSize: 24
 					font.weight: Font.Bold

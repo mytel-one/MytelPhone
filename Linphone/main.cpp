@@ -16,6 +16,8 @@ FILE *gStream = NULL;
 #include "core/App.hpp"
 #include "core/logger/QtLogger.hpp"
 #include "core/path/Paths.hpp"
+#include "tool/Constants.hpp"
+#include "tool/Utils.hpp"
 
 #include <QApplication>
 #include <QLocale>
@@ -31,7 +33,7 @@ FILE *gStream = NULL;
 #define WIDEN2(x) L##x
 #define WIDEN(x) WIDEN2(x)
 
-static const wchar_t *mAumid = WIDEN(APPLICATION_NAME);
+static const wchar_t *mAumid = WIDEN(APPLICATION_NOTIFICATION_ID);
 
 void cleanStream() {
 #ifdef _WIN32
@@ -69,11 +71,6 @@ int main(int argc, char *argv[]) {
 	HRESULT hrCom = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 	qInfo() << "CoInitializeEx STA result:" << Qt::hex << hrCom;
 
-	//  Register AUMID and COM server (for a packaged app, this is a no-operation)
-	auto hr = DesktopNotificationManagerCompat::RegisterAumidAndComServer(mAumid, __uuidof(NotificationActivator));
-	if (FAILED(hr)) {
-		qWarning() << "RegisterAumidAndComServer failed:" << Qt::hex << hr;
-	}
 #endif
 
 	// Useful to share camera on Fullscreen (other context) or multiscreens
@@ -94,6 +91,13 @@ int main(int argc, char *argv[]) {
 	auto app = QSharedPointer<App>::create(argc, argv);
 
 #if defined _WIN32
+	// Render after QApplication exists; the identity remains stable across display-name changes.
+	const auto notificationIcon = Utils::getIconAsPng(Constants::WindowIconPath).toStdWString();
+	auto hr = DesktopNotificationManagerCompat::RegisterAumidAndComServer(
+	    mAumid, __uuidof(NotificationActivator), notificationIcon.empty() ? nullptr : notificationIcon.c_str());
+	if (FAILED(hr)) {
+		qWarning() << "RegisterAumidAndComServer failed:" << Qt::hex << hr;
+	}
 	hr = DesktopNotificationManagerCompat::RegisterActivator();
 	if (FAILED(hr)) {
 		qWarning() << "RegisterActivator failed:" << Qt::hex << hr;

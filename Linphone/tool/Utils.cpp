@@ -1919,7 +1919,10 @@ QString Utils::getIconAsPng(const QString &imagePath, const QSize &size) {
 	if (imagePath.startsWith("image://internal/"))
 		resourcePath = ":/data/image/" + imagePath.mid(QString("image://internal/").length());
 
-	QSvgRenderer renderer(resourcePath);
+	QFile source(resourcePath);
+	if (!source.open(QIODevice::ReadOnly)) return QString();
+	const QByteArray contents = source.readAll();
+	QSvgRenderer renderer(contents);
 	if (!renderer.isValid()) return QString();
 
 	QImage image(size, QImage::Format_ARGB32_Premultiplied);
@@ -1928,10 +1931,12 @@ QString Utils::getIconAsPng(const QString &imagePath, const QSize &size) {
 	renderer.render(&painter);
 	painter.end();
 
-	QString outPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/linphone_" +
-	                  QFileInfo(resourcePath).baseName() + ".png";
+	// Include the artwork and requested size so upgrades cannot reuse an old logo.
+	const QByteArray identity = contents + QByteArray::number(size.width()) + 'x' + QByteArray::number(size.height());
+	const QString hash = QString::fromLatin1(QCryptographicHash::hash(identity, QCryptographicHash::Sha256).toHex());
+	QString outPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/mytel_icon_" + hash + ".png";
 
-	if (!QFile::exists(outPath)) image.save(outPath, "PNG");
+	if (!QFile::exists(outPath) && !image.save(outPath, "PNG")) return QString();
 
 	return outPath;
 }
