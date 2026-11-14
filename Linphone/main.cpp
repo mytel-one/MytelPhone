@@ -89,6 +89,7 @@ int main(int argc, char *argv[]) {
 	lDebug() << "[Main] Creating application";
 
 	auto app = QSharedPointer<App>::create(argc, argv);
+	QGuiApplication::setApplicationDisplayName(APPLICATION_NAME);
 
 #if defined _WIN32
 	// Render after QApplication exists; the identity remains stable across display-name changes.
