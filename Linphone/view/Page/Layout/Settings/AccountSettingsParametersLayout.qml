@@ -59,8 +59,8 @@ AbstractSettingsLayout {
             spacing: Utils.getSizeWithScreenRatio(20)
 			SmallButton {
 				text: qsTr("Stop reconnecting")
-				visible: account && (account.core.registrationState === LinphoneEnums.RegistrationState.Progress
-				         || account.core.registrationState === LinphoneEnums.RegistrationState.Refreshing)
+				visible: account && account.core.registerEnabled
+				         && account.core.registrationState !== LinphoneEnums.RegistrationState.Ok
 				onClicked: account.core.lSetRegisterEnabled(false)
 			}
             DecoratedTextField {
