@@ -6,6 +6,7 @@ SetCompressor /SOLID lzma
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
 !include "x64.nsh"
+Var GuardMessage
 
 Name "MyTel"
 OutFile "${MYTEL_OUTPUT}"
@@ -37,6 +38,7 @@ VIAddVersionKey /LANG=1033 "LegalCopyright" "MyTel distribution. Includes GPL so
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "${MYTEL_LICENSE}"
 !insertmacro MUI_PAGE_COMPONENTS
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE ValidateInstallTarget
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
@@ -52,6 +54,105 @@ Function .onInit
     ${EndIf}
     SetShellVarContext current
     SetRegView 64
+FunctionEnd
+
+; These checks also run in the section, so /S /D= cannot bypass ownership checks.
+!macro TargetGuards PREFIX
+Function ${PREFIX}RejectTarget
+    IfSilent quiet
+    MessageBox MB_ICONSTOP "$GuardMessage"
+    quiet:
+    SetErrorLevel 2
+    Abort
+FunctionEnd
+
+Function ${PREFIX}ValidateSafePath
+    StrCmp "$INSTDIR" "" unsafe
+    ; NSIS can strip the final slash from /D=C:\ before entering the section.
+    StrLen $0 "$INSTDIR"
+    ${If} $0 <= 3
+        StrCpy $1 "$INSTDIR" 1 1
+        StrCmp "$1" ":" unsafe
+    ${EndIf}
+    System::Call 'kernel32::GetFullPathNameW(w "$INSTDIR", i ${NSIS_MAX_STRLEN}, w .r2, p 0) i.r0'
+    ${If} $0 <= 0
+    ${OrIf} $0 >= ${NSIS_MAX_STRLEN}
+        Goto unsafe
+    ${EndIf}
+    StrCmp "$2" "" unsafe
+    trim:
+    StrLen $0 "$2"
+    ${If} $0 > 3
+        StrCpy $1 "$2" 1 -1
+        ${If} "$1" == "\"
+            StrCpy $2 "$2" -1
+            Goto trim
+        ${EndIf}
+    ${EndIf}
+    StrCpy $INSTDIR "$2"
+    System::Call 'shlwapi::PathIsRootW(w "$INSTDIR") i.r0'
+    StrCmp $0 0 +2
+    Goto unsafe
+    StrCmp "$INSTDIR" "$WINDIR" unsafe
+    StrLen $0 "$WINDIR\"
+    StrCpy $1 "$INSTDIR" $0
+    StrCmp "$1" "$WINDIR\" unsafe
+    StrCmp "$INSTDIR" "$SYSDIR" unsafe
+    StrCmp "$INSTDIR" "$PROGRAMFILES" unsafe
+    StrCmp "$INSTDIR" "$PROGRAMFILES64" unsafe
+    StrCmp "$INSTDIR" "$PROGRAMFILES32" unsafe
+    StrCmp "$INSTDIR" "$PROFILE" unsafe
+    StrCmp "$INSTDIR" "$APPDATA" unsafe
+    StrCmp "$INSTDIR" "$LOCALAPPDATA" unsafe
+    StrCmp "$INSTDIR" "$DESKTOP" unsafe
+    StrCmp "$INSTDIR" "$DOCUMENTS" unsafe
+    StrCmp "$INSTDIR" "$TEMP" unsafe
+    Return
+    unsafe:
+    StrCpy $GuardMessage "Choose a dedicated MyTel folder. A drive, Windows, system or profile root cannot be used."
+    Call ${PREFIX}RejectTarget
+FunctionEnd
+
+Function ${PREFIX}ValidateOwnedTarget
+    Call ${PREFIX}ValidateSafePath
+    ClearErrors
+    ReadINIStr $0 "$INSTDIR\.mytel-install.ini" "MyTel" "Identity"
+    IfErrors unowned
+    StrCmp "$0" "MyTelDesktop" 0 unowned
+    ReadINIStr $0 "$INSTDIR\.mytel-install.ini" "MyTel" "Path"
+    IfErrors unowned
+    StrCmp "$0" "$INSTDIR" 0 unowned
+    Return
+    unowned:
+    StrCpy $GuardMessage "This folder is not a verified MyTel installation. No files have been removed."
+    Call ${PREFIX}RejectTarget
+FunctionEnd
+!macroend
+!insertmacro TargetGuards ""
+!insertmacro TargetGuards "un."
+
+Function ValidateInstallTarget
+    Call ValidateSafePath
+    IfFileExists "$INSTDIR\.mytel-install.ini" owned
+    ClearErrors
+    FindFirst $0 $1 "$INSTDIR\*"
+    IfErrors empty
+    next:
+    StrCmp "$1" "." advance
+    StrCmp "$1" ".." advance
+    FindClose $0
+    StrCpy $GuardMessage "This folder already contains files and is not owned by MyTel. Choose a new or empty folder."
+    Call RejectTarget
+    advance:
+    FindNext $0 $1
+    IfErrors finished
+    Goto next
+    finished:
+    FindClose $0
+    empty:
+    Return
+    owned:
+    Call ValidateOwnedTarget
 FunctionEnd
 
 !macro CheckMyTelClosed PREFIX
@@ -72,7 +173,16 @@ FunctionEnd
 
 Section "MyTel (required)" SEC_MYTEL
     SectionIn RO
+    Call ValidateInstallTarget
     Call CheckMyTelClosed
+    ClearErrors
+    CreateDirectory "$INSTDIR"
+    WriteINIStr "$INSTDIR\.mytel-install.ini" "MyTel" "Identity" "MyTelDesktop"
+    WriteINIStr "$INSTDIR\.mytel-install.ini" "MyTel" "Path" "$INSTDIR"
+    WriteINIStr "$INSTDIR\.mytel-install.ini" "MyTel" "Version" "${MYTEL_VERSION}"
+    IfErrors 0 +3
+    StrCpy $GuardMessage "MyTel could not create its installation marker. Choose a writable folder."
+    Call RejectTarget
     SetOutPath "$INSTDIR"
     !include "${MYTEL_FILES}"
     WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -103,6 +213,7 @@ Function un.onInit
 FunctionEnd
 
 Section "Uninstall"
+    Call un.ValidateOwnedTarget
     Call un.CheckMyTelClosed
     !include "${MYTEL_UNINSTALL_FILES}"
     Delete "$DESKTOP\MyTel.lnk"
@@ -110,6 +221,7 @@ Section "Uninstall"
     Delete "$SMPROGRAMS\MyTel\Uninstall MyTel.lnk"
     RMDir "$SMPROGRAMS\MyTel"
     Delete "$INSTDIR\Uninstall.exe"
+    Delete "$INSTDIR\.mytel-install.ini"
     RMDir "$INSTDIR"
     DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MyTel"
     DeleteRegKey HKCU "Software\MyTel"

@@ -36,6 +36,15 @@ installation directories. It keeps the existing user profile, SIP accounts,
 contacts and history. It checks that the installed executable is closed before
 installing or uninstalling.
 
+Installation accepts a new/empty dedicated directory or an existing MyTel folder
+with a matching ownership marker and normalized path. Drive/Windows/system/profile
+roots and nonempty unrelated folders are rejected, including silent `/S /D=`
+invocations. Uninstall verifies the same marker and path before deleting files.
+`tests/mytelv3/installer_guard_test.ps1` executes the production NSIS guard and
+sections against a small payload. It isolates registry/shortcut names with a
+unique test suffix and probes real root validation in a section that quits before
+any payload write.
+
 `Assert-MyTelBranding.ps1` also checks the final application/installer PE directly.
 The small `mytel-resource-fixture` target in `tests/mytelv3` compiles the actual
 production resource template without rebuilding the SIP engine; it does not
