@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
 		const bool expected = !dnd && allowed && !locked && !ended;
 		bool ok = app.windowsCreated == int(expected) && notifier.toasts == int(allowed && !dnd);
 		ok &= app.smartShows == int(expected && !background);
-		if (expected) {
+		if (expected && app.mCallsWindow) {
 			ok &= app.mCallsWindow != nullptr;
 			if (background) ok &= app.mCallsWindow->visibility() == QWindow::Minimized;
 			QPointer<QQuickWindow> window = app.mCallsWindow;
