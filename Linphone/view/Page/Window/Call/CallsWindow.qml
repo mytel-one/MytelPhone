@@ -840,6 +840,19 @@ AbstractWindow {
                         }
                         startGroupButtonVisible: false
                         displayCurrentCalls: true
+                        onTransferDestinationRequested: (destination) => {
+                            var sourceCall = mainWindow.call
+                            if (!sourceCall) return
+                            mainWindow.showConfirmationLambdaPopup(
+                                qsTr("call_transfer_confirm_dialog_tittle"),
+                                qsTr("call_transfer_confirm_dialog_message").arg(sourceCall.core.remoteName).arg(destination), "",
+                                function(confirmed) {
+                                    if (confirmed && sourceCall && sourceCall.core) {
+                                        sourceCall.core.lTransferCall(destination)
+                                        rightPanel.visible = false
+                                    }
+                                })
+                        }
                         searchBarColor: DefaultStyle.grey_0
                         searchBarBorderColor: DefaultStyle.grey_200
                         searchBarRightMaring: 0

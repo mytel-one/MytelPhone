@@ -13,6 +13,7 @@ CreationFormLayout {
     id: mainItem
     property bool displayCurrentCalls: false
     signal transferCallToAnotherRequested(CallGui dest)
+    signal transferDestinationRequested(string destination)
 
     //: Appel de groupe
     startGroupButtonText: qsTr("call_start_group_call_title")
@@ -41,8 +42,10 @@ CreationFormLayout {
             dialError = qsTr("mytel_chat_invalid_destination")
             return
         }
-        console.log("[MyTel] Placing call to [" + destination + "]")
-        UtilsCpp.createCall(destination)
+        if (displayCurrentCalls)
+            mainItem.transferDestinationRequested(destination)
+        else
+            UtilsCpp.createCall(destination)
     }
 
     topContent: [
@@ -135,7 +138,7 @@ CreationFormLayout {
                     }
                     contentItem: Text {
                         //: "Call"
-                        text: qsTr("mytel_call_action")
+                        text: mainItem.displayCurrentCalls ? qsTr("Transfer") : qsTr("mytel_call_action")
                         color: DefaultStyle.grey_0
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
