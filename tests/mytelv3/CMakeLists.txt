@@ -52,3 +52,19 @@ add_executable(mytel-chat-layout-test chat_layout_test.cpp)
 target_link_libraries(mytel-chat-layout-test PRIVATE Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick)
 target_compile_definitions(mytel-chat-layout-test PRIVATE MYTEL_SOURCE_ROOT="${MYTEL_SOURCE_ROOT}")
 add_test(NAME mytel-chat-layout-test COMMAND mytel-chat-layout-test)
+
+extract_production_method("Linphone/tool/Utils.cpp"
+    "void Utils::forceInputLeftToRight(QObject *input) {" "dial_input_production.inc")
+add_executable(mytel-dial-input-test dial_input_test.cpp)
+target_link_libraries(mytel-dial-input-test PRIVATE Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick)
+target_include_directories(mytel-dial-input-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+# The installed Qt package does not export GuiPrivate. These versioned headers
+# are a test-only keyboard seam; the application has no private Qt dependency.
+get_target_property(qt_gui_includes Qt6::Gui INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(qt_core_includes Qt6::Core INTERFACE_INCLUDE_DIRECTORIES)
+list(GET qt_gui_includes 0 qt_gui_include)
+list(GET qt_core_includes 0 qt_core_include)
+target_include_directories(mytel-dial-input-test PRIVATE
+    "${qt_gui_include}/${Qt6Gui_VERSION}" "${qt_gui_include}/${Qt6Gui_VERSION}/QtGui"
+    "${qt_core_include}/${Qt6Core_VERSION}" "${qt_core_include}/${Qt6Core_VERSION}/QtCore")
+add_test(NAME mytel-dial-input-test COMMAND mytel-dial-input-test)
