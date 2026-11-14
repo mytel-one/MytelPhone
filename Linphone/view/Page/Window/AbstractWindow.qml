@@ -110,7 +110,13 @@ ApplicationWindow {
                 }
                 TextField {
                     id: preDialNumberField
-                    text: preDialEditPopup.initialNumber
+                    initialText: preDialEditPopup.initialNumber
+                    horizontalAlignment: TextInput.AlignLeft
+                    LayoutMirroring.enabled: false
+                    inputMethodHints: Qt.ImhPreferLatin | Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText
+                    Component.onCompleted: UtilsCpp.forceInputLeftToRight(this)
+                    onActiveFocusChanged: if (activeFocus) UtilsCpp.forceInputLeftToRight(this)
+                    Keys.onPressed: event => { event.accepted = event.key === Qt.Key_Direction_R }
                     font.pixelSize: Typography.b1.pixelSize
                     Layout.fillWidth: true
                     focus: true

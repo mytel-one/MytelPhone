@@ -49,11 +49,13 @@
 #include <QFileInfo>
 #include <QHostAddress>
 #include <QImageReader>
+#include <QKeyEvent>
 #include <QMimeDatabase>
 #include <QPainter>
 #include <QProcess>
 #include <QQmlComponent>
 #include <QQmlProperty>
+#include <QQuickItem>
 #include <QQuickWindow>
 #include <QRandomGenerator>
 #include <QRegularExpression>
@@ -110,6 +112,20 @@ QString Utils::getUsername(const QString &address) {
 	int splitIndex = res.lastIndexOf('@');
 	if (splitIndex != -1) res.truncate(splitIndex);
 	return res;
+}
+
+void Utils::forceInputLeftToRight(QObject *input) {
+	auto *item = qobject_cast<QQuickItem *>(input);
+	if (!item) return;
+	QKeyEvent direction(QEvent::KeyPress, Qt::Key_Direction_L, Qt::NoModifier);
+	QCoreApplication::sendEvent(item, &direction);
+	// The public direction event does not invalidate an existing text layout.
+	// Relayout without changing text, selection, or the original width binding.
+	const auto width = item->width();
+	auto binding = item->bindableWidth().takeBinding();
+	item->setWidth(width + 1);
+	item->setWidth(width);
+	if (!binding.isNull()) item->bindableWidth().setBinding(binding);
 }
 
 bool Utils::isReduceMotionEnabled() {

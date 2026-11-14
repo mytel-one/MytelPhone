@@ -3,6 +3,7 @@ import QtQuick.Controls.Basic as Control
 import QtQuick.Layouts
 import Linphone
 import CustomControls 1.0
+import UtilsCpp
 import 'qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js' as Utils
 import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 
@@ -18,6 +19,8 @@ import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 		property alias color: backgroundItem.color
 		property bool delaySearch: true	// Wait some idle time after typing to start searching
 		property bool handleNumericPadPopupButtonsPressed: true
+        property bool dialInput: numericPadPopup != null
+        onDialInputChanged: if (dialInput) UtilsCpp.forceInputLeftToRight(textField)
 
 		// MyTel (owner 2026-11-13): Enter in the search bar triggers a
 		// validated signal so the Calls page can dial the typed number
@@ -103,6 +106,12 @@ import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 		}
 		color: DefaultStyle.main2_600
 		selectByMouse: true
+        horizontalAlignment: mainItem.dialInput ? TextInput.AlignLeft : undefined
+        inputMethodHints: mainItem.dialInput
+                          ? Qt.ImhPreferLatin | Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText
+                          : Qt.ImhNone
+        Component.onCompleted: if (mainItem.dialInput) UtilsCpp.forceInputLeftToRight(this)
+        onActiveFocusChanged: if (activeFocus && mainItem.dialInput) UtilsCpp.forceInputLeftToRight(this)
 		validator: mainItem.validator
 		onTextChanged: mainItem.delaySearch ? delayTimer.restart() : searchText = text
 		background: Item {
@@ -121,6 +130,10 @@ import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 		}
 		Keys.onPressed: (event) => {
 			event.accepted = false
+            if (mainItem.dialInput && event.key === Qt.Key_Direction_R) {
+                event.accepted = true
+                return
+            }
 			if (mainItem.numericPadPopup && mainItem.numericPadPopup.opened && (event.modifiers & Qt.KeypadModifier || event.key === Qt.Key_Return)) {
 				mainItem.numericPadPopup.keyPadKeyPressed(event)
 				event.accepted = true

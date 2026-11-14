@@ -251,6 +251,7 @@ Item {
                     spacing: Utils.getSizeWithScreenRatio(25)
                     SearchBar {
                         id: magicSearchBar
+                        dialInput: /^[+*#0-9\u06F0-\u06F9\u0660-\u0669]/.test(inputText)
                         Layout.fillWidth: true
                         //: "Rechercher un contact, appeler %1"
                         placeholderText: qsTr("searchbar_placeholder_text").arg(SettingsCpp.disableChatFeature ? "…" :

@@ -29,6 +29,7 @@ the user's request. Credentials and user configuration are excluded.
 | Read history/contact detail cards | 12 of 16 color/accessibility cases failed, including the white history card with pale dark-mode labels | Detail cards, contact fields/banner/note and the creation gradient use adaptive surfaces; ordinary and missed-call dates retain text contrast (16/16 pass) |
 | Open call/main options and account popups | 8/16 production surface checks failed; native Qt popup palette failed all four theme switches | Shared popup surfaces and incoming notification contrast pass 16/16; native Qt popup/text-field colors inherit the actual window palette on every switch |
 | Return from adding an account | 5/6 navigation cases failed; seven global routes were absent from the footer wrapper | Adding an account retains the main page, Back restores it, and all seven wrapper routes forward to the retained layout (13/13 pass) |
+| Read dial codes under a Persian keyboard | Qt renders neutral `*43` as `43*`; left alignment alone does not change its bidi base | Exact production public-Qt helper corrects four code formats in enabled/disabled fields, preserving raw text, cursor, selection, width binding and subsequent edits (8/8 pass) |
 
 The Qt harness instantiates the production `DefaultStyle.qml`, `Themes.qml`,
 `AppIcons.qml` and `buttonStyle.js`. It switches light → dark → light → dark,
@@ -55,6 +56,11 @@ editor blocks with small view-dependency seams. The old editor block from
 `096571c` produces a `contentWidth` binding-loop warning; the corrected editor
 and composing header produce zero warnings in the harness. Whole application
 logs and visible behavior still require separate runtime acceptance.
+The direction harness injects an RTL/Persian keyboard through a private Qt
+test seam. Production uses only the public direction-key event and bindable
+width API; private Qt headers are excluded from the application. Destination
+fields request Latin input without rejecting Persian digits. Chat composition
+retains its existing direction handling.
 
 Additional production-function tests check that dialing uses the current input
 rather than the history debounce, rejects invalid values without closing the

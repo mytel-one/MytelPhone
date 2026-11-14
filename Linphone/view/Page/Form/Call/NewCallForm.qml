@@ -92,6 +92,12 @@ CreationFormLayout {
 
             Control.TextField {
                 id: dialField
+                horizontalAlignment: TextInput.AlignLeft
+                LayoutMirroring.enabled: false
+                inputMethodHints: Qt.ImhPreferLatin | Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText
+                Component.onCompleted: UtilsCpp.forceInputLeftToRight(this)
+                onActiveFocusChanged: if (activeFocus) UtilsCpp.forceInputLeftToRight(this)
+                Keys.onPressed: event => { event.accepted = event.key === Qt.Key_Direction_R }
                 Layout.fillWidth: true
                 Layout.preferredHeight: Utils.getSizeWithScreenRatio(48)
                 Layout.rightMargin: 0

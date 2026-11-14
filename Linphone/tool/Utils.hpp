@@ -64,6 +64,7 @@ public:
 
 	Q_INVOKABLE static VariantObject *getDisplayName(const QString &address);
 	Q_INVOKABLE static QString getUsername(const QString &address);
+	Q_INVOKABLE static void forceInputLeftToRight(QObject *input);
 	// MyTel: system reduced-motion preference (leader correction 2026-11-11).
 	// Windows client-area animation off -> reduced motion; the
 	// MYTELL_REDUCED_MOTION=1 environment override may force it on.

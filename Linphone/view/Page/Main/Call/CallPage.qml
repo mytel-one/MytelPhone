@@ -458,7 +458,12 @@ AbstractMainPage {
                     Layout.topMargin: dialUnit * 0.2
                     font.pixelSize: Math.max(16, dialUnit * 0.35)
                     color: DefaultStyle.main2_900
-                    horizontalAlignment: TextInput.AlignHCenter
+                    horizontalAlignment: TextInput.AlignLeft
+                    LayoutMirroring.enabled: false
+                    inputMethodHints: Qt.ImhPreferLatin | Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText
+                    Component.onCompleted: UtilsCpp.forceInputLeftToRight(this)
+                    onActiveFocusChanged: if (activeFocus) UtilsCpp.forceInputLeftToRight(this)
+                    Keys.onPressed: event => { event.accepted = event.key === Qt.Key_Direction_R }
                     verticalAlignment: TextInput.AlignVCenter
                     placeholderText: qsTr("Extension or SIP address")
                     background: Rectangle {
