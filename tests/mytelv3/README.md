@@ -28,8 +28,10 @@ the user's request. Credentials and user configuration are excluded.
 | Read call labels and controls after switching theme | 8 of 12 production color-binding cases failed in the old palette | Dedicated media surfaces keep white call labels and icons readable in both modes (12/12 pass) |
 | Read history/contact detail cards | 12 of 16 color/accessibility cases failed, including the white history card with pale dark-mode labels | Detail cards, contact fields/banner/note and the creation gradient use adaptive surfaces; ordinary and missed-call dates retain text contrast (16/16 pass) |
 | Open call/main options and account popups | 8/16 production surface checks failed; native Qt popup palette failed all four theme switches | Shared popup surfaces and incoming notification contrast pass 16/16; native Qt popup/text-field colors inherit the actual window palette on every switch |
-| Return from adding an account | 5/6 navigation cases failed; seven global routes were absent from the footer wrapper | Adding an account retains the main page, Back restores it, and all seven wrapper routes forward to the retained layout (13/13 pass) |
+| Return from adding an account | 5/6 navigation cases failed; seven global routes were absent from the footer wrapper | Adding an account retains the main page, closes its launching popup, restores prior selection on Back, and forwards all seven wrapper routes (15/15 pass) |
 | Read dial codes under a Persian keyboard | Qt renders neutral `*43` as `43*`; left alignment alone does not change its bidi base | Exact production public-Qt helper corrects four code formats in enabled/disabled fields, preserving raw text, cursor, selection, width binding and subsequent edits (8/8 pass) |
+| Restore the vertical navigation after Back | Actual Qt StackView push/pop collapsed all tab Y positions to zero | A vertical Container keeps tab placement stable over repeated push/pop cycles; model availability remains independent of ancestor visibility |
+| Traverse popup focus with hidden options | 9/10 cases failed, including unbounded recursive wrap | A bounded loop excludes hidden/disabled options and null-safe keyboard callers handle empty menus (10/10 pass) |
 
 The Qt harness instantiates the production `DefaultStyle.qml`, `Themes.qml`,
 `AppIcons.qml` and `buttonStyle.js`. It switches light → dark → light → dark,
@@ -65,7 +67,7 @@ retains its existing direction handling.
 Additional production-function tests check that dialing uses the current input
 rather than the history debounce, rejects invalid values without closing the
 keypad, and clears both displayed/search values immediately. The final Node suite
-contains 195 passing cases. Changed QML files were checked with Qt 6.10
+contains 210 passing cases. Changed QML files were checked with Qt 6.10
 `qmlformat`: zero syntax failures.
 
 ## Limits

@@ -479,7 +479,10 @@ Item {
                             popup.contentItem: AccountListView {
                                 id: accounts
                                 popupId: avatarButton
-                                onAddAccountRequest: mainItem.addAccountRequest()
+                                onAddAccountRequest: {
+                                    avatarButton.close()
+                                    mainItem.addAccountRequest()
+                                }
                                 onEditAccount: function (account) {
                                     avatarButton.popup.close();
                                     openAccountSettings(account);
@@ -496,9 +499,10 @@ Item {
                             popup.padding: Utils.getSizeWithScreenRatio(14)
                             //: "Application options"
                             popUpTitle: qsTr("application_options_accessible_name")
-                            popup.Accessible.role: Accessible.PopupMenu
                             popup.contentItem: FocusScope {
                                 id: popupFocus
+                                Accessible.role: Accessible.PopupMenu
+                                Accessible.name: settingsMenuButton.popUpTitle
                                 implicitHeight: settingsButtons.implicitHeight
                                 implicitWidth: settingsButtons.implicitWidth
                                 Keys.onPressed: event => {
@@ -631,7 +635,10 @@ Item {
                                         //: "Ajouter un compte"
                                         text: qsTr("drawer_menu_add_account")
                                         icon.source: AppIcons.plusCircle
-                                        onClicked: mainItem.addAccountRequest()
+                                        onClicked: {
+                                            settingsMenuButton.close()
+                                            mainItem.addAccountRequest()
+                                        }
                                         KeyNavigation.up: visibleChildren.length != 0 ? settingsMenuButton.getPreviousItem(7) : null
                                         KeyNavigation.down: visibleChildren.length != 0 ? settingsMenuButton.getNextItem(7) : null
                                     }

@@ -7,8 +7,9 @@ import SettingsCpp
 import CustomControls 1.0
 import 'qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js' as Utils
 
-Control.TabBar {
+Control.Container {
 	id: mainItem
+    Accessible.role: Accessible.PageTabList
     //spacing: Utils.getSizeWithScreenRatio(32)
     topPadding: Utils.getSizeWithScreenRatio(36)
 
@@ -29,7 +30,7 @@ Control.TabBar {
 	function updateVisibleCount() {
 		mainItem.visibleCount = 0
 		contentChildren.forEach(child => {
-			if (child.visible) mainItem.visibleCount = mainItem.visibleCount + 1
+			if (child.isAvailable) mainItem.visibleCount = mainItem.visibleCount + 1
 		})
 	}
 	
@@ -48,8 +49,11 @@ Control.TabBar {
     }
 	
     contentItem: ListView {
+        id: navigationList
         model: mainItem.contentModel
         currentIndex: mainItem.currentIndex
+        onVisibleChanged: if (visible) Qt.callLater(navigationList.forceLayout)
+        onCountChanged: Qt.callLater(navigationList.forceLayout)
 
         spacing: mainItem.spacing
         orientation: ListView.Vertical
@@ -92,15 +96,15 @@ Control.TabBar {
 		Control.TabButton {
 			id: tabButton
 			width: mainItem.width
-			Binding on height {
-				when: !tabButton.visible
-				value: 0
-			}
+            readonly property bool isAvailable: modelData?.visible ?? true
+            height: isAvailable ? implicitHeight : 0
+            checked: mainItem.currentIndex === index
+            autoExclusive: false
     		anchors.topMargin: index === 0 ? Utils.getSizeWithScreenRatio(36) : 0
             bottomInset:  Utils.getSizeWithScreenRatio(32)
             topInset:  Utils.getSizeWithScreenRatio(32)
 			hoverEnabled: true
-			visible: modelData?.visible != undefined ? modelData.visible : true
+            visible: isAvailable
 			onVisibleChanged: mainItem.updateVisibleCount()
 			text: modelData.accessibilityLabel
 			property bool keyboardFocus: FocusHelper.keyboardFocus
@@ -183,18 +187,18 @@ Control.TabBar {
 					mainItem.spacePressed()
 				} else if(event.key === Qt.Key_Down){
 					event.accepted = true;
-					if(TabBar.index >= mainItem.visibleCount - 1)
+					if(index >= mainItem.visibleCount - 1)
        					return;
 					tabButton.nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocusReason)
 				} else if(event.key === Qt.Key_Up){
 					event.accepted = true;
-					if(TabBar.index <= 0)
+					if(index <= 0)
        					return;
 					tabButton.nextItemInFocusChain(false).forceActiveFocus(Qt.BacktabFocusReason)
 				}
 			}
 			onClicked: {
-				mainItem.setCurrentIndex(TabBar.index)
+				mainItem.setCurrentIndex(index)
 			}
 		}
 	}

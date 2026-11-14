@@ -80,3 +80,17 @@ for (const [name, args] of [
         assert.deepEqual(calls, [args]);
     });
 }
+const layoutSource = readFileSync(join(__dirname, '../../Linphone/view/Page/Layout/Main/MainLayout.qml'), 'utf8');
+for (const [name, from, marker, owner] of [
+    ['account popup', layoutSource, 'onAddAccountRequest:', 'avatarButton'],
+    ['main options popup', layoutSource.slice(layoutSource.indexOf('id: addAccountButton')), 'onClicked:', 'settingsMenuButton']
+]) {
+    test(`Add account closes ${name} before hiding the retained page`, () => {
+        const expression = from.slice(from.indexOf(marker) + marker.length).trimStart();
+        const body = expression.startsWith('{') ? block(marker, from).replace(marker, '') : expression.split(/\r?\n/)[0];
+        const calls = [];
+        vm.runInNewContext(body, { [owner]: { close: () => calls.push('close') },
+            mainItem: { addAccountRequest: () => calls.push('navigate') } });
+        assert.deepEqual(calls, ['close', 'navigate']);
+    });
+}

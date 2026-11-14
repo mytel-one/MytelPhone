@@ -45,7 +45,7 @@ Button {
      * Check if an element has at least one child that is focusable
      */
     function hasFocusableChild(content) {
-        return content.children.some(child => isFocusable(child));
+        return content?.children?.some(child => child.visible && child.enabled && isFocusable(child)) || false;
     }
 
     function getPreviousItem(index) {
@@ -57,28 +57,24 @@ Button {
     }
 
     function _getPreviousItem(content, index) {
-        if (!content.visible) return null
-        if (content.visibleChildren.length == 0 || !hasFocusableChild(content))
-            return null;
-        --index;
-        while (index >= 0) {
-            if (isFocusable(content.children[index]) && content.children[index].visible)
-                return content.children[index];
-            --index;
-        }
-        return _getPreviousItem(content, content.visibleChildren.length);
+        return _findFocusableItem(content, index, -1);
     }
 
     function _getNextItem(content, index) {
-        if (content.visibleChildren.length == 0 || !hasFocusableChild(content))
-            return null;
-        ++index;
-        while (index < content.children.length) {
-            if (isFocusable(content.children[index]) && content.children[index].visible)
-                return content.children[index];
-            ++index;
+        return _findFocusableItem(content, index, 1);
+    }
+
+    function _findFocusableItem(content, index, direction) {
+        if (!content?.visible || !content.children?.length) return null;
+        var children = content.children;
+        var count = children.length;
+        var cursor = ((index % count) + count) % count;
+        for (var checked = 0; checked < count; ++checked) {
+            cursor = (cursor + direction + count) % count;
+            var item = children[cursor];
+            if (item.visible && item.enabled && isFocusable(item)) return item;
         }
-        return _getNextItem(content, -1);
+        return null;
     }
 
     Keys.onPressed: event => {
@@ -88,10 +84,10 @@ Button {
                 mainItem.forceActiveFocus(Qt.TabFocusReason);
                 event.accepted = true;
             } else if (event.key == Qt.Key_Up) {
-                getPreviousItem(0).forceActiveFocus(Qt.TabFocusReason);
+                getPreviousItem(0)?.forceActiveFocus(Qt.TabFocusReason);
                 event.accepted = true;
             } else if (event.key == Qt.Key_Tab || event.key == Qt.Key_Down) {
-                getNextItem(-1).forceActiveFocus(Qt.BacktabFocusReason);
+                getNextItem(-1)?.forceActiveFocus(Qt.BacktabFocusReason);
                 event.accepted = true;
             }
         } else if (event.key == Qt.Key_Space) {
