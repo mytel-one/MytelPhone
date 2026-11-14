@@ -71,7 +71,7 @@ import 'qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js' as Utils
                         gradient: Gradient {
                             orientation: Gradient.Horizontal
                             GradientStop { position: 0.0; color: DefaultStyle.main2_100}
-                            GradientStop { position: 1.0; color: DefaultStyle.grey_0}
+                            GradientStop { position: 1.0; color: DefaultStyle.surface}
                         }
                         // Black border for keyboard navigation
                         border.color: DefaultStyle.main2_900
@@ -97,7 +97,7 @@ import 'qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js' as Utils
                         }
                         Text {
                             text: mainItem.startGroupButtonText
-                            color: DefaultStyle.grey_1000
+                            color: DefaultStyle.main2_900
                             font {
                                 pixelSize: Typography.h4.pixelSize
                                 weight: Typography.h4.weight

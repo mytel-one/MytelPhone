@@ -228,7 +228,7 @@ MainRightPanel {
 						onTextEdited: {
 							contact.core.givenName = givenNameEdit.text
 						}
-						backgroundColor: DefaultStyle.grey_0
+						backgroundColor: DefaultStyle.surface
 						backgroundBorderColor: givenName.errorTextVisible ? DefaultStyle.danger_500_main : DefaultStyle.grey_200
 						KeyNavigation.up: editButton.visible ? editButton : addPictureButton
 						KeyNavigation.down: nameTextField
@@ -244,7 +244,7 @@ MainRightPanel {
                 		width: parent.width
 						initialText: contact.core.familyName
 						onTextEdited: contact.core.familyName = text
-						backgroundColor: DefaultStyle.grey_0
+						backgroundColor: DefaultStyle.surface
 						KeyNavigation.up: givenNameEdit
 						KeyNavigation.down: companyTextField
 						Accessible.name: qsTr("contact_editor_last_name")
@@ -259,7 +259,7 @@ MainRightPanel {
                 		width: parent.width
 						initialText: contact.core.organization
 						onTextEdited: contact.core.organization = text
-						backgroundColor: DefaultStyle.grey_0
+						backgroundColor: DefaultStyle.surface
 						KeyNavigation.up: nameTextField
 						KeyNavigation.down: jobTextField
 						Accessible.name: qsTr("contact_editor_company")
@@ -274,7 +274,7 @@ MainRightPanel {
 						width: parent.width
 						initialText: contact.core.job
 						onTextEdited: contact.core.job = text
-						backgroundColor: DefaultStyle.grey_0
+						backgroundColor: DefaultStyle.surface
 						KeyNavigation.up: companyTextField
 						Keys.onPressed: (event) => {
 							if(event.key == Qt.Key_Down){
@@ -321,7 +321,7 @@ MainRightPanel {
 								}
 								property string _initialText: modelData.address
 								initialText: SettingsCpp.hideSipAddresses ? UtilsCpp.getUsername(_initialText) : _initialText
-								backgroundColor: DefaultStyle.grey_0
+								backgroundColor: DefaultStyle.surface
 								focus: true
 								KeyNavigation.right: removeAddressButton
 								Keys.onPressed: (event) => addressLayout.updateFocus(event)
@@ -356,7 +356,7 @@ MainRightPanel {
 					contentItem: TextField {
 						id: newAddressTextField
 						width: parent.width
-						backgroundColor: DefaultStyle.grey_0
+						backgroundColor: DefaultStyle.surface
 						Keys.onPressed: (event) => {
 							if(event.key == Qt.Key_Up){
 								(addressesList.count > 0 ? addressesList.itemAt(addressesList.count - 1) : jobTextField).forceActiveFocus(Qt.BacktabFocusReason)
@@ -401,7 +401,7 @@ MainRightPanel {
                                 Layout.fillWidth: true
 								Layout.preferredHeight: height
 								initialText: modelData.address
-								backgroundColor: DefaultStyle.grey_0
+								backgroundColor: DefaultStyle.surface
 								focus: true
 								KeyNavigation.right: removePhoneButton
 								Keys.onPressed: (event) => phoneNumberLayout.updateFocus(event)
@@ -440,7 +440,7 @@ MainRightPanel {
 					contentItem: TextField {
 						id: phoneNumberInputTextField
 						width: parent.width
-						backgroundColor: DefaultStyle.grey_0
+						backgroundColor: DefaultStyle.surface
 						Keys.onPressed: (event) => {
 							if(event.key == Qt.Key_Up){
 								(phoneNumberList.count > 0 ? phoneNumberList.itemAt(phoneNumberList.count - 1) : newAddressTextField).forceActiveFocus(Qt.BacktabFocusReason)

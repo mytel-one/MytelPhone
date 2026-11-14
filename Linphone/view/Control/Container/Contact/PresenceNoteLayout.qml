@@ -11,7 +11,7 @@ import "qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js" as Utils
 Rectangle {
     id: mainItem
     property FriendGui friendGui
-    color: DefaultStyle.grey_0
+    color: DefaultStyle.surface
     radius: Utils.getSizeWithScreenRatio(20)
     border.color: DefaultStyle.main2_200
     border.width: Utils.getSizeWithScreenRatio(2)
@@ -44,7 +44,7 @@ Rectangle {
 
         Text {
             font: Typography.p3
-            color: DefaultStyle.main2_500_main
+            color: DefaultStyle.main2_600
             text: mainItem.friendGui?.core.presenceNote || ""
             wrapMode: Text.Wrap
             Layout.fillWidth: true

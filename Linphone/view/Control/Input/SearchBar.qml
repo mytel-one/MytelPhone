@@ -149,7 +149,7 @@ import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 		anchors.right: parent.right
         anchors.rightMargin: Utils.getSizeWithScreenRatio(20)
 		//: "Open dialer"
-		Accessible.name: qsTr("open_dialer_acccessibility_label")
+		Accessible.name: qsTr("Open dialer")
 		onClicked: {
 			if(!checked){
 				mainItem.openNumericPadRequested()

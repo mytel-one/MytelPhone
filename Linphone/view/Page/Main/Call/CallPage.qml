@@ -69,7 +69,7 @@ AbstractMainPage {
         icon.source: AppIcons.dialer
         icon.width: 26
         icon.height: 26
-        Accessible.name: qsTr("open_dialer_acccessibility_label")
+        Accessible.name: qsTr("Open dialer")
         onClicked: mainItem.openDialPad()
     }
 
@@ -780,7 +780,7 @@ AbstractMainPage {
                         background: Rectangle {
                             id: detailListBackground
                             anchors.fill: parent
-                            color: DefaultStyle.grey_0
+                            color: DefaultStyle.surface
                             radius: Utils.getSizeWithScreenRatio(15)
                         }
                         contentItem: Control.ScrollView {
@@ -847,7 +847,9 @@ AbstractMainPage {
                                             }
                                             Text {
                                                 text: UtilsCpp.formatDate(modelData.core.date)
-                                                color: modelData.core.status === LinphoneEnums.CallStatus.Missed ? DefaultStyle.danger_500_main : DefaultStyle.main2_500_main
+                                                color: modelData.core.status === LinphoneEnums.CallStatus.Missed
+                                                       ? DefaultStyle.dark ? DefaultStyle.danger_500_main : DefaultStyle.danger_700
+                                                       : DefaultStyle.main2_600
                                                 font {
                                                     pixelSize: Utils.getSizeWithScreenRatio(12)
                                                     weight: Utils.getSizeWithScreenRatio(300)

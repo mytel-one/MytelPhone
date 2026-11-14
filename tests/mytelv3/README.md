@@ -26,6 +26,7 @@ the user's request. Credentials and user configuration are excluded.
 | Remove contact numbers/addresses | Exact methods in isolated child processes: 3/10 passed; invalid indexes crashed or marked unchanged contacts dirty | Negative, at-size and empty-list removals do nothing; valid removals notify once, mark unsaved, and clear only a removed default address (10/10 pass) |
 | Open/reset an empty conversation | Four production binding/handler cases threw on missing chat/message objects | All four null-state cases pass |
 | Read call labels and controls after switching theme | 8 of 12 production color-binding cases failed in the old palette | Dedicated media surfaces keep white call labels and icons readable in both modes (12/12 pass) |
+| Read history/contact detail cards | 12 of 16 color/accessibility cases failed, including the white history card with pale dark-mode labels | Detail cards, contact fields/banner/note and the creation gradient use adaptive surfaces; ordinary and missed-call dates retain text contrast (16/16 pass) |
 
 The Qt harness instantiates the production `DefaultStyle.qml`, `Themes.qml`,
 `AppIcons.qml` and `buttonStyle.js`. It switches light → dark → light → dark,
@@ -52,7 +53,7 @@ logs and visible behavior still require separate runtime acceptance.
 Additional production-function tests check that dialing uses the current input
 rather than the history debounce, rejects invalid values without closing the
 keypad, and clears both displayed/search values immediately. The final Node suite
-contains 142 passing cases. Changed QML files were checked with Qt 6.10
+contains 158 passing cases. Changed QML files were checked with Qt 6.10
 `qmlformat`: zero syntax failures.
 
 ## Limits

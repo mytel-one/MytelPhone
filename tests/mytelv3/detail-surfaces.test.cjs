@@ -28,7 +28,7 @@ const callPage = read('Page/Main/Call/CallPage.qml');
 const history = callPage.slice(callPage.indexOf('id: detailListBackground'));
 const historyBackground = history.match(/color: DefaultStyle\.(\w+)/)[1];
 const historyDateExpression = history.slice(history.indexOf('UtilsCpp.formatDate'))
-    .match(/color: ([^\r\n]+)/)[1];
+    .match(/color:\s*([\s\S]*?)\s*font\s*\{/)[1];
 const editors = [...read('Page/Form/Contact/ContactEdition.qml')
     .matchAll(/backgroundColor: DefaultStyle\.(\w+)/g)].map(m => m[1]);
 const banner = read('Control/Container/Contact/ContactLayout.qml')

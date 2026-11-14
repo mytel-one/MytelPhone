@@ -53,7 +53,7 @@ ColumnLayout {
 						}
 						gradient: Gradient {
 							orientation: Gradient.Horizontal
-							GradientStop { position: 0.0; color: DefaultStyle.grey_0 }
+							GradientStop { position: 0.0; color: DefaultStyle.surface }
 							GradientStop { position: 1.0; color: DefaultStyle.grey_100 }
 						}
 					}
