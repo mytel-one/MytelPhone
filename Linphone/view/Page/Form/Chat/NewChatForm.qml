@@ -22,20 +22,8 @@ CreationFormLayout {
 	signal chatDestinationRequested(string destination)
 
 	function normalizeInput(raw) {
-		var s = raw.trim()
-		if (s.toLowerCase().startsWith("sip:")) return s
-		var digits = s.replace(/[\s\-\.\(\)]/g, "")
-		digits = digits.replace(/[\u06F0-\u06F9]/g, function (d) {
-			return String.fromCharCode(d.charCodeAt(0) - 0x06F0 + 0x30)
-		})
-		digits = digits.replace(/[\u0660-\u0669]/g, function (d) {
-			return String.fromCharCode(d.charCodeAt(0) - 0x0660 + 0x30)
-		})
-		if (/^\+98/.test(digits)) digits = "0" + digits.slice(3)
-		else if (/^0098/.test(digits)) digits = "0" + digits.slice(4)
-		else if (/^098/.test(digits)) digits = "0" + digits.slice(3)
-		return digits
-	}
+        return Utils.normalizeSipDestination(raw)
+    }
 
 	function startChat() {
 		destinationError = ""

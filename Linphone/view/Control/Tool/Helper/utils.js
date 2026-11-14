@@ -889,3 +889,22 @@ function getSizeWithScreenRatio(size){
       ? Math.max(Math.round(size * Linphone.DefaultStyle.dp), 1)
       : Math.min(Math.round(size * Linphone.DefaultStyle.dp), -1);
 }
+
+// Shared by every direct call/chat entry point. Only complete Iranian national
+// numbers are rewritten; short PBX extensions beginning with 098 stay intact.
+function normalizeSipDestination(raw) {
+    if (typeof raw !== "string" || /[\r\n\x00-\x1f\x7f]/.test(raw)) return ""
+    var value = raw.trim()
+        .replace(/[\u06F0-\u06F9]/g, function(d) { return String(d.charCodeAt(0) - 0x06F0) })
+        .replace(/[\u0660-\u0669]/g, function(d) { return String(d.charCodeAt(0) - 0x0660) })
+    if (!value || value.length > 256) return ""
+    if (/^sips?:/i.test(value) || value.indexOf("@") >= 0) {
+        if (!/^sips?:/i.test(value)) value = "sip:" + value
+        return /^sips?:[^\s<>@;?]+@[^\s<>@;?]+(?:[;?][^\s<>]*)?$/i.test(value) ? value : ""
+    }
+    var digits = value.replace(/[\s().-]/g, "")
+    if (!/^\+?[0-9*#]+$/.test(digits) || digits.length > 64) return ""
+    if (/^(?:\+98|0098|098|98)[1-9][0-9]{9}$/.test(digits))
+        return "0" + digits.slice(-10)
+    return digits
+}

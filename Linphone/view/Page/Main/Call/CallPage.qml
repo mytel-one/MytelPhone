@@ -28,13 +28,7 @@ AbstractMainPage {
     // Prominent green FAB opens an instant dial popup — always visible
     // on the Calls page, no navigation needed.
     function mytelNormalizeDial(raw) {
-        var s = raw.trim()
-        if (s.toLowerCase().startsWith("sip:")) return s
-        var d = s.replace(/[\s\-\.\(\)]/g, "")
-        if (/^\+98/.test(d)) d = "0" + d.slice(3)
-        else if (/^0098/.test(d)) d = "0" + d.slice(4)
-        else if (/^098/.test(d)) d = "0" + d.slice(3)
-        return d
+        return Utils.normalizeSipDestination(raw)
     }
 
     function mytelPlaceCall() {
