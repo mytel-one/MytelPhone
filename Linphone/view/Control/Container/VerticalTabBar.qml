@@ -53,7 +53,10 @@ Control.Container {
         model: mainItem.contentModel
         currentIndex: mainItem.currentIndex
         onVisibleChanged: if (visible) Qt.callLater(navigationList.forceLayout)
-        onCountChanged: Qt.callLater(navigationList.forceLayout)
+        onCountChanged: {
+            Qt.callLater(mainItem.updateVisibleCount)
+            Qt.callLater(navigationList.forceLayout)
+        }
 
         spacing: mainItem.spacing
         orientation: ListView.Vertical
