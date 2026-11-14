@@ -3,6 +3,7 @@ param(
     [Parameter(Mandatory)][string]$PayloadDirectory,
     [Parameter(Mandatory)][string]$OutputDirectory,
     [Parameter(Mandatory)][string]$MakeNsis,
+    [Parameter(Mandatory)][ValidatePattern('^[0-9a-fA-F]{40}$')][string]$ApplicationSourceSha,
     [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '3.0.1'
 )
 $ErrorActionPreference = 'Stop'
@@ -14,6 +15,13 @@ $output = (Resolve-Path -LiteralPath $OutputDirectory).Path
 if ($output.StartsWith($payload.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase) -or $output -eq $payload) {
     throw 'Installer output must be outside the payload.'
 }
+$evidencePath = Join-Path $output 'installer-build-evidence.json'
+if (Test-Path -LiteralPath $evidencePath) { Remove-Item -LiteralPath $evidencePath }
+$desktopSourceSha = (& git -C $repo rev-parse --verify HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or $desktopSourceSha -notmatch '^[0-9a-f]{40}$') { throw 'Cannot identify desktop source revision.' }
+$sourceStatus = @(& git -C $repo status --porcelain)
+if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect desktop source worktree.' }
+$desktopSourceClean = $sourceStatus.Count -eq 0
 $exe = Join-Path $payload 'mytellphone.exe'
 if (!(Test-Path -LiteralPath $exe -PathType Leaf)) { throw 'Payload must contain mytellphone.exe.' }
 $metadata = [Diagnostics.FileVersionInfo]::GetVersionInfo($exe)
@@ -56,8 +64,9 @@ $filesInclude = Join-Path $build 'files.nsh'
 $uninstallInclude = Join-Path $build 'uninstall-files.nsh'
 [IO.File]::WriteAllLines($filesInclude, $installLines, [Text.UTF8Encoding]::new($true))
 [IO.File]::WriteAllLines($uninstallInclude, $uninstallLines, [Text.UTF8Encoding]::new($true))
-$manifest | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $output 'installed-payload.json') -Encoding utf8
-$installer = Join-Path $output "MyTel-$Version-windows-x64-setup.exe"
+$manifestPath = Join-Path $output 'installed-payload.json'
+$manifest | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $manifestPath -Encoding utf8
+$installer = Join-Path $output "MyTel-v$Version-windows-x64-setup.exe"
 $sizeKB = [Math]::Ceiling(($files | Measure-Object Length -Sum).Sum / 1024)
 $arguments = @('/V3', '/WX', "/DMYTEL_VERSION=$Version", "/DMYTEL_OUTPUT=$installer", "/DMYTEL_ICON=$icon",
     "/DMYTEL_HEADER=$header", "/DMYTEL_WELCOME=$welcome", "/DMYTEL_LICENSE=$license",
@@ -65,5 +74,31 @@ $arguments = @('/V3', '/WX', "/DMYTEL_VERSION=$Version", "/DMYTEL_OUTPUT=$instal
     (Join-Path $PSScriptRoot 'MyTel.nsi'))
 & $compiler @arguments
 if ($LASTEXITCODE -ne 0) { throw "NSIS failed: $LASTEXITCODE" }
+$sourceAfter = (& git -C $repo rev-parse --verify HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or $sourceAfter -ne $desktopSourceSha) { throw 'Desktop source revision changed during installer compilation.' }
+$statusAfter = @(& git -C $repo status --porcelain)
+if ($LASTEXITCODE -ne 0 -or ($statusAfter -join "`n") -ne ($sourceStatus -join "`n")) {
+    throw 'Desktop source worktree changed during installer compilation.'
+}
+# Bind the exact compiled installer to this manifest, not a stale same-version artifact.
+foreach ($entry in $manifest) {
+    $file = Get-Item -LiteralPath (Join-Path $payload $entry.path)
+    if ($file.Length -ne $entry.bytes -or (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant() -ne $entry.sha256) {
+        throw "Payload changed during installer compilation: $($entry.path)"
+    }
+}
+$installerFile = Get-Item -LiteralPath $installer
+$installerHash = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
+$evidence = [ordered]@{
+    schemaVersion = 1
+    version = $Version
+    desktopSourceSha = $desktopSourceSha
+    desktopSourceClean = $desktopSourceClean
+    applicationSourceSha = $ApplicationSourceSha.ToLowerInvariant()
+    installer = [ordered]@{name=$installerFile.Name; bytes=$installerFile.Length; sha256=$installerHash}
+    payloadManifest = [ordered]@{name='installed-payload.json'; sha256=(Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant()}
+    nsisCompiler = [ordered]@{name=[IO.Path]::GetFileName($compiler); sha256=(Get-FileHash -LiteralPath $compiler -Algorithm SHA256).Hash.ToLowerInvariant()}
+}
+$evidence | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $evidencePath -Encoding utf8
 Get-FileHash -LiteralPath $installer -Algorithm SHA256
-Get-Item -LiteralPath $installer
+$installerFile

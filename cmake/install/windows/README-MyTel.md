@@ -19,7 +19,8 @@ Build an installer from a fully deployed and tested flat Windows payload:
 ./cmake/install/windows/Build-MyTelInstaller.ps1 `
   -PayloadDirectory C:/release/MyTel `
   -OutputDirectory C:/release/installer `
-  -MakeNsis C:/tools/nsis/makensis.exe -Version 3.0.1
+  -MakeNsis C:/tools/nsis/makensis.exe -Version 3.0.1 `
+  -ApplicationSourceSha <exact-40-character-commit-used-to-build-the-application>
 ```
 
 Use the official NSIS portable compiler distribution. The helper checks the PE
@@ -28,6 +29,16 @@ before compiling with warnings treated as errors. The payload must include all
 deployed Qt/SDK components, their notices/licenses and supported Microsoft VC++
 runtime dependencies. This per-user installer does not install a machine-wide
 runtime or change OS notification settings.
+
+The canonical output is `MyTel-v3.0.1-windows-x64-setup.exe`. After successful
+compilation, `installer-build-evidence.json` binds its exact size and SHA256 to
+`installed-payload.json`, the compiler SHA256, release version and clean desktop
+source/archive revision. `applicationSourceSha` separately records the commit
+used to compile the application: installer-only changes may advance the archive
+revision without rebuilding identical application sources. Release sealing must
+reject dirty source evidence and mismatched artifact/manifest hashes. Old build
+evidence is removed before a new attempt; changed source or payload during a build
+does not receive successful evidence.
 
 MyTel installs to `%LOCALAPPDATA%/Programs/MyTel` by default, registers its own
 Installed Apps entry and adds MyTel Start menu and optional desktop shortcuts.
