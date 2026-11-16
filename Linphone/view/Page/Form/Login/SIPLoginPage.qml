@@ -52,7 +52,8 @@ Rectangle {
                           : LinphoneEnums.TransportType.Udp
         LoginPageCpp.login(usernameEdit.text.trim(), passwordEdit.text, displayName.text.trim(),
                            domainEdit.text.trim(), transportType, registrar.text.trim(),
-                           proxy.text.trim(), authenticationId.text.trim())
+                           proxy.text.trim(), authenticationId.text.trim(),
+                           transport.currentValue === "Automatic")
     }
 
     component FieldLabel: Text {
