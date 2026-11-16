@@ -146,18 +146,16 @@ bool AccountManager::login(QString username,
 	                                        "",                                         // Realm.
 	                                        identity->getDomain()                       // Domain.
 	);
-	core->addAuthInfo(authInfo);
-	mLoginAuthInfo = authInfo;
+	mLoginAuth.begin(core, authInfo);
 	mAccountModel = Utils::makeQObject_ptr<AccountModel>(account);
 	mAccountModel->setSelf(mAccountModel);
 	connect(mAccountModel.get(), &AccountModel::registrationStateChanged, this,
-	        [this, authInfo, core](const std::shared_ptr<linphone::Account> &account, linphone::RegistrationState state,
-	                               const std::string &message) {
+	        [this, core](const std::shared_ptr<linphone::Account> &account, linphone::RegistrationState state,
+	                     const std::string &message) {
 		        QString errorMessage = QString::fromStdString(message);
 		        if (mAccountModel && account == mAccountModel->getAccount()) {
 			        if (state == linphone::RegistrationState::Failed) {
-				        core->removeAuthInfo(authInfo);
-				        mLoginAuthInfo = nullptr;
+				        mLoginAuth.rollback();
 				        connect(
 				            mAccountModel.get(), &AccountModel::removed, this, [this]() { mAccountModel = nullptr; },
 				            Qt::SingleShotConnection);
@@ -175,6 +173,7 @@ bool AccountManager::login(QString username,
 					        return;
 				        }
 				        core->setDefaultAccount(account);
+				        mLoginAuth.commit();
 				        emit mAccountModel->removeListener();
 				        mAccountModel = nullptr;
 			        }
@@ -186,7 +185,7 @@ bool AccountManager::login(QString username,
 	if (status == -1) {
 		//: "Unable to add account."
 		*errorMessage = tr("assistant_account_add_error");
-		core->removeAuthInfo(authInfo);
+		mLoginAuth.rollback();
 		return false;
 	}
 	return true;
@@ -200,9 +199,8 @@ void AccountManager::cancelLogin() {
 		disconnect(mAccountModel.get(), nullptr, this, nullptr);
 		mAccountModel->removeAccount();
 		mAccountModel = nullptr;
-		if (mLoginAuthInfo) CoreModel::getInstance()->getCore()->removeAuthInfo(mLoginAuthInfo);
 	}
-	mLoginAuthInfo = nullptr;
+	mLoginAuth.rollback();
 }
 
 void AccountManager::registerNewAccount(const QString &username,

@@ -1,0 +1,49 @@
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR)
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR)
+-- Configuring done (1.2s)
+-- Generating done (0.7s)
+-- Build files have been written to: C:/Users/HajSaman/AppData/Local/Temp/mytel-v3-theme-tests
+[1/4] Automatic MOC for target mytel-login-auth-test
+[2/4] Building CXX object CMakeFiles\mytel-login-auth-test.dir\mytel-login-auth-test_autogen\mocs_compilation.cpp.obj
+[3/4] Building CXX object CMakeFiles\mytel-login-auth-test.dir\C_\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\login_auth_test.cpp.obj
+C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\login_auth_test.cpp(25): warning C4834: discarding return value of function with [[nodiscard]] attribute
+C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\login_auth_test.cpp(50): warning C4834: discarding return value of function with [[nodiscard]] attribute
+[4/4] Linking CXX executable mytel-login-auth-test.exe
+2026-11-16 20:41:22:006 liblinphone-error- No parsed content from configuration file, parsed_size=[0]
+
+2026-11-16 20:41:22:049 mediastreamer-error- Fail to load plugin ./lib/mediastreamer/plugins\libmsopenh264.dll: error 126
+
+2026-11-16 20:41:22:068 liblinphone-warning- No ringtone has been defined in sound config, using default one
+
+PASS isolated Core has no account
+2026-11-16 20:41:22:110 liblinphone-warning- nothing to migrate, skipping...
+
+PASS isolated Core starts with all SIP transports disabled
+PASS isolated Core network remains unreachable
+PASS setup stores one auth info
+PASS real SDK stores its own clone
+PASS started isolated Core persists auth before cancellation
+2026-11-16 20:41:22:133 liblinphone-error- Core::removeAuthInfo: AuthInfo [ 000001EC36D70BE0] is not known by Core [000001EC34AB5050] (programming error?)
+
+FAIL cancel removes only the Core-owned attempt clone
+FAIL cancel removes persisted auth sections
+FAIL repeated cancellation is idempotent
+2026-11-16 20:41:22:137 liblinphone-error- Core::removeAuthInfo: AuthInfo [ 000001EC36D82790] is not known by Core [000001EC34AB5050] (programming error?)
+
+FAIL unrelated existing Core auth object survives unchanged
+PASS SDK replaces matching identity during setup
+2026-11-16 20:41:22:137 liblinphone-error- Core::removeAuthInfo: AuthInfo [ 000001EC36D82790] is not known by Core [000001EC34AB5050] (programming error?)
+
+FAIL cancel restores displaced preexisting credentials
+2026-11-16 20:41:22:137 liblinphone-error- Core::removeAuthInfo: AuthInfo [ 000001EC36D82790] is not known by Core [000001EC34AB5050] (programming error?)
+
+PASS rollback preserves a later independent replacement
+PASS accepted setup keeps its credentials
+FAIL destroyed unfinished setup rolls back credentials
+2026-11-16 20:41:22:137 liblinphone-error- Core::removeAuthInfo: AuthInfo [ 000001EC36D82790] is not known by Core [000001EC34AB5050] (programming error?)
+
+PASS rollback respects a later independent credential deletion
+10/16 actual isolated SDK auth checks passed
+isolated Core stop begins
+isolated Core stop returned
+isolated Core released

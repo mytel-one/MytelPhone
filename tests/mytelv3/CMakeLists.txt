@@ -196,4 +196,10 @@ if(MYTEL_TEST_SDK_ROOT)
     target_include_directories(mytel-setup-address-test PRIVATE "${MYTEL_SOURCE_ROOT}/Linphone"
         "${MYTEL_TEST_SDK_ROOT}/include")
     add_test(NAME mytel-setup-address-test COMMAND mytel-setup-address-test)
+    add_executable(mytel-login-auth-test "${MYTEL_SOURCE_ROOT}/tests/mytelv310/login_auth_test.cpp")
+    target_link_libraries(mytel-login-auth-test PRIVATE Qt6::Core Qt6::Gui
+        "${MYTEL_TEST_SDK_ROOT}/lib/liblinphone++.lib" "${MYTEL_TEST_SDK_ROOT}/lib/liblinphone.lib")
+    target_include_directories(mytel-login-auth-test PRIVATE "${MYTEL_SOURCE_ROOT}/Linphone"
+        "${MYTEL_TEST_SDK_ROOT}/include")
+    add_test(NAME mytel-login-auth-test COMMAND mytel-login-auth-test)
 endif()

@@ -30,6 +30,7 @@
 #include "AccountModel.hpp"
 #include "tool/AbstractObject.hpp"
 #include "tool/LoginAttempt.hpp"
+#include "tool/LoginAuthTransaction.hpp"
 
 class AccountManager : public QObject, public AbstractObject {
 	Q_OBJECT
@@ -74,7 +75,7 @@ signals:
 
 private:
 	std::shared_ptr<AccountModel> mAccountModel;
-	std::shared_ptr<linphone::AuthInfo> mLoginAuthInfo;
+	LoginAuthTransaction mLoginAuth;
 	std::shared_ptr<LoginAttempt> mLoginAttempt;
 	std::shared_ptr<AccountManagerServicesModel> mAccountManagerServicesModel;
 	QTimer timer;
