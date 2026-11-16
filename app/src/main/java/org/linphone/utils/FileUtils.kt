@@ -47,10 +47,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import org.linphone.LinphoneApplication.Companion.coreContext
+import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
 import org.linphone.compatibility.Compatibility
+import org.linphone.core.Factory
 import org.linphone.core.tools.Log
 import androidx.core.net.toUri
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class FileUtils {
     enum class MimeType {
@@ -326,6 +331,62 @@ class FileUtils {
             return false
         }
 
+        /** The picker retains only the original; decryption starts after a destination exists. */
+        suspend fun copyExportFileToDocument(sourcePath: String, destination: Uri): Boolean {
+            return try {
+                withPlainExportSource(sourcePath) { source -> copyFile(source.toUri(), destination) }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                Log.e("$TAG Document export source failed (${error.javaClass.simpleName})")
+                false
+            }
+        }
+
+        private suspend fun prepareExportSourceOnCoreThread(source: File): MyTelPlainExportSource =
+            suspendCoroutine { continuation ->
+                if (!coreContext.isReady()) {
+                    continuation.resumeWithException(IOException("Export requires a ready SDK core"))
+                } else {
+                    coreContext.postOnCoreThread {
+                        try {
+                            // createContent() only creates generic Content; its file export is
+                            // unsupported. This factory constructs native FileContent instead.
+                            val content = Factory.instance().createContentFromFile(source.absolutePath)
+                            val prepared = MyTelPlainExportSource.prepare(
+                                source,
+                                File(corePreferences.vfsCachePath),
+                                { content.isFileEncrypted },
+                                { content.exportPlainFile() }
+                            )
+                            continuation.resume(prepared)
+                        } catch (error: Exception) {
+                            continuation.resumeWithException(error)
+                        }
+                    }
+                }
+            }
+
+        private suspend fun <T> withPlainExportSource(path: String, copy: suspend (File) -> T): T {
+            val sourcePath = MyTelDocumentExport.sourceFilePath(path)
+                ?: throw IOException("Export requires a local file source")
+            return MyTelPlainExportSource.withPrepared(
+                { prepareExportSourceOnCoreThread(File(sourcePath)) },
+                copy
+            )
+        }
+
+        /** Own nonce-named exports only; independent of whether VFS remains enabled. */
+        suspend fun clearAbandonedDocumentExports() {
+            withContext(Dispatchers.IO) {
+                try {
+                    MyTelPlainExportSource.clearAbandoned(File(corePreferences.vfsCachePath))
+                } catch (error: Exception) {
+                    Log.e("$TAG Export temporary cleanup failed (${error.javaClass.simpleName})")
+                }
+            }
+        }
+
         private suspend fun copyFileTo(filePath: String, outputStream: OutputStream?): Boolean {
             if (outputStream == null) {
                 Log.e("$TAG Can't copy file [$filePath] to given null output stream")
@@ -467,6 +528,7 @@ class FileUtils {
             val dir = File(path)
             if (dir.exists()) {
                 for (file in dir.listFiles().orEmpty()) {
+                    if (MyTelPlainExportSource.isActive(file)) continue
                     Log.w(
                         "$TAG [VFS] Found forgotten plain file [${file.path}], deleting it now"
                     )
@@ -555,9 +617,24 @@ class FileUtils {
                 return ""
             }
 
-            val isImage = isExtensionImage(path)
-            val isVideo = isExtensionVideo(path)
-            val isAudio = isExtensionAudio(path)
+            return try {
+                val originalPath = MyTelDocumentExport.sourceFilePath(path)
+                    ?: throw IOException("MediaStore export requires a local file")
+                withPlainExportSource(path) { source ->
+                    addPlainContentToMediaStore(source.absolutePath, originalPath)
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                Log.e("$TAG MediaStore export source failed (${error.javaClass.simpleName})")
+                ""
+            }
+        }
+
+        private suspend fun addPlainContentToMediaStore(path: String, originalPath: String): String {
+            val isImage = isExtensionImage(originalPath)
+            val isVideo = isExtensionVideo(originalPath)
+            val isAudio = isExtensionAudio(originalPath)
 
             val directory = when {
                 isImage -> Environment.DIRECTORY_PICTURES
@@ -568,7 +645,7 @@ class FileUtils {
 
             val appName = AppUtils.getString(R.string.app_name)
             val relativePath = "$directory/$appName"
-            val fileName = getNameFromFilePath(path)
+            val fileName = getNameFromFilePath(originalPath)
             val extension = getExtensionFromFileName(fileName)
             val mime = getMimeTypeFromExtension(extension)
 

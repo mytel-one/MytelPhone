@@ -90,7 +90,7 @@ open class GenericActivity : AppCompatActivity() {
             val copied = withContext(Dispatchers.IO) {
                 var success = false
                 try {
-                    success = FileUtils.copyFile(sourcePath.toUri(), destination)
+                    success = FileUtils.copyExportFileToDocument(sourcePath, destination)
                     success
                 } finally {
                     if (!success) {
@@ -156,6 +156,9 @@ open class GenericActivity : AppCompatActivity() {
 
         documentExport = MyTelDocumentExport(savedInstanceState?.getString(PENDING_DOCUMENT_EXPORT))
         legacyExportNoticeShown = savedInstanceState?.getBoolean(LEGACY_EXPORT_NOTICE_SHOWN) ?: false
+        lifecycleScope.launch {
+            FileUtils.clearAbandonedDocumentExports()
+        }
 
         // MyTel product requirement: the app UI language is always English,
         // regardless of the device locale (owner order 2026-11-06). Applied
