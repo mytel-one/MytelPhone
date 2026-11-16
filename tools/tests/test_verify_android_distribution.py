@@ -3,6 +3,8 @@ import pathlib
 import struct
 import tempfile
 import unittest
+from unittest.mock import patch
+import warnings
 import zipfile
 
 MODULE = pathlib.Path(__file__).resolve().parents[1] / "verify_android_distribution.py"
@@ -47,7 +49,9 @@ def archive(path, kind="apk", omit_abi=None, omit_library=None, aligned=True, co
                         entry.extra = struct.pack("<HH", 0xD935, padding - 4) + bytes(padding - 4)
                 output.writestr(entry, elf(abi))
         if duplicate:
-            output.writestr(prefix + "/x86/liblinphone.so", elf("x86"))
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", UserWarning)
+                output.writestr(prefix + "/x86/liblinphone.so", elf("x86"))
 
 class ElfTests(unittest.TestCase):
     def test_every_supported_abi_accepts_its_correct_class_machine_and_alignment(self):
@@ -141,6 +145,13 @@ class NativeArchiveTests(unittest.TestCase):
         self.path.write_bytes(b"not a zip")
         self.assertIn("ARCHIVE_INVALID", [item["code"] for item in self.verify()["errors"]])
 
+    def test_native_code_in_other_bundle_modules_is_explicitly_unverified(self):
+        self.path = self.path.with_suffix(".aab")
+        archive(self.path, kind="aab", aligned=False)
+        with zipfile.ZipFile(self.path, "a") as output:
+            output.writestr("feature/lib/x86_64/libextra.so", b"not inspected")
+        self.assertIn("NON_BASE_NATIVE_UNVERIFIED", [item["code"] for item in self.verify()["unverified"]])
+
 class MetadataTests(unittest.TestCase):
     def test_badging_extracts_explicit_metadata_and_required_features(self):
         text = """package: name='one.example.phone' versionCode='30100' versionName='3.1.0'
@@ -160,10 +171,91 @@ uses-feature-not-required: name='android.hardware.camera'
         with self.assertRaises(verification.VerificationError):
             verification.parse_badging("package: name='one.example.phone' versionCode='1' versionName='1.0'")
 
+    def test_indented_aapt_feature_groups_keep_required_hardware_filters(self):
+        text = """package: name='one.example.phone' versionCode='30100' versionName='3.1.0'
+sdkVersion:'24'
+targetSdkVersion:'37'
+feature-group: label=''
+  uses-feature: name='android.hardware.wifi'
+  uses-implied-feature: name='android.hardware.bluetooth' reason='permission'
+  uses-feature-not-required: name='android.hardware.camera'
+"""
+        self.assertEqual(
+            ["android.hardware.bluetooth", "android.hardware.wifi"],
+            verification.parse_badging(text)["required_features"],
+        )
+
     def test_bundle_alignment_recognizes_declared_four_and_sixteen_kilobytes(self):
         self.assertEqual("PAGE_ALIGNMENT_16K", verification.parse_bundle_alignment("alignment: PAGE_ALIGNMENT_16K"))
         self.assertEqual("PAGE_ALIGNMENT_4K", verification.parse_bundle_alignment('{"alignment": "PAGE_ALIGNMENT_4K"}'))
         self.assertIsNone(verification.parse_bundle_alignment("optimizations {}"))
+
+
+class DistributionReportTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.path = pathlib.Path(self.temporary.name) / "test.apk"
+        archive(self.path)
+
+    def options(self, *extra):
+        return verification.arguments([
+            str(self.path), "--package-name", "one.example.phone",
+            "--version-name", "3.1.0", "--version-code", "30100",
+            "--min-sdk", "24", "--target-sdk", "37",
+            "--require-library", "liblinphone.so", "--require-library", "libmediastreamer2.so",
+            *extra,
+        ])
+
+    @staticmethod
+    def official_output(tool, arguments, label, options, report):
+        return {
+            "aapt": "package: name='one.example.phone' versionCode='30100' versionName='3.1.0'\nsdkVersion:'24'\ntargetSdkVersion:'37'\nnative-code: 'armeabi-v7a' 'arm64-v8a' 'x86' 'x86_64'\n",
+            "zipalign": "Verification successful",
+            "apksigner": "Signer #1 certificate SHA-256 digest: " + "a" * 64,
+            "bundletool_manifest": '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="one.example.phone" android:versionCode="30100" android:versionName="3.1.0"><uses-sdk android:minSdkVersion="24" android:targetSdkVersion="37" /></manifest>',
+            "bundletool_config": "alignment: PAGE_ALIGNMENT_16K",
+            "jarsigner": "jar verified.",
+            "keytool": "SHA256: " + "a" * 64,
+        }[label]
+
+    def test_missing_official_tools_report_unverified_instead_of_pass(self):
+        report = verification.verify_distribution(self.options())
+        self.assertEqual("UNVERIFIED", report["status"])
+        self.assertEqual([], report["errors"])
+        self.assertIn("TOOL_UNAVAILABLE", [item["code"] for item in report["unverified"]])
+
+    def test_matching_official_metadata_and_expected_identity_complete_the_gate(self):
+        with patch.object(verification, "_run_tool", side_effect=self.official_output):
+            report = verification.verify_distribution(self.options("--certificate-sha256", "a" * 64))
+        self.assertEqual("PASS", report["status"])
+        self.assertEqual([], report["unverified"])
+
+    def test_metadata_mismatch_is_a_failure(self):
+        options = self.options("--certificate-sha256", "a" * 64)
+        options.version_code += 1
+        with patch.object(verification, "_run_tool", side_effect=self.official_output):
+            report = verification.verify_distribution(options)
+        self.assertEqual("FAIL", report["status"])
+        self.assertIn("METADATA_MISMATCH", [item["code"] for item in report["errors"]])
+
+    def test_other_signing_identity_is_a_failure(self):
+        with patch.object(verification, "_run_tool", side_effect=self.official_output):
+            report = verification.verify_distribution(self.options("--certificate-sha256", "b" * 64))
+        self.assertEqual("FAIL", report["status"])
+        self.assertIn("SIGNING_IDENTITY_MISMATCH", [item["code"] for item in report["errors"]])
+
+    def test_explicit_bundle_four_kilobyte_alignment_is_rejected(self):
+        self.path = self.path.with_suffix(".aab")
+        archive(self.path, kind="aab", aligned=False)
+        def output(tool, arguments, label, options, report):
+            if label == "bundletool_config":
+                return "alignment: PAGE_ALIGNMENT_4K"
+            return self.official_output(tool, arguments, label, options, report)
+        with patch.object(verification, "_run_tool", side_effect=output):
+            report = verification.verify_distribution(self.options("--certificate-sha256", "a" * 64))
+        self.assertEqual("FAIL", report["status"])
+        self.assertIn("BUNDLE_ALIGNMENT", [item["code"] for item in report["errors"]])
 
 if __name__ == "__main__":
     unittest.main()
