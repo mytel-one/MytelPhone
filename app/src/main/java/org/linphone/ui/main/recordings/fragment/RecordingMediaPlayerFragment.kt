@@ -23,6 +23,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.SurfaceTexture
 import android.os.Bundle
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.TextureView
 import android.view.View
@@ -165,6 +166,10 @@ class RecordingMediaPlayerFragment : GenericMainFragment() {
     }
 
     private fun exportFile(filePath: String) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            (requireActivity() as GenericActivity).exportFileToDocuments(filePath)
+            return
+        }
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 Log.i(

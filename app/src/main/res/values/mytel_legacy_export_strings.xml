@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mytel_legacy_media_export_manual_save">Your file stays in MyTel. Open it and use Export to choose where to save a copy.</string>
+    <string name="mytel_legacy_media_export_setting_hint">On this Android version, use Export from the file viewer to choose where to save a copy.</string>
+</resources>

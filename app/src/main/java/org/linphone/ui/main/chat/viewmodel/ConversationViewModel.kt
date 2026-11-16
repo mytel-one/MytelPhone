@@ -20,6 +20,7 @@
 package org.linphone.ui.main.chat.viewmodel
 
 import android.net.Uri
+import android.os.Build
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
@@ -111,6 +112,10 @@ class ConversationViewModel
     }
 
     val fileToDisplayEvent: MutableLiveData<Event<FileModel>> by lazy {
+        MutableLiveData()
+    }
+
+    val legacyMediaExportManualSaveEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData()
     }
 
@@ -833,14 +838,18 @@ class ConversationViewModel
                     voiceRecordPlaybackEndedEvent.postValue(Event(id))
                 },
                 { filePath -> // onFileToExportToNativeGallery
-                    viewModelScope.launch {
-                        withContext(Dispatchers.IO) {
-                            Log.i("$TAG Export file [$filePath] to Android's MediaStore")
-                            val mediaStorePath = FileUtils.addContentToMediaStore(filePath)
-                            if (mediaStorePath.isNotEmpty()) {
-                                Log.i("$TAG File [$filePath] has been successfully exported to MediaStore")
-                            } else {
-                                Log.e("$TAG Failed to export file [$filePath] to MediaStore!")
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                        legacyMediaExportManualSaveEvent.postValue(Event(true))
+                    } else {
+                        viewModelScope.launch {
+                            withContext(Dispatchers.IO) {
+                                Log.i("$TAG Export file [$filePath] to Android's MediaStore")
+                                val mediaStorePath = FileUtils.addContentToMediaStore(filePath)
+                                if (mediaStorePath.isNotEmpty()) {
+                                    Log.i("$TAG File [$filePath] has been successfully exported to MediaStore")
+                                } else {
+                                    Log.e("$TAG Failed to export file [$filePath] to MediaStore!")
+                                }
                             }
                         }
                     }

@@ -25,6 +25,7 @@ import android.database.CursorIndexOutOfBoundsException
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Environment
+import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.os.Process
 import android.provider.MediaStore
@@ -43,6 +44,7 @@ import java.io.IOException
 import java.io.OutputStream
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.R
@@ -305,26 +307,21 @@ class FileUtils {
         @AnyThread
         fun copyFile(from: Uri, to: Uri): Boolean {
             try {
-                coreContext.context.contentResolver.openFileDescriptor(to, "w")?.use { fd ->
-                    FileOutputStream(fd.fileDescriptor).use { outputStream ->
-                        val fileDescriptor = coreContext.context.contentResolver.openFileDescriptor(
-                            from,
-                            "r"
-                        )
-                        val inputStream = FileInputStream(fileDescriptor?.fileDescriptor)
-                        val buffer = ByteArray(4096)
-                        var bytesRead: Int
-                        while (inputStream.read(buffer).also { bytesRead = it } >= 0) {
-                            outputStream.write(buffer, 0, bytesRead)
-                        }
-                        fileDescriptor?.close()
-                    }
-                }
-                return true
+                val resolver = coreContext.context.contentResolver
+                return MyTelDocumentExport.copy(
+                    { resolver.openInputStream(from) },
+                    { resolver.openOutputStream(to, "w") }
+                )
             } catch (e: FileNotFoundException) {
                 Log.e("$TAG Failed to find dest file: $e")
             } catch (e: IOException) {
                 Log.e("$TAG Error copying file: $e")
+            } catch (e: SecurityException) {
+                Log.e("$TAG File provider denied the copy: $e")
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e("$TAG File provider failed while copying: $e")
             }
             return false
         }
@@ -343,11 +340,8 @@ class FileUtils {
 
             try {
                 withContext(Dispatchers.IO) {
-                    val inputStream = FileInputStream(file)
-                    val buffer = ByteArray(4096)
-                    var bytesRead: Int
-                    while (inputStream.read(buffer).also { bytesRead = it } >= 0) {
-                        outputStream.write(buffer, 0, bytesRead)
+                    FileInputStream(file).use { inputStream ->
+                        inputStream.copyTo(outputStream)
                     }
                 }
                 return true
@@ -552,6 +546,10 @@ class FileUtils {
         }
 
         suspend fun addContentToMediaStore(path: String): String {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                Log.w("$TAG Automatic MediaStore export requires Android 10; use document export instead")
+                return ""
+            }
             if (path.isEmpty()) {
                 Log.e("$TAG No file path to export to MediaStore!")
                 return ""
@@ -645,24 +643,40 @@ class FileUtils {
             values: ContentValues,
             pendingKey: String
         ): String {
+            var fileUri: Uri? = null
+            var published = false
             try {
-                val fileUri = context.contentResolver.insert(collection, values)
+                fileUri = context.contentResolver.insert(collection, values)
                 if (fileUri == null) {
                     Log.e("$TAG Failed to get a URI to where store the file, aborting")
                     return ""
                 }
 
                 context.contentResolver.openOutputStream(fileUri).use { out ->
-                    if (copyFileTo(filePath, out)) {
-                        values.clear()
-                        values.put(pendingKey, 0)
-                        context.contentResolver.update(fileUri, values, null, null)
-
-                        return fileUri.toString()
-                    }
+                    if (!copyFileTo(filePath, out)) return ""
                 }
+                values.clear()
+                values.put(pendingKey, 0)
+                if (context.contentResolver.update(fileUri, values, null, null) <= 0) {
+                    Log.e("$TAG MediaStore did not publish the copied file")
+                    return ""
+                }
+                published = true
+                return fileUri.toString()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e("$TAG Exception: $e")
+            } finally {
+                if (!published && fileUri != null) {
+                    try {
+                        if (context.contentResolver.delete(fileUri, null, null) <= 0) {
+                            Log.w("$TAG MediaStore did not confirm removal of incomplete item")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("$TAG Failed to remove incomplete MediaStore item: $e")
+                    }
+                }
             }
             return ""
         }

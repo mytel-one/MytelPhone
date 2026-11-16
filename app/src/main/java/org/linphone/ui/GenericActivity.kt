@@ -20,6 +20,7 @@
 package org.linphone.ui
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.res.Configuration
@@ -27,16 +28,19 @@ import android.content.res.Resources
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.provider.DocumentsContract
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.annotation.DrawableRes
 import androidx.annotation.MainThread
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
@@ -44,18 +48,68 @@ import org.linphone.R
 import org.linphone.compatibility.Compatibility
 import org.linphone.core.tools.Log
 import org.linphone.utils.ToastUtils
+import org.linphone.utils.FileUtils
+import org.linphone.utils.MyTelDocumentExport
 import org.linphone.utils.slideInToastFromTop
 import org.linphone.utils.slideInToastFromTopForDuration
+import androidx.core.net.toUri
+import java.io.File
 
 @MainThread
 open class GenericActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "[Generic Activity]"
+        private const val PENDING_DOCUMENT_EXPORT = "mytel.pending_document_export"
+        private const val LEGACY_EXPORT_NOTICE_SHOWN = "mytel.legacy_export_notice_shown"
     }
 
     private lateinit var toastsArea: ViewGroup
 
     private var mainColor: String = "orange"
+
+    private var documentExport = MyTelDocumentExport()
+    private var legacyExportNoticeShown = false
+
+    private val documentExportLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val sourcePath = documentExport.takePendingPath() ?: return@registerForActivityResult
+        if (result.resultCode != Activity.RESULT_OK) {
+            Log.i("$TAG Document export cancelled")
+            return@registerForActivityResult
+        }
+        val destination = result.data?.data
+        if (destination == null || destination.scheme != "content" ||
+            !DocumentsContract.isDocumentUri(this, destination)
+        ) {
+            showDocumentExportError()
+            return@registerForActivityResult
+        }
+        lifecycleScope.launch {
+            val copied = withContext(Dispatchers.IO) {
+                var success = false
+                try {
+                    success = FileUtils.copyFile(sourcePath.toUri(), destination)
+                    success
+                } finally {
+                    if (!success) {
+                        try {
+                            if (!DocumentsContract.deleteDocument(contentResolver, destination)) {
+                                Log.w("$TAG Provider did not confirm removal of incomplete exported document")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("$TAG Failed to remove incomplete exported document: $e")
+                        }
+                    }
+                }
+            }
+            if (copied) {
+                showGreenToast(getString(R.string.file_successfully_exported_to_documents_toast), R.drawable.check)
+            } else {
+                showDocumentExportError()
+            }
+        }
+    }
 
     override fun getTheme(): Resources.Theme {
         mainColor = corePreferences.themeMainColor
@@ -99,6 +153,9 @@ open class GenericActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
+        documentExport = MyTelDocumentExport(savedInstanceState?.getString(PENDING_DOCUMENT_EXPORT))
+        legacyExportNoticeShown = savedInstanceState?.getBoolean(LEGACY_EXPORT_NOTICE_SHOWN) ?: false
+
         // MyTel product requirement: the app UI language is always English,
         // regardless of the device locale (owner order 2026-11-06). Applied
         // idempotently in the shared AppCompat activity lifecycle right after
@@ -108,6 +165,54 @@ open class GenericActivity : AppCompatActivity() {
         if (AppCompatDelegate.getApplicationLocales() != english) {
             AppCompatDelegate.setApplicationLocales(english)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(PENDING_DOCUMENT_EXPORT, documentExport.pendingPath)
+        outState.putBoolean(LEGACY_EXPORT_NOTICE_SHOWN, legacyExportNoticeShown)
+        super.onSaveInstanceState(outState)
+    }
+
+    /** Save a user-selected copy without requesting broad storage permissions. */
+    fun exportFileToDocuments(filePath: String) {
+        val sourceUri = FileUtils.getProperFilePath(filePath).toUri()
+        val source = if (sourceUri.scheme == "file") sourceUri.path?.let { File(it) } else null
+        if (source == null || !source.isFile || !source.canRead()) {
+            Log.e("$TAG Document export source is not a readable file")
+            showDocumentExportError()
+            return
+        }
+        if (!documentExport.begin(source.toUri().toString())) {
+            Log.w("$TAG A document export picker is already open")
+            return
+        }
+        val name = MyTelDocumentExport.safeFileName(source.name)
+        val mime = FileUtils.getMimeTypeFromExtension(FileUtils.getExtensionFromFileName(name))
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = mime.ifBlank { "application/octet-stream" }
+            putExtra(Intent.EXTRA_TITLE, name)
+        }
+        try {
+            documentExportLauncher.launch(intent)
+        } catch (e: CancellationException) {
+            documentExport.takePendingPath()
+            throw e
+        } catch (e: Exception) {
+            documentExport.takePendingPath()
+            Log.e("$TAG Document picker could not be opened: $e")
+            showDocumentExportError()
+        }
+    }
+
+    private fun showDocumentExportError() {
+        showRedToast(getString(R.string.export_file_to_documents_error_toast), R.drawable.warning_circle)
+    }
+
+    fun showLegacyMediaExportGuidance() {
+        if (legacyExportNoticeShown) return
+        legacyExportNoticeShown = true
+        showBlueToast(getString(R.string.mytel_legacy_media_export_manual_save), R.drawable.info)
     }
 
     protected fun checkMainColorTheme() {

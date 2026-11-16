@@ -829,6 +829,12 @@ open class ConversationFragment : SlidingPaneChildFragment() {
             }
         }
 
+        viewModel.legacyMediaExportManualSaveEvent.observe(viewLifecycleOwner) {
+            it.consume {
+                (requireActivity() as GenericActivity).showLegacyMediaExportGuidance()
+            }
+        }
+
         viewModel.fileToDisplayEvent.observe(viewLifecycleOwner) {
             it.consume { model ->
                 if (messageLongPressViewModel.visible.value == true) return@consume

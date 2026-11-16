@@ -121,4 +121,18 @@ class MyTelDocumentExportTest {
     fun validEmptyDocumentCanBeExported() {
         assertTrue(MyTelDocumentExport.copy({ ByteArrayInputStream(byteArrayOf()) }, { ByteArrayOutputStream() }))
     }
+
+    @Test
+    fun providerRuntimeFailureClosesTheOpenedDestination() {
+        var closed = false
+        val output = object : ByteArrayOutputStream() {
+            override fun close() { closed = true; super.close() }
+        }
+        try {
+            MyTelDocumentExport.copy({ throw IllegalStateException("Provider disconnected") }, { output })
+            throw AssertionError("Expected the provider failure")
+        } catch (_: IllegalStateException) {
+            assertTrue(closed)
+        }
+    }
 }

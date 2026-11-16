@@ -3,6 +3,7 @@ package org.linphone.ui.fileviewer
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
+import android.os.Build
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.UiThread
 import androidx.core.content.FileProvider
@@ -212,6 +213,10 @@ class MediaViewerActivity : GenericActivity() {
         val model = if (currentItem >= 0 && currentItem < list.size) list[currentItem] else null
         if (model != null) {
             val filePath = model.path
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                exportFileToDocuments(filePath)
+                return
+            }
             lifecycleScope.launch {
                 withContext(Dispatchers.IO) {
                     Log.i(
