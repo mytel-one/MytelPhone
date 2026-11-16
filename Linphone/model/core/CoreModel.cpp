@@ -33,6 +33,7 @@
 #include "core/path/Paths.hpp"
 #include "model/call/CallModel.hpp"
 #include "model/tool/ToolModel.hpp"
+#include "tool/SipSetupIdentity.hpp"
 #include "tool/Utils.hpp"
 
 #if defined(Q_OS_MACOS)
@@ -79,6 +80,7 @@ void CoreModel::start() {
 	mCore =
 	    linphone::Factory::get()->createCore(Utils::appStringToCoreString(Paths::getConfigFilePath(mConfigPath)),
 	                                         Utils::appStringToCoreString(Paths::getFactoryConfigFilePath()), nullptr);
+	auto identityMigration = SipSetupIdentity::prepare(mCore);
 	setMonitor(mCore);
 	mCore->usePreviewWindow(true);
 	// Force capture/display.
@@ -95,6 +97,13 @@ void CoreModel::start() {
 	QString userAgent = ToolModel::computeUserAgent(config);
 	mCore->setUserAgent(Utils::appStringToCoreString(userAgent), LINPHONESDK_VERSION);
 	mCore->start();
+	const auto identityResult = SipSetupIdentity::commit(mCore, identityMigration);
+	if (identityResult.migrated)
+		lInfo() << "[CoreModel] Restored basic chat identity compatibility for" << identityResult.migrated
+		        << "account(s)";
+	if (identityResult.failed || identityResult.rollbackFailed)
+		lWarning() << "[CoreModel] Basic chat identity migration failures:" << identityResult.failed
+		           << "rollback failures:" << identityResult.rollbackFailed;
 	migrate();
 	setPathAfterStart();
 	if (SettingsModel::clearLocalLdapFriendsUponStartup(config)) {

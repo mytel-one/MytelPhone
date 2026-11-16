@@ -215,4 +215,11 @@ if(MYTEL_TEST_SDK_ROOT)
     target_include_directories(mytel-pending-account-test PRIVATE "${MYTEL_SOURCE_ROOT}/Linphone"
         "${MYTEL_TEST_SDK_ROOT}/include" "${CMAKE_CURRENT_BINARY_DIR}")
     add_test(NAME mytel-pending-account-test COMMAND mytel-pending-account-test)
+    add_executable(mytel-chat-identity-test "${MYTEL_SOURCE_ROOT}/tests/mytelv310/chat_identity_test.cpp")
+    target_link_libraries(mytel-chat-identity-test PRIVATE Qt6::Core Qt6::Gui Qt6::Network
+        "${MYTEL_TEST_SDK_ROOT}/lib/liblinphone++.lib" "${MYTEL_TEST_SDK_ROOT}/lib/liblinphone.lib")
+    target_include_directories(mytel-chat-identity-test PRIVATE "${MYTEL_SOURCE_ROOT}/Linphone" "${MYTEL_TEST_SDK_ROOT}/include")
+    file(TO_CMAKE_PATH "${MYTEL_TEST_SDK_ROOT}" MYTEL_CHAT_TEST_SDK)
+    target_compile_definitions(mytel-chat-identity-test PRIVATE MYTEL_PROBE_SDK="${MYTEL_CHAT_TEST_SDK}")
+    add_test(NAME mytel-chat-identity-test COMMAND mytel-chat-identity-test)
 endif()

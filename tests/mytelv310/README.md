@@ -45,6 +45,7 @@ without reading a production profile or connecting to a PBX.
 | Real installed Linphone SDK Address parsing, route policy and identity construction | 188/188 |
 | Isolated real SDK auth rollback, persistence and existing-credential protection | 16/16 |
 | Production account cleanup/destructor bodies with real loopback REGISTER and history | 22/22 |
+| Actual SDK chat persistence, guarded identity repair, setter rollback and third restart | 193/193 |
 | Actual isolated NSIS ownership, upgrade and project URL checks | 13/13 |
 | Changed QML parsed by Qt qmlformat | 8 files |
 
@@ -71,7 +72,8 @@ names are canonicalized using their SDK-parsed values before choosing the transp
 The appended Automatic argument defaults to false for existing explicit API callers.
 
 The native AccountManager boundary uses the SDK parser for SIP/SIPS, bare host/port
-and bracketed IPv6. Identity host and port come from the parsed Address. SIPS stays
+and bracketed IPv6. The identity uses the parsed host and omits the registrar port;
+the server, registrar and routes retain their ports and transports. SIPS stays
 secure even if a caller or URI requests UDP/TCP. The SDK's `setTransport()` ignores
 SIPS, so its secure URI transport parameter is explicitly canonicalized to TLS.
 Invalid/non-SIP inputs return a clear setup error without changing stored accounts.
@@ -84,6 +86,25 @@ user deletion retains removeAccountWithData as the default. A local-only test
 compiles the production cleanup/cancel/destructor bodies and verifies real delayed
 registration-cleared behavior, synthetic history preservation and normal manager
 destruction. It uses an ephemeral 127.0.0.1 registrar and no PBX/phone traffic.
+
+`build-chat-identity.cmd` runs the real installed SDK against fresh temporary
+profiles and ephemeral loopback REGISTER/MESSAGE traffic. It stores two Persian
+messages, performs a failed local-account login matching the existing remote peer,
+and verifies global/account-scoped messages and call history after restart. It
+also tests strict SIP/SIPS/IPv6 identity guards, collision snapshots, setter
+rollback and independent identity/account replacement. A third start exercises
+idempotence under the original account/media chat filters.
+
+The pinned SDK reloads Basic chat addresses without their registrar port, so a
+portful account AOR can hide persisted rooms. New setup omits that port. The
+separately guarded startup repair handles only a plain SIP identity whose explicit
+port/domain match its plain registrar, with no colliding account. It clones params
+on the same account before Core.start, then uses the normal SDK setter/config sync
+after start because its pre-start account writer is not ready. Account objects,
+idkeys, defaults, authentication and registrar/routes/contact settings survive.
+The repair conservatively skips secure/extended/external/different-port forms and
+collision groups. Its narrow form cannot prove historical account origin when an
+externally configured plain AOR is indistinguishable from the old generated form.
 
 ## Scope and remaining acceptance
 

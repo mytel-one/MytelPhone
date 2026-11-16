@@ -60,8 +60,9 @@ parseServer(const QString &server, linphone::TransportType transport, bool autom
 inline bool applyIdentity(const std::shared_ptr<linphone::Address> &identity,
                           const std::shared_ptr<linphone::Address> &server) {
 	if (!identity || !server) return false;
-	// The identity must contain the SDK's host/port, never a prefixed URI or host:port as its domain.
-	if (identity->setDomain(server->getDomain()) || identity->setPort(server->getPort())) return false;
+	// The registrar owns its port. Basic chat persistence normalizes the AOR
+	// without a port, so copying the registrar port hides chats after restart.
+	if (identity->setDomain(server->getDomain()) || identity->setPort(0)) return false;
 	identity->setSecure(server->getSecure());
 	return true;
 }

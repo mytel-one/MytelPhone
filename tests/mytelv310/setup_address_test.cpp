@@ -26,7 +26,7 @@ static void valid(const char *input,
 	check(server->getTransport() == expected, "server transport follows selection or secure scheme");
 	check(server->getSecure() == secure, "server secure scheme is preserved");
 	check(identity->getDomain() == domain, "identity uses the parsed host");
-	check(identity->getPort() == port, "identity uses the parsed port");
+	check(identity->getPort() == 0, "identity omits the registrar port so persisted basic chats remain visible");
 	check(identity->getSecure() == secure, "identity secure scheme is preserved");
 	check(identity->getUsername() == "100", "identity username is unchanged");
 }
