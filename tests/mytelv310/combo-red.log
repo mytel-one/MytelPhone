@@ -1,0 +1,180 @@
+✖ ComboBox tolerates undefined model while its model initializes (2.7783ms)
+✖ ComboBox tolerates null model while its model initializes (0.5962ms)
+✖ ComboBox tolerates unselected index while its model initializes (1.2441ms)
+✖ ComboBox tolerates empty array while its model initializes (0.5746ms)
+✖ ComboBox tolerates past-end array while its model initializes (0.6593ms)
+✔ ComboBox still renders array model text, flag and icon (0.5551ms)
+✔ ComboBox still supports application models exposing getAt (1.4698ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 2
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 98.7148
+
+✖ failing tests:
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:19:4
+✖ ComboBox tolerates undefined model while its model initializes (2.7783ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception.
+  Actual message: "Cannot read properties of undefined (reading '0')"
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: evalmachine.<anonymous>:2
+            var item = model[currentIndex];
+                            ^
+    
+    TypeError: Cannot read properties of undefined (reading '0')
+        at evalmachine.<anonymous>:2:25
+        at evalmachine.<anonymous>:11:7
+        at Script.runInContext (node:vm:149:12)
+        at Script.runInNewContext (node:vm:154:17)
+        at Object.runInNewContext (node:vm:310:38)
+        at C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:32
+        at getActual (node:assert:611:5)
+        at strict.doesNotThrow (node:assert:779:32)
+        at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:12)
+        at Test.runInAsyncScope (node:async_hooks:227:14),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:19:4
+✖ ComboBox tolerates null model while its model initializes (0.5962ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception.
+  Actual message: "Cannot read properties of null (reading '0')"
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: evalmachine.<anonymous>:2
+            var item = model[currentIndex];
+                            ^
+    
+    TypeError: Cannot read properties of null (reading '0')
+        at evalmachine.<anonymous>:2:25
+        at evalmachine.<anonymous>:11:7
+        at Script.runInContext (node:vm:149:12)
+        at Script.runInNewContext (node:vm:154:17)
+        at Object.runInNewContext (node:vm:310:38)
+        at C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:32
+        at getActual (node:assert:611:5)
+        at strict.doesNotThrow (node:assert:779:32)
+        at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:12)
+        at Test.runInAsyncScope (node:async_hooks:227:14),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:19:4
+✖ ComboBox tolerates unselected index while its model initializes (1.2441ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception.
+  Actual message: "model.getAt is not a function"
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: evalmachine.<anonymous>:4
+                item = model.getAt(currentIndex);
+                             ^
+    
+    TypeError: model.getAt is not a function
+        at evalmachine.<anonymous>:4:26
+        at evalmachine.<anonymous>:11:7
+        at Script.runInContext (node:vm:149:12)
+        at Script.runInNewContext (node:vm:154:17)
+        at Object.runInNewContext (node:vm:310:38)
+        at C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:32
+        at getActual (node:assert:611:5)
+        at strict.doesNotThrow (node:assert:779:32)
+        at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:12)
+        at Test.runInAsyncScope (node:async_hooks:227:14),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:19:4
+✖ ComboBox tolerates empty array while its model initializes (0.5746ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception.
+  Actual message: "model.getAt is not a function"
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: evalmachine.<anonymous>:4
+                item = model.getAt(currentIndex);
+                             ^
+    
+    TypeError: model.getAt is not a function
+        at evalmachine.<anonymous>:4:26
+        at evalmachine.<anonymous>:11:7
+        at Script.runInContext (node:vm:149:12)
+        at Script.runInNewContext (node:vm:154:17)
+        at Object.runInNewContext (node:vm:310:38)
+        at C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:32
+        at getActual (node:assert:611:5)
+        at strict.doesNotThrow (node:assert:779:32)
+        at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:12)
+        at Test.runInAsyncScope (node:async_hooks:227:14),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:19:4
+✖ ComboBox tolerates past-end array while its model initializes (0.6593ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception.
+  Actual message: "model.getAt is not a function"
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: evalmachine.<anonymous>:4
+                item = model.getAt(currentIndex);
+                             ^
+    
+    TypeError: model.getAt is not a function
+        at evalmachine.<anonymous>:4:26
+        at evalmachine.<anonymous>:11:7
+        at Script.runInContext (node:vm:149:12)
+        at Script.runInNewContext (node:vm:154:17)
+        at Object.runInNewContext (node:vm:310:38)
+        at C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:32
+        at getActual (node:assert:611:5)
+        at strict.doesNotThrow (node:assert:779:32)
+        at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\combo-init.test.cjs:21:12)
+        at Test.runInAsyncScope (node:async_hooks:227:14),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
