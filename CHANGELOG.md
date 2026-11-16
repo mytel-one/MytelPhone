@@ -10,6 +10,21 @@ Group changes to describe their impact on the project, as follows:
     Fixed for any bug fixes.
     Security to invite users to upgrade in case of vulnerabilities.
 
+## MyTel [3.1.0] - 2026-11-16
+
+### Changed
+- One-screen Android introduction and direct three-field SIP setup on Android and Windows, with technical fields in Advanced.
+- Automatic UDP/TCP/TLS selection per registration route; a secure SIP route enforces TLS across the account.
+- Clearer connection feedback, readable transport choices, primary navigation and empty states in light and dark themes.
+- Appearance/background settings first; technical settings remain available under More.
+- Android minimum version lowered to API 24, all four supported native ABIs bundled, with a signed App Bundle for device-specific store delivery.
+
+### Fixed
+- Older Android notification, Telecom construction, image decoding/EXIF, clipboard and picture-in-picture API guards.
+- Legacy user-selected document exports, preserving original files, provider failure/cancellation handling and filenames with URI metacharacters.
+- Adaptive launcher icon placement for pre-Android-8 devices and resource compatibility on Android 7.
+- Secure/mixed-case SIP route parsing and explicit transport selection without leaking credential-bearing server URIs into setup logs.
+
 ## MyTel [3.0.1] - 2026-11-15
 
 ### Fixed

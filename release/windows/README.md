@@ -8,17 +8,17 @@ After building/installing the required Qt renderer as described below:
 
 ```
 configure-build.cmd C:\src\SoftPhone C:\Qt\6.10.0\msvc2022_64
-powershell -File package-windows.ps1 -BaseDirectory C:\src\SoftPhone -StageDirectory C:\output\MyTel-v3.0.1 -CrtDirectory "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Redist\MSVC\14.44.35112\x64\Microsoft.VC143.CRT" -SourceCommit <FULL_WINDOWS_SOURCE_SHA>
+powershell -File package-windows.ps1 -BaseDirectory C:\src\SoftPhone -StageDirectory C:\output\MyTel-v3.1.0 -CrtDirectory "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Redist\MSVC\14.44.35112\x64\Microsoft.VC143.CRT" -SourceCommit <FULL_WINDOWS_SOURCE_SHA>
 ```
 
 `VCVARS64` can select another Visual Studio 2022 edition. Packaging requires the Qt video module and Qt OpenGL runtime, refuses an existing staging directory, preserves local profiles, includes the trust-root bundle at the path used by the application, and copies application/SDK licenses. It never copies an account profile, chat database, signing key, build log or credentials.
 
-The 3.0.1 build flags select the MyTel friendly product/vendor and retain the internal `mytellphone` executable/profile and `MytellPhone` Windows notification identity. `SourceCommit` identifies the full Windows archive revision in the source manifest. The accepted executable was built at `aeb62a0afcbe0750e0a4ba1243043fd004236ff3`; record the executable build revision separately with `ApplicationSourceSha`. Use the standard x64 Microsoft CRT distribution, not OneCore or debug DLLs. The Microsoft notice references the vendor terms; it is not a replacement EULA or a licensing-entitlement audit. See [Microsoft redistribution documentation](https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files).
+The 3.1.0 build flags select the MyTel friendly product/vendor and retain the internal `mytellphone` executable/profile and `MytellPhone` Windows notification identity. `SourceCommit` identifies the full Windows archive revision in the source manifest. The accepted executable revision is recorded as `appBuildSourceCommit` in `WINDOWS-RUNTIME-MANIFEST-v3.1.0.json`; pass that revision separately as `ApplicationSourceSha`. Use the standard x64 Microsoft CRT distribution, not OneCore or debug DLLs. The Microsoft notice references the vendor terms; it is not a replacement EULA or a licensing-entitlement audit. See [Microsoft redistribution documentation](https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files).
 
 The matching Windows source ZIP includes `cmake/install/windows/Build-MyTelInstaller.ps1`, `Assert-MyTelBranding.ps1` and the MyTel NSIS template/artwork. With an official NSIS compiler:
 
 ```powershell
-powershell -File C:\src\SoftPhone\linphone-desktop\cmake\install\windows\Build-MyTelInstaller.ps1 -PayloadDirectory C:\output\MyTel-v3.0.1 -OutputDirectory C:\output\MyTel-setup -MakeNsis C:\tools\nsis\makensis.exe -ApplicationSourceSha aeb62a0afcbe0750e0a4ba1243043fd004236ff3 -Version 3.0.1
+powershell -File C:\src\SoftPhone\linphone-desktop\cmake\install\windows\Build-MyTelInstaller.ps1 -PayloadDirectory C:\output\MyTel-v3.1.0 -OutputDirectory C:\output\MyTel-setup -MakeNsis C:\tools\nsis\makensis.exe -ApplicationSourceSha <APP_BUILD_SOURCE_SHA> -Version 3.1.0
 ```
 
 The per-user setup uses `%LOCALAPPDATA%\Programs\MyTel`, branded shortcuts and an Apps/Uninstall entry. It rejects unsafe roots and nonempty directories without its ownership marker, including silent `/D` targets. The uninstaller checks that marker and deletes only its known files, retaining unknown files and the separate account profile. The app and setup are not Authenticode-signed; unknown-publisher or SmartScreen warnings may occur. A separate actual installation/uninstallation acceptance check is still required.

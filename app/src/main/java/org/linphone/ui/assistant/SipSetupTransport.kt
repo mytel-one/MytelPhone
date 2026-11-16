@@ -45,4 +45,3 @@ object SipSetupTransport {
         return if (port == "5061") "TLS" else "UDP"
     }
 }
-

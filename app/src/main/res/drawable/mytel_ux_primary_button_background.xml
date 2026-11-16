@@ -4,4 +4,3 @@
     <item android:state_pressed="true"><shape><corners android:radius="14dp"/><solid android:color="#0856D9"/></shape></item>
     <item><shape><corners android:radius="14dp"/><solid android:color="@color/mytel_blue"/></shape></item>
 </selector>
-

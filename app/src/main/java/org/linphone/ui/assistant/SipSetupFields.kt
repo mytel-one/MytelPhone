@@ -6,4 +6,3 @@ object SipSetupFields {
         return !username.isNullOrBlank() && !server.isNullOrBlank()
     }
 }
-

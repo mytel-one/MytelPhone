@@ -28,7 +28,7 @@ cmake -S "%MYTEL_BASE%\linphone-desktop" -B "%MYTEL_BASE%\win\build" -G Ninja ^
  -DLINPHONEAPP_APPLICATION_NAME=MyTel -DLINPHONEAPP_EXECUTABLE_NAME=mytellphone ^
  -DLINPHONEAPP_NOTIFICATION_ID=MytellPhone -DLINPHONEAPP_APPLICATION_VENDOR=MyTel ^
  -DLINPHONEAPP_APPLICATION_URL=https://github.com/mytel-one/MytelPhone ^
- -DLINPHONEAPP_VERSION=3.0.1
+ -DLINPHONEAPP_VERSION=3.1.0
 if errorlevel 1 exit /b 1
 cmake --build "%MYTEL_BASE%\win\build" --parallel 2
 exit /b %errorlevel%
