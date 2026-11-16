@@ -9,6 +9,6 @@ object MyTelPermissionRequestPolicy {
         else -> Action.SETTINGS
     }
 
-    fun canResume(pendingCall: Long, activeCalls: Set<Long>, activityAlive: Boolean): Boolean =
-        activityAlive && pendingCall != 0L && pendingCall in activeCalls
+    fun canResume(pendingCall: Long, activeCalls: Set<Long>, activityAlive: Boolean, selectedCall: Long): Boolean =
+        activityAlive && pendingCall != 0L && pendingCall == selectedCall && pendingCall in activeCalls
 }

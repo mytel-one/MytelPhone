@@ -68,6 +68,7 @@ import org.linphone.utils.AppUtils
 import org.linphone.utils.AudioUtils
 import org.linphone.utils.Event
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.MyTelPermissionRequestPolicy
 
 class CurrentCallViewModel
     @UiThread
@@ -793,6 +794,16 @@ class CurrentCallViewModel
 
     @UiThread
     fun toggleVideo() {
+        updateVideoForCall(null) { true }
+    }
+
+    @UiThread
+    fun enableVideoAfterPermission(expectedCallPointer: Long, isContextActive: () -> Boolean) {
+        updateVideoForCall(expectedCallPointer, isContextActive)
+    }
+
+    @UiThread
+    private fun updateVideoForCall(expectedCallPointer: Long?, isContextActive: () -> Boolean) {
         if (ActivityCompat.checkSelfPermission(
                 coreContext.context,
                 Manifest.permission.CAMERA
@@ -805,7 +816,32 @@ class CurrentCallViewModel
 
         coreContext.postOnCoreThread { core ->
             if (::currentCall.isInitialized) {
+                if (expectedCallPointer != null) {
+                    val terminal = setOf(Call.State.End, Call.State.Error, Call.State.Released)
+                    val active = core.calls.filter { it.state !in terminal }.map { it.nativePointer }.toSet()
+                    if (!MyTelPermissionRequestPolicy.canResume(
+                        expectedCallPointer, active, isContextActive(), currentCall.nativePointer
+                    )) return@postOnCoreThread
+                }
                 val params = core.createCallParams(currentCall)
+                if (expectedCallPointer != null) {
+                    if (params == null) return@postOnCoreThread
+                    // A permission continuation enables the requested camera; it never toggles it off.
+                    if (params.isVideoEnabled && params.videoDirection in setOf(MediaDirection.SendRecv, MediaDirection.SendOnly)) {
+                        return@postOnCoreThread
+                    }
+                    params.isVideoEnabled = true
+                    params.videoDirection = MediaDirection.SendRecv
+                    if (!isContextActive() || currentCall.nativePointer != expectedCallPointer) return@postOnCoreThread
+                    if (currentCall.conference != null) {
+                        conferenceModel.setNewLayout(ConferenceViewModel.ACTIVE_SPEAKER_LAYOUT)
+                        conferenceModel.localVideoStreamToggled(true)
+                    }
+                    if (!isContextActive() || currentCall.nativePointer != expectedCallPointer) return@postOnCoreThread
+                    currentCall.update(params)
+                    videoUpdateInProgress.postValue(true)
+                    return@postOnCoreThread
+                }
                 if (currentCall.conference != null) {
                     if (params?.isVideoEnabled == false) {
                         Log.i("$TAG Conference found and video disabled in params, enabling it")

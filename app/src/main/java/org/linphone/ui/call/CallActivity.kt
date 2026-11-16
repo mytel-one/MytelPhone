@@ -95,6 +95,7 @@ class CallActivity : GenericActivity() {
     private var initialMicrophonePermissionChecked = false
     private var pendingMicrophoneCall = 0L
     private var pendingCameraCall = 0L
+    @Volatile private var permissionUiActive = false
 
     private val requestCameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -366,12 +367,6 @@ class CallActivity : GenericActivity() {
             callsViewModel.showTopBar.postValue(showTopBar)
         }
 
-        if (!initialMicrophonePermissionChecked) {
-            initialMicrophonePermissionChecked = true
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                requestCallPermission(Manifest.permission.RECORD_AUDIO, automatic = true)
-            }
-        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -387,7 +382,7 @@ class CallActivity : GenericActivity() {
             val terminal = setOf(Call.State.End, Call.State.Error, Call.State.Released)
             val pointer = target?.takeIf { it.state !in terminal }?.nativePointer ?: 0L
             coreContext.postOnMainThread {
-                if (isFinishing || isDestroyed || pointer == 0L) return@postOnMainThread
+                if (!permissionUiActive || isFinishing || isDestroyed || pointer == 0L) return@postOnMainThread
                 if (permission == Manifest.permission.RECORD_AUDIO) pendingMicrophoneCall = pointer else pendingCameraCall = pointer
                 val action = MyTelPermissionRequestPolicy.resolve(
                     ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED,
@@ -418,6 +413,7 @@ class CallActivity : GenericActivity() {
     }
 
     private fun resumePermissionIntent(permission: String) {
+        if (!permissionUiActive || isFinishing || isDestroyed) return
         if (ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) return
         val pointer = if (permission == Manifest.permission.RECORD_AUDIO) pendingMicrophoneCall else pendingCameraCall
         if (permission == Manifest.permission.RECORD_AUDIO) pendingMicrophoneCall = 0L else pendingCameraCall = 0L
@@ -425,7 +421,10 @@ class CallActivity : GenericActivity() {
         coreContext.postOnCoreThread { core ->
             val terminal = setOf(Call.State.End, Call.State.Error, Call.State.Released)
             val calls = core.calls.filter { it.state !in terminal }
-            if (!MyTelPermissionRequestPolicy.canResume(pointer, calls.map { it.nativePointer }.toSet(), !isFinishing && !isDestroyed)) {
+            val selected = runCatching { callViewModel.currentCall.nativePointer }.getOrDefault(0L)
+            if (!MyTelPermissionRequestPolicy.canResume(
+                pointer, calls.map { it.nativePointer }.toSet(), permissionUiActive && !isFinishing && !isDestroyed, selected
+            )) {
                 return@postOnCoreThread
             }
             val target = calls.first { it.nativePointer == pointer }
@@ -437,7 +436,7 @@ class CallActivity : GenericActivity() {
                     if (permission == Manifest.permission.RECORD_AUDIO) {
                         callViewModel.refreshMicrophoneState()
                     } else if (callViewModel.isSendingVideo.value != true) {
-                        callViewModel.toggleVideo()
+                        callViewModel.enableVideoAfterPermission(pointer) { permissionUiActive && !isFinishing && !isDestroyed }
                     }
                 }
             }
@@ -446,8 +445,15 @@ class CallActivity : GenericActivity() {
 
     override fun onResume() {
         super.onResume()
+        permissionUiActive = true
         resumePermissionIntent(Manifest.permission.RECORD_AUDIO)
         resumePermissionIntent(Manifest.permission.CAMERA)
+        if (!initialMicrophonePermissionChecked) {
+            initialMicrophonePermissionChecked = true
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                requestCallPermission(Manifest.permission.RECORD_AUDIO, automatic = true)
+            }
+        }
 
         val isInPipMode = isInPictureInPictureMode
         Log.i("$TAG onResume: is in PiP mode? [$isInPipMode]")
@@ -467,6 +473,7 @@ class CallActivity : GenericActivity() {
     }
 
     override fun onPause() {
+        permissionUiActive = false
         coreContext.enableProximitySensor(false)
 
         super.onPause()
@@ -476,6 +483,7 @@ class CallActivity : GenericActivity() {
     }
 
     override fun onDestroy() {
+        permissionUiActive = false
         coreContext.enableProximitySensor(false)
 
         super.onDestroy()
