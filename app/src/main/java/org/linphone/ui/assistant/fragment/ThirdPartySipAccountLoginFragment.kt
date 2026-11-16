@@ -36,9 +36,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.UiThread
 import androidx.core.view.ViewCompat
+import androidx.core.app.ActivityCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnLayout
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navGraphViewModels
 import kotlinx.coroutines.delay
@@ -51,9 +53,12 @@ import org.linphone.databinding.AssistantThirdPartySipAccountLoginFragmentBindin
 import org.linphone.ui.GenericActivity
 import org.linphone.ui.GenericFragment
 import org.linphone.ui.assistant.viewmodel.ThirdPartySipAccountLoginViewModel
+import org.linphone.ui.assistant.SipLoginLanGate
 import org.linphone.ui.sso.SingleSignOnActivity
 import org.linphone.utils.DialogUtils
 import org.linphone.utils.PhoneNumberUtils
+import org.linphone.utils.MyTelPermissionRequestHistory
+import org.linphone.utils.MyTelPermissionRequestPolicy
 
 @UiThread
 class ThirdPartySipAccountLoginFragment : GenericFragment() {
@@ -80,14 +85,28 @@ class ThirdPartySipAccountLoginFragment : GenericFragment() {
 
     private lateinit var adapter: ArrayAdapter<String>
 
+    private var launchedLocalNetworkToken: String? = null
+
     private val accessLocalNetworkPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) {
-            Log.i("$TAG ACCESS_LOCAL_NETWORK permission has been granted")
-        } else {
-            Log.w("$TAG ACCESS_LOCAL_NETWORK permission has been denied!")
-        }
+        val token = launchedLocalNetworkToken ?: return@registerForActivityResult
+        launchedLocalNetworkToken = null
+        if (viewModel.pendingLocalNetworkToken() != token) return@registerForActivityResult
+        val settingsHint = !isGranted && activity?.let {
+            !ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.ACCESS_LOCAL_NETWORK)
+        } == true
+        if (viewModel.localNetworkPermissionResult(token, isGranted, settingsHint)) resumeLocalNetworkConnect()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        launchedLocalNetworkToken = savedInstanceState?.getString("mytel_setup_lan_request")
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("mytel_setup_lan_request", launchedLocalNetworkToken)
+        super.onSaveInstanceState(outState)
     }
 
     override fun onCreateView(
@@ -144,12 +163,23 @@ class ThirdPartySipAccountLoginFragment : GenericFragment() {
             val feedbackView = binding.connectionFeedback
             if (!message.isNullOrBlank() && feedbackView != null) {
                 binding.executePendingBindings()
+                feedbackView.isClickable = viewModel.localNetworkSettingsAvailable.value == true
+                feedbackView.isFocusable = feedbackView.isClickable
                 feedbackView.doOnLayout { feedback ->
                     feedback.requestRectangleOnScreen(
                         Rect(0, 0, feedback.width, feedback.height), false
                     )
                 }
             }
+        }
+        binding.connectionFeedback?.setOnClickListener {
+            if (viewModel.localNetworkSettingsAvailable.value == true && isLoginContextActive()) {
+                (requireActivity() as GenericActivity).goToAndroidPermissionSettings()
+            }
+        }
+
+        viewModel.localNetworkPreflightEvent.observe(viewLifecycleOwner) { event ->
+            if (isLoginContextActive()) event.consume { resumeLocalNetworkConnect() }
         }
 
         binding.setBackClickListener {
@@ -203,12 +233,6 @@ class ThirdPartySipAccountLoginFragment : GenericFragment() {
                     message,
                     R.drawable.warning_circle
                 )
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN &&
-                    !Compatibility.isAccessLocalNetworkPermissionGranted(requireContext())
-                ) {
-                    Log.w("$TAG Asking for ACCESS_LOCAL_NETWORK permission")
-                    accessLocalNetworkPermissionLauncher.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
-                }
             }
         }
 
@@ -246,6 +270,70 @@ class ThirdPartySipAccountLoginFragment : GenericFragment() {
 
     private fun goBack() {
         if (!findNavController().popBackStack()) requireActivity().finish()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        resumeLocalNetworkConnect()
+    }
+
+    override fun onStop() {
+        cancelLocalConnectIfLeaving()
+        super.onStop()
+    }
+
+    override fun onDestroyView() {
+        cancelLocalConnectIfLeaving()
+        super.onDestroyView()
+    }
+
+    private fun cancelLocalConnectIfLeaving() {
+        val destination = runCatching { findNavController().currentDestination?.id }.getOrNull()
+        if (isRemoving || activity?.isFinishing == true ||
+            (destination != null && destination != R.id.thirdPartySipAccountLoginFragment)
+        ) viewModel.cancelLogin()
+    }
+
+    private fun isLoginContextActive(): Boolean = isAdded && view != null && activity?.isFinishing == false &&
+        viewLifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) &&
+        runCatching { findNavController().currentDestination?.id }.getOrNull() == R.id.thirdPartySipAccountLoginFragment
+
+    private fun resumeLocalNetworkConnect() {
+        if (!isLoginContextActive()) return
+        val token = viewModel.pendingLocalNetworkToken() ?: return
+        if (viewModel.continueLocalNetworkPreflight(token, true) != SipLoginLanGate.Action.REQUEST ||
+            !viewModel.claimLocalNetworkPermissionLaunch(token)
+        ) return
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.CINNAMON_BUN) {
+            viewModel.localNetworkPermissionResult(token, true, false)
+            resumeLocalNetworkConnect()
+            return
+        }
+        val permission = Manifest.permission.ACCESS_LOCAL_NETWORK
+        when (MyTelPermissionRequestPolicy.resolve(
+            Compatibility.isAccessLocalNetworkPermissionGranted(requireContext()),
+            MyTelPermissionRequestHistory.wasRequested(requireContext(), permission),
+            ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), permission)
+        )) {
+            MyTelPermissionRequestPolicy.Action.NONE -> {
+                viewModel.localNetworkPermissionResult(token, true, false)
+                resumeLocalNetworkConnect()
+            }
+            MyTelPermissionRequestPolicy.Action.REQUEST -> {
+                launchedLocalNetworkToken = token
+                MyTelPermissionRequestHistory.record(requireContext(), permission)
+                try {
+                    accessLocalNetworkPermissionLauncher.launch(permission)
+                } catch (_: RuntimeException) {
+                    launchedLocalNetworkToken = null
+                    viewModel.cancelLogin()
+                }
+            }
+            MyTelPermissionRequestPolicy.Action.SETTINGS -> {
+                viewModel.localNetworkPermissionResult(token, false, true)
+                resumeLocalNetworkConnect()
+            }
+        }
     }
 
     private fun showOutboundProxyInfoDialog() {

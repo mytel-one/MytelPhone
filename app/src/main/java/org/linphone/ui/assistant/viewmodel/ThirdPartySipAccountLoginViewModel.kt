@@ -19,6 +19,7 @@
  */
 package org.linphone.ui.assistant.viewmodel
 
+import android.os.Build
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MediatorLiveData
@@ -27,6 +28,7 @@ import java.util.Locale
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
+import org.linphone.compatibility.Compatibility
 import org.linphone.core.Account
 import org.linphone.core.Address
 import org.linphone.core.AuthInfo
@@ -41,6 +43,8 @@ import org.linphone.ui.GenericViewModel
 import org.linphone.ui.assistant.SipSetupTransport
 import org.linphone.ui.assistant.SipSetupFields
 import org.linphone.ui.assistant.SipSetupServerUri
+import org.linphone.ui.assistant.SipLocalNetworkPolicy
+import org.linphone.ui.assistant.SipLoginLanGate
 import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.SipLoginAttempt
@@ -85,6 +89,24 @@ class ThirdPartySipAccountLoginViewModel
     val registrationInProgress = MutableLiveData<Boolean>()
 
     val connectionFeedback = MutableLiveData("")
+
+    val localNetworkSettingsAvailable = MutableLiveData(false)
+
+    val localNetworkPreflightEvent = MutableLiveData<Event<String>>()
+
+    private val localNetworkGate = SipLoginLanGate()
+    private var optionalLocalNetworkHint = false
+    private var localNetworkSettingsHint = false
+    // Memory only, never SavedState/Bundle/Event: the exact Connect intent must
+    // retain its validated routes while an OS permission dialog is displayed.
+    private data class LoginInput(
+        val username: String, val authId: String, val password: String, val server: String,
+        val displayName: String, val outbound: String, val proxy: String, val transport: String,
+        val prefix: String, val prefixIso: String
+    ) {
+        val routes: List<String> get() = listOf(server, outbound, proxy)
+    }
+    private var pendingLoginInput: LoginInput? = null
 
     val accountLoggedInEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData()
@@ -179,8 +201,105 @@ class ThirdPartySipAccountLoginViewModel
 
     @UiThread
     fun login() {
+        if (registrationInProgress.value == true || localNetworkGate.current() != null) return
+        localNetworkSettingsAvailable.value = false
+        localNetworkSettingsHint = false
         if (!coreContext.isReady()) return
         if (!isLoginButtonEnabled()) {
+            connectionFeedback.value = AppUtils.getString(R.string.mytel_ux_required_fields)
+            return
+        }
+        val input = LoginInput(
+            username.value.orEmpty().trim(), authId.value.orEmpty().trim(), password.value.orEmpty(),
+            domain.value.orEmpty().trim(), displayName.value.orEmpty().trim(), outboundProxy.value.orEmpty().trim(),
+            proxy.value.orEmpty().trim(), transport.value.orEmpty(), internationalPrefix.value.orEmpty().trim(),
+            internationalPrefixIsoCountryCode.value.orEmpty()
+        )
+        val routes = input.routes
+        val need = SipLocalNetworkPolicy.routes(routes)
+        if (need == SipLocalNetworkPolicy.Need.INVALID) {
+            connectionFeedback.value = AppUtils.getString(R.string.assistant_login_cant_parse_address_toast)
+            return
+        }
+        val token = localNetworkGate.begin(need) ?: return
+        pendingLoginInput = input
+        registrationInProgress.value = true
+        connectionFeedback.value = ""
+        localNetworkSettingsAvailable.value = false
+        localNetworkSettingsHint = false
+        val selection = input.transport
+        // Validate SDK URI syntax without config, auth, accounts, registration
+        // attempts or a timeout. A delayed result cannot revive a cancelled intent.
+        coreContext.postOnCoreThread {
+            val valid = runCatching {
+                routes.filter { it.isNotBlank() }.all {
+                    createServerAddress(it, selection, routes)?.let { address ->
+                        !address.domain.isNullOrBlank() && address.port in 0..65535
+                    } == true
+                }
+            }.getOrDefault(false)
+            coreContext.postOnMainThread {
+                if (!localNetworkGate.isCurrent(token)) return@postOnMainThread
+                if (!valid) {
+                    localNetworkGate.cancel()
+                    pendingLoginInput = null
+                    registrationInProgress.value = false
+                    connectionFeedback.value = AppUtils.getString(R.string.assistant_login_cant_parse_address_toast)
+                    return@postOnMainThread
+                }
+                localNetworkGate.validated(
+                    token, Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN,
+                    Compatibility.isAccessLocalNetworkPermissionGranted(coreContext.context)
+                )
+                localNetworkPreflightEvent.value = Event(token)
+            }
+        }
+    }
+
+    @UiThread
+    fun pendingLocalNetworkToken(): String? = localNetworkGate.current()
+
+    @UiThread
+    fun claimLocalNetworkPermissionLaunch(token: String): Boolean = localNetworkGate.claimLaunch(token)
+
+    @UiThread
+    fun localNetworkPermissionResult(token: String, granted: Boolean, settingsHint: Boolean): Boolean {
+        val accepted = localNetworkGate.result(token, granted)
+        if (accepted) localNetworkSettingsHint = !granted && settingsHint
+        return accepted
+    }
+
+    @UiThread
+    fun continueLocalNetworkPreflight(token: String, activeContext: Boolean): SipLoginLanGate.Action {
+        val action = localNetworkGate.action(token, activeContext)
+        when (action) {
+            SipLoginLanGate.Action.START, SipLoginLanGate.Action.START_WITH_HINT -> {
+                optionalLocalNetworkHint = action == SipLoginLanGate.Action.START_WITH_HINT
+                val input = pendingLoginInput
+                pendingLoginInput = null
+                if (input != null) startSdkLogin(input) else registrationInProgress.value = false
+            }
+            SipLoginLanGate.Action.DENIED -> {
+                pendingLoginInput = null
+                registrationInProgress.value = false
+                localNetworkSettingsAvailable.value = localNetworkSettingsHint
+                connectionFeedback.value = AppUtils.getString(
+                    if (localNetworkSettingsHint) R.string.mytel_lan_setup_settings else R.string.mytel_lan_setup_denied
+                )
+            }
+            else -> Unit
+        }
+        return action
+    }
+
+    @UiThread
+    private fun startSdkLogin(input: LoginInput) {
+        if (!coreContext.isReady()) {
+            registrationInProgress.value = false
+            return
+        }
+        if (!SipSetupFields.canConnect(input.username, input.server)) {
+            registrationInProgress.value = false
             connectionFeedback.value = AppUtils.getString(R.string.mytel_ux_required_fields)
             return
         }
@@ -189,17 +308,17 @@ class ThirdPartySipAccountLoginViewModel
         // taps in one frame cannot create two accounts or replace credentials.
         registrationInProgress.value = true
         connectionFeedback.value = ""
-        val usernameValue = username.value.orEmpty().trim()
-        val authIdValue = authId.value.orEmpty().trim()
-        val passwordValue = password.value.orEmpty()
-        val serverValue = domain.value.orEmpty().trim()
-        val displayNameValue = displayName.value.orEmpty().trim()
-        val outboundValue = outboundProxy.value.orEmpty().trim()
-        val proxyValue = proxy.value.orEmpty().trim()
-        val transportSelection = transport.value.orEmpty()
+        val usernameValue = input.username
+        val authIdValue = input.authId
+        val passwordValue = input.password
+        val serverValue = input.server
+        val displayNameValue = input.displayName
+        val outboundValue = input.outbound
+        val proxyValue = input.proxy
+        val transportSelection = input.transport
         val accountRoutes = listOf(serverValue, outboundValue, proxyValue)
-        val prefixValue = internationalPrefix.value.orEmpty().trim()
-        val prefixIsoValue = internationalPrefixIsoCountryCode.value.orEmpty()
+        val prefixValue = input.prefix
+        val prefixIsoValue = input.prefixIso
         coreContext.postOnCoreThread { core ->
             if (!attempts.isCurrent(attempt)) return@postOnCoreThread
             try {
@@ -364,8 +483,9 @@ class ThirdPartySipAccountLoginViewModel
         if (!attempts.finish(attempt)) return
         releasePendingAccount(core, attempt, removeAccount = true)
         registrationInProgress.postValue(false)
-        connectionFeedback.postValue(message)
-        accountLoginErrorEvent.postValue(Event(message))
+        val feedback = if (optionalLocalNetworkHint) "$message\n${AppUtils.getString(R.string.mytel_lan_setup_optional_hint)}" else message
+        connectionFeedback.postValue(feedback)
+        accountLoginErrorEvent.postValue(Event(feedback))
     }
 
     @WorkerThread
@@ -386,15 +506,22 @@ class ThirdPartySipAccountLoginViewModel
 
     @UiThread
     fun cancelLogin() {
-        val attempt = attempts.cancel() ?: return
+        val cancelledPreflight = localNetworkGate.cancel()
+        pendingLoginInput = null
+        localNetworkSettingsAvailable.value = false
+        optionalLocalNetworkHint = false
+        val attempt = attempts.cancel()
+        if (!cancelledPreflight && attempt == null) return
         registrationInProgress.value = false
         connectionFeedback.value = AppUtils.getString(R.string.mytel_ux_connection_cancelled)
-        coreContext.postOnCoreThread { core ->
+        if (attempt != null) coreContext.postOnCoreThread { core ->
             releasePendingAccount(core, attempt, removeAccount = true)
         }
     }
 
     override fun onCleared() {
+        localNetworkGate.cancel()
+        pendingLoginInput = null
         val attempt = attempts.cancel()
         if (attempt != null && coreContext.isReady()) {
             coreContext.postOnCoreThread { core ->

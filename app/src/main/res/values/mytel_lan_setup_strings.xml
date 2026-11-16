@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mytel_lan_setup_denied">Local network access is needed for this phone system. Tap Connect to try permission again, or use a public server.</string>
+    <string name="mytel_lan_setup_settings">Local network access is off. Tap here to open Android settings, allow Nearby devices, then return and tap Connect.</string>
+    <string name="mytel_lan_setup_optional_hint">If this server is on your office network, allow Nearby devices in Android app settings and try again.</string>
+</resources>
