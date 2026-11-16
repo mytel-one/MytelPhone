@@ -1,0 +1,14 @@
+PASS silent-D-existing-unowned-directory-blocked-without-overwrite
+PASS fresh-dedicated-directory-installed-with-ownership-marker
+PASS installed-about-links-to-canonical-project
+PASS owned-upgrade-refreshes-known-files-preserves-unknown
+PASS uninstall-wrong-marker-path-blocked-before-delete
+PASS install-existing-invalid-marker-blocked
+PASS owned-uninstall-deletes-known-files-preserves-unknown
+PASS no-write-actual-root-guard-blocked:C:\
+PASS no-write-actual-root-guard-blocked:C:\Windows
+PASS no-write-actual-root-guard-blocked:C:\Windows\
+PASS no-write-actual-root-guard-blocked:C:\Users\HajSaman
+PASS no-write-actual-root-guard-blocked:C:\Users\HajSaman\
+PASS no-write-actual-root-guard-blocked:C:\Users\HajSaman\AppData\Local
+13/13 actual NSIS ownership guard checks passed. Evidence fixtures: C:\Users\HajSaman\Documents\Codex\mytelsoftphone\evidence-v310\installer-guards\MyTel.InstallerTest.cadd77de198d468a97b692bd9c561de1

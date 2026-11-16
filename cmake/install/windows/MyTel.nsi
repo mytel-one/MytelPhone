@@ -197,7 +197,7 @@ Section "MyTel (required)" SEC_MYTEL
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MyTel" "InstallLocation" "$INSTDIR"
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MyTel" "UninstallString" '"$INSTDIR\Uninstall.exe"'
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MyTel" "QuietUninstallString" '"$INSTDIR\Uninstall.exe" /S'
-    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MyTel" "URLInfoAbout" "https://github.com/DashSaman/MyTelSoftPhone"
+    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MyTel" "URLInfoAbout" "https://github.com/mytel-one/MytelPhone"
     WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MyTel" "NoModify" 1
     WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MyTel" "NoRepair" 1
     WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MyTel" "EstimatedSize" ${MYTEL_SIZE_KB}

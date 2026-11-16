@@ -22,13 +22,17 @@ node --test tests/mytelv310/*.test.cjs
 node --test tests/mytelv3/*.test.cjs
 tests/mytelv310/build-ux.cmd C:/path/to/evidence
 tests/mytelv310/build-address.cmd
+tests/mytelv310/build-auth.cmd
 ```
 
 The small native test scripts use the existing temporary theme-test build tree,
 build their named target with one worker and do not build or launch the application.
 The SDK address script uses the adjacent `win/sdk/linphone-sdk/win64` installation
 and runs from its resource directory so that the real SIP grammar is available.
-It creates Address objects only: no Core, account registration or network calls.
+The address script creates Address objects only. The auth script starts one
+separate temporary Core with all SIP transports disabled, network explicitly
+unreachable and no accounts. It verifies both live and persisted auth rollback
+without reading a production profile or connecting to a PBX.
 
 ## Recorded results
 
@@ -38,12 +42,16 @@ It creates Address objects only: no Core, account registration or network calls.
 | Existing Node regressions | 225/225 |
 | Production QML setup/control render and interaction seam | 96/96 |
 | Real installed Linphone SDK Address parsing, route policy and identity construction | 188/188 |
+| Isolated real SDK auth rollback, persistence and existing-credential protection | 16/16 |
+| Actual isolated NSIS ownership, upgrade and project URL checks | 13/13 |
 | Changed QML parsed by Qt qmlformat | 8 files |
 
 RED checkpoints retain the observed failures before the fixes: `red.log`,
 `transport-red.log`, `combo-red.log`, `address-red.log`, `qt-label-red.log`,
 `routes-red.log`, `route-mode-red.log`, `qt-route-mode-red.log` and
 `route-parameter-case-red.log`.
+`auth-red.log` reproduces the SDK clone ownership issue and `installer-url-red.log`
+captures the old installed project URL before their fixes.
 The corresponding GREEN outputs are included alongside the tests. Test counts are
 assertions/scenarios, not whole-application coverage measurements.
 
@@ -63,6 +71,10 @@ and bracketed IPv6. Identity host and port come from the parsed Address. SIPS st
 secure even if a caller or URI requests UDP/TCP. The SDK's `setTransport()` ignores
 SIPS, so its secure URI transport parameter is explicitly canonicalized to TLS.
 Invalid/non-SIP inputs return a clear setup error without changing stored accounts.
+Unfinished setup owns the SDK-stored auth clone rather than the supplied object.
+Cancellation/failure removes that clone and restores any preexisting credential
+it displaced, while leaving later independent replacements/deletions untouched.
+Successful setup commits its credential; an abandoned transaction rolls back.
 
 ## Scope and remaining acceptance
 

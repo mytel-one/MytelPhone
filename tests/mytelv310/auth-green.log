@@ -1,0 +1,38 @@
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR)
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR)
+-- Configuring done (1.1s)
+-- Generating done (0.7s)
+-- Build files have been written to: C:/Users/HajSaman/AppData/Local/Temp/mytel-v3-theme-tests
+[1/4] Automatic MOC for target mytel-login-auth-test
+[2/3] Building CXX object CMakeFiles\mytel-login-auth-test.dir\C_\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\login_auth_test.cpp.obj
+C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\login_auth_test.cpp(25): warning C4834: discarding return value of function with [[nodiscard]] attribute
+C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\login_auth_test.cpp(50): warning C4834: discarding return value of function with [[nodiscard]] attribute
+[3/3] Linking CXX executable mytel-login-auth-test.exe
+2026-11-16 20:43:09:640 liblinphone-error- No parsed content from configuration file, parsed_size=[0]
+
+2026-11-16 20:43:09:677 mediastreamer-error- Fail to load plugin ./lib/mediastreamer/plugins\libmsopenh264.dll: error 126
+
+2026-11-16 20:43:09:704 liblinphone-warning- No ringtone has been defined in sound config, using default one
+
+PASS isolated Core has no account
+2026-11-16 20:43:09:746 liblinphone-warning- nothing to migrate, skipping...
+
+PASS isolated Core starts with all SIP transports disabled
+PASS isolated Core network remains unreachable
+PASS setup stores one auth info
+PASS real SDK stores its own clone
+PASS started isolated Core persists auth before cancellation
+PASS cancel removes only the Core-owned attempt clone
+PASS cancel removes persisted auth sections
+PASS repeated cancellation is idempotent
+PASS unrelated existing Core auth object survives unchanged
+PASS SDK replaces matching identity during setup
+PASS cancel restores displaced preexisting credentials
+PASS rollback preserves a later independent replacement
+PASS accepted setup keeps its credentials
+PASS destroyed unfinished setup rolls back credentials
+PASS rollback respects a later independent credential deletion
+16/16 actual isolated SDK auth checks passed
+isolated Core stop begins
+isolated Core stop returned
+isolated Core released
