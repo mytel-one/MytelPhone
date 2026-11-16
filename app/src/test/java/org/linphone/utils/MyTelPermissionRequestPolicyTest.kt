@@ -17,9 +17,13 @@ class MyTelPermissionRequestPolicyTest {
         assertEquals(MyTelPermissionRequestPolicy.Action.NONE, MyTelPermissionRequestPolicy.resolve(true, true, false))
     }
     @Test fun permissionResultResumesOnlyTheOriginalStillActiveCall() {
-        assertEquals(true, MyTelPermissionRequestPolicy.canResume(42, setOf(42, 43), true))
-        assertEquals(false, MyTelPermissionRequestPolicy.canResume(42, setOf(43), true))
-        assertEquals(false, MyTelPermissionRequestPolicy.canResume(42, setOf(42), false))
-        assertEquals(false, MyTelPermissionRequestPolicy.canResume(0, setOf(0), true))
+        assertEquals(true, MyTelPermissionRequestPolicy.canResume(42, setOf(42, 43), true, 42))
+        assertEquals(false, MyTelPermissionRequestPolicy.canResume(42, setOf(43), true, 42))
+        assertEquals(false, MyTelPermissionRequestPolicy.canResume(42, setOf(42), false, 42))
+        assertEquals(false, MyTelPermissionRequestPolicy.canResume(0, setOf(0), true, 0))
+    }
+    @Test fun incomingSelectionChangeCannotApplyAnOlderPermissionIntent() {
+        assertEquals(false, MyTelPermissionRequestPolicy.canResume(42, setOf(42, 43), true, 43))
+        assertEquals(true, MyTelPermissionRequestPolicy.canResume(42, setOf(42, 43), true, 42))
     }
 }
