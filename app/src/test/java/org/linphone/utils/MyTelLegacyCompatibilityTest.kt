@@ -44,4 +44,26 @@ class MyTelLegacyCompatibilityTest {
     fun modernChannelPolicyRemainsIndependentOfLegacyFallback() {
         assertEquals(4, MyTelLegacyCompatibility.notificationImportance(37, false, 4, 2))
     }
+
+    @Test
+    fun unrotatedAndUnknownExifValuesKeepTheOriginalBitmapOrientation() {
+        for (orientation in listOf(0, 1, 9)) {
+            assertEquals(MyTelImageOrientation(), MyTelLegacyCompatibility.bitmapOrientation(orientation))
+        }
+    }
+
+    @Test
+    fun rotatedExifValuesKeepCameraPhotosUpright() {
+        assertEquals(MyTelImageOrientation(180), MyTelLegacyCompatibility.bitmapOrientation(3))
+        assertEquals(MyTelImageOrientation(90), MyTelLegacyCompatibility.bitmapOrientation(6))
+        assertEquals(MyTelImageOrientation(-90), MyTelLegacyCompatibility.bitmapOrientation(8))
+    }
+
+    @Test
+    fun mirroredAndTransposedExifValuesPreserveThePhotoGeometry() {
+        assertEquals(MyTelImageOrientation(0, true), MyTelLegacyCompatibility.bitmapOrientation(2))
+        assertEquals(MyTelImageOrientation(180, true), MyTelLegacyCompatibility.bitmapOrientation(4))
+        assertEquals(MyTelImageOrientation(90, true), MyTelLegacyCompatibility.bitmapOrientation(5))
+        assertEquals(MyTelImageOrientation(-90, true), MyTelLegacyCompatibility.bitmapOrientation(7))
+    }
 }
