@@ -1,0 +1,107 @@
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
+-- Configuring done (1.2s)
+-- Generating done (0.7s)
+-- Build files have been written to: C:/Users/HajSaman/AppData/Local/Temp/mytel-v3-theme-tests
+ninja: no work to do.
+2026-11-16 19:32:40:294 belle-sip-warning- There is no object pool created in thread [39204]. Use belle_sip_object_pool_push() to create one. Unowned objects not unref'd will be leaked.
+
+PASS 192.168.8.171:5060
+PASS server host is parsed by the SDK
+PASS server port is preserved
+PASS server transport follows selection or secure scheme
+PASS server secure scheme is preserved
+FAIL identity uses the parsed host
+FAIL identity uses the parsed port
+PASS identity secure scheme is preserved
+PASS identity username is unchanged
+2026-11-16 19:32:40:300 liblinphone-warning- Cannot create Address, bad uri [sip: pbx.example.invalid ]
+
+FAIL  pbx.example.invalid 
+2026-11-16 19:32:40:300 belle-sip-warning- [bellesip-sip-parser] Parsing ended prematuraly at pos 7
+
+2026-11-16 19:32:40:300 liblinphone-warning- Cannot create Address, bad uri [sip:sip:pbx.example.invalid:5060]
+
+FAIL sip:pbx.example.invalid:5060
+2026-11-16 19:32:40:300 belle-sip-warning- [bellesip-sip-parser] Parsing ended prematuraly at pos 8
+
+2026-11-16 19:32:40:300 liblinphone-warning- Cannot create Address, bad uri [sip:sips:pbx.example.invalid:5061]
+
+FAIL sips:pbx.example.invalid:5061
+2026-11-16 19:32:40:300 liblinphone-warning- Cannot create Address, bad uri [sip: SiPs:pbx.example.invalid:5060 ]
+
+FAIL  SiPs:pbx.example.invalid:5060 
+PASS [2001:db8::1]:5060
+PASS server host is parsed by the SDK
+PASS server port is preserved
+PASS server transport follows selection or secure scheme
+PASS server secure scheme is preserved
+FAIL identity uses the parsed host
+FAIL identity uses the parsed port
+PASS identity secure scheme is preserved
+PASS identity username is unchanged
+2026-11-16 19:32:40:300 belle-sip-warning- [bellesip-sip-parser] Parsing ended prematuraly at pos 8
+
+2026-11-16 19:32:40:300 liblinphone-warning- Cannot create Address, bad uri [sip:sips:[2001:db8::1]:5061]
+
+FAIL sips:[2001:db8::1]:5061
+2026-11-16 19:32:40:301 belle-sip-warning- [bellesip-sip-parser] Parsing ended prematuraly at pos 7
+
+2026-11-16 19:32:40:301 liblinphone-warning- Cannot create Address, bad uri [sip:sip:pbx.example.invalid:5061;transport=tcp]
+
+FAIL sip:pbx.example.invalid:5061;transport=tcp
+2026-11-16 19:32:40:301 liblinphone-warning- Cannot create Address, bad uri [sip:]
+
+PASS 
+PASS invalid input leaves the cloned identity unchanged
+2026-11-16 19:32:40:301 liblinphone-warning- Cannot create Address, bad uri [sip:  ]
+
+PASS   
+PASS invalid input leaves the cloned identity unchanged
+2026-11-16 19:32:40:301 belle-sip-warning- [bellesip-sip-parser] Parsing ended prematuraly at pos 7
+
+2026-11-16 19:32:40:301 liblinphone-warning- Cannot create Address, bad uri [sip:sip:]
+
+PASS sip:
+PASS invalid input leaves the cloned identity unchanged
+2026-11-16 19:32:40:301 belle-sip-warning- [bellesip-sip-parser] Parsing ended prematuraly at pos 8
+
+2026-11-16 19:32:40:301 liblinphone-warning- Cannot create Address, bad uri [sip:sips:]
+
+PASS sips:
+PASS invalid input leaves the cloned identity unchanged
+2026-11-16 19:32:40:301 belle-sip-warning- [bellesip-sip-parser] Parsing ended prematuraly at pos 7
+
+2026-11-16 19:32:40:301 liblinphone-warning- Cannot create Address, bad uri [sip:sip::5060]
+
+PASS sip::5060
+PASS invalid input leaves the cloned identity unchanged
+2026-11-16 19:32:40:301 belle-sip-warning- [bellesip-sip-parser] Parsing ended prematuraly at pos 8
+
+2026-11-16 19:32:40:301 liblinphone-warning- Cannot create Address, bad uri [sip:http://pbx.example.invalid]
+
+PASS http://pbx.example.invalid
+PASS invalid input leaves the cloned identity unchanged
+2026-11-16 19:32:40:301 belle-sip-warning- [bellesip-sip-parser] Parsing ended prematuraly at pos 9
+
+2026-11-16 19:32:40:301 liblinphone-warning- Cannot create Address, bad uri [sip:https://pbx.example.invalid]
+
+PASS https://pbx.example.invalid
+PASS invalid input leaves the cloned identity unchanged
+FAIL tel:100
+FAIL invalid input leaves the cloned identity unchanged
+2026-11-16 19:32:40:302 liblinphone-warning- Cannot create Address, bad uri [sip:sip:user@]
+
+2026-11-16 19:32:40:302 belle-sip-error- Cannot parse a sip/sips uri as a generic uri
+
+PASS sip:user@
+PASS invalid input leaves the cloned identity unchanged
+2026-11-16 19:32:40:302 belle-sip-warning- [bellesip-sip-parser] Parsing ended prematuraly at pos 7
+
+2026-11-16 19:32:40:302 liblinphone-warning- Cannot create Address, bad uri [sip:sip:pbx.example.invalid:invalid]
+
+PASS sip:pbx.example.invalid:invalid
+PASS invalid input leaves the cloned identity unchanged
+32/44 SDK-backed setup address checks passed
+2026-11-16 19:32:40:378 ortp-warning- ortp_exit() called without prior call to ortp_init(), ignored.
+

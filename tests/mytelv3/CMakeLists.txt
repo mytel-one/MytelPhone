@@ -175,3 +175,25 @@ add_executable(mytel-incoming-call-test incoming_call_test.cpp)
 target_link_libraries(mytel-incoming-call-test PRIVATE Qt6::Core Qt6::Gui Qt6::Quick)
 target_include_directories(mytel-incoming-call-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 add_test(NAME mytel-incoming-call-test COMMAND mytel-incoming-call-test)
+
+add_executable(mytel-ux-v310-test "${MYTEL_SOURCE_ROOT}/tests/mytelv310/ux_render_test.cpp")
+target_link_libraries(mytel-ux-v310-test PRIVATE Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::Test Qt6::Svg)
+target_compile_definitions(mytel-ux-v310-test PRIVATE MYTEL_SOURCE_ROOT="${MYTEL_SOURCE_ROOT}")
+qt_add_resources(mytel-ux-v310-test "mytel-ux-helpers"
+    PREFIX "/qt/qml/Linphone/view/Control/Tool/Helper"
+    BASE "${MYTEL_SOURCE_ROOT}/Linphone/view/Control/Tool/Helper"
+    FILES "${MYTEL_SOURCE_ROOT}/Linphone/view/Control/Tool/Helper/utils.js")
+qt_add_resources(mytel-ux-v310-test "mytel-ux-style"
+    PREFIX "/qt/qml/Linphone/view/Style"
+    BASE "${MYTEL_SOURCE_ROOT}/Linphone/view/Style"
+    FILES "${MYTEL_SOURCE_ROOT}/Linphone/view/Style/buttonStyle.js")
+add_test(NAME mytel-ux-v310-test COMMAND mytel-ux-v310-test)
+
+if(MYTEL_TEST_SDK_ROOT)
+    add_executable(mytel-setup-address-test "${MYTEL_SOURCE_ROOT}/tests/mytelv310/setup_address_test.cpp")
+    target_link_libraries(mytel-setup-address-test PRIVATE Qt6::Core
+        "${MYTEL_TEST_SDK_ROOT}/lib/liblinphone++.lib" "${MYTEL_TEST_SDK_ROOT}/lib/liblinphone.lib")
+    target_include_directories(mytel-setup-address-test PRIVATE "${MYTEL_SOURCE_ROOT}/Linphone"
+        "${MYTEL_TEST_SDK_ROOT}/include")
+    add_test(NAME mytel-setup-address-test COMMAND mytel-setup-address-test)
+endif()
