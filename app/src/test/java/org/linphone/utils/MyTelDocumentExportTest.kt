@@ -12,6 +12,53 @@ import org.junit.Test
 
 class MyTelDocumentExportTest {
     @Test
+    fun rawFilePathsPreserveCharactersThatHaveUriMeaning() {
+        val path = "/private/meeting#1?final%20.wav"
+        assertEquals(path, MyTelDocumentExport.sourceFilePath(path))
+        assertEquals("/private/meeting with spaces.wav", MyTelDocumentExport.sourceFilePath("/private/meeting with spaces.wav"))
+    }
+
+    @Test
+    fun actualFileUrisDecodeThePathOnce() {
+        assertEquals("/private/meeting#1?100%.wav", MyTelDocumentExport.sourceFilePath("file:///private/meeting%231%3F100%25.wav"))
+        assertEquals("/private/literal%20.wav", MyTelDocumentExport.sourceFilePath("file:///private/literal%2520.wav"))
+    }
+
+    @Test
+    fun contentUrisAreNotTreatedAsPrivateFiles() {
+        assertNull(MyTelDocumentExport.sourceFilePath("content://documents/document/report.wav"))
+    }
+
+    @Test
+    fun fileUrisWithAuthorityQueryOrFragmentAreRejected() {
+        assertNull(MyTelDocumentExport.sourceFilePath("file://another-host/private/report.wav"))
+        assertNull(MyTelDocumentExport.sourceFilePath("file:///private/report.wav?replace=true"))
+        assertNull(MyTelDocumentExport.sourceFilePath("file:///private/report.wav#fragment"))
+    }
+
+    @Test
+    fun malformedUrisAndNonAbsoluteSourcesAreRejectedWithoutThrowing() {
+        assertNull(MyTelDocumentExport.sourceFilePath("file:///private/bad%xx.wav"))
+        assertNull(MyTelDocumentExport.sourceFilePath("file:relative.wav"))
+        assertNull(MyTelDocumentExport.sourceFilePath("relative.wav"))
+        assertNull(MyTelDocumentExport.sourceFilePath("https://example.com/report.wav"))
+        assertNull(MyTelDocumentExport.sourceFilePath(""))
+    }
+
+    @Test
+    fun knownMimeTypesArePreservedForTheDocumentPicker() {
+        assertEquals("audio/wav", MyTelDocumentExport.exportMimeType("audio/wav"))
+        assertEquals("application/vnd.example.document+zip", MyTelDocumentExport.exportMimeType("application/vnd.example.document+zip"))
+    }
+
+    @Test
+    fun unknownOrNonConcreteMimeTypesUseOctetStream() {
+        for (mime in listOf(null, "", " ", "file/", "file/unknown", "*/*")) {
+            assertEquals("application/octet-stream", MyTelDocumentExport.exportMimeType(mime))
+        }
+    }
+
+    @Test
     fun pendingSourceCanBeRestoredAfterActivityRecreation() {
         val state = MyTelDocumentExport()
         assertTrue(state.begin("/private/recording.wav"))
