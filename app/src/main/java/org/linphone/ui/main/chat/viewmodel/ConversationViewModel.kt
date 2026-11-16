@@ -41,6 +41,8 @@ import org.linphone.core.EventLog
 import org.linphone.core.Friend
 import org.linphone.core.SearchDirection
 import org.linphone.core.tools.Log
+import org.linphone.ui.main.chat.ConversationHistoryPageGate
+import org.linphone.ui.main.chat.ConversationHistoryPolicy
 import org.linphone.ui.main.chat.model.EventLogModel
 import org.linphone.ui.main.chat.model.FileModel
 import org.linphone.ui.main.chat.model.MessageModel
@@ -158,6 +160,7 @@ class ConversationViewModel
     private var latestMatch: EventLog? = null
 
     private var latestMatchModel: MessageModel? = null
+    private val historyPages = ConversationHistoryPageGate()
 
     private val chatRoomListener = object : ChatRoomListenerStub() {
         @WorkerThread
@@ -355,6 +358,7 @@ class ConversationViewModel
 
     @UiThread
     override fun onCleared() {
+        historyPages.invalidate()
         super.onCleared()
 
         coreContext.postOnCoreThread {
@@ -369,6 +373,7 @@ class ConversationViewModel
     @WorkerThread
     override fun beforeNotifyingChatRoomFound(sameOne: Boolean) {
         if (!sameOne) {
+            historyPages.invalidate()
             Log.i("$TAG Conversation found and not the same as before, configuring it...")
             chatRoom.addListener(chatRoomListener)
             configureChatRoom()
@@ -546,35 +551,21 @@ class ConversationViewModel
     @UiThread
     fun loadMoreData(totalItemsCount: Int) {
         if (!isChatRoomInitialized()) return
+        val ticket = historyPages.begin() ?: return
         coreContext.postOnCoreThread {
-            val maxSize: Int = chatRoom.historyEventsSize
-            Log.i("$TAG Loading more data, current total is $totalItemsCount, max size is $maxSize")
-
-            if (totalItemsCount < maxSize) {
-                var upperBound: Int = totalItemsCount + MESSAGES_PER_PAGE
-                if (upperBound > maxSize) {
-                    upperBound = maxSize
-                }
-
-                val history = chatRoom.getHistoryRangeEvents(totalItemsCount, upperBound)
-                val list = getEventsListFromHistory(history)
-
-                val lastEvent = list.lastOrNull()
-                val newEvent = eventsList.firstOrNull()
-                if (lastEvent != null && lastEvent.model is MessageModel && newEvent != null && newEvent.model is MessageModel && shouldWeGroupTwoEvents(
-                        newEvent.eventLog,
-                        lastEvent.eventLog
-                    )
-                ) {
-                    lastEvent.model.groupedWithNextMessage.postValue(true)
-                    newEvent.model.groupedWithPreviousMessage.postValue(true)
-                }
-
-                Log.i("$TAG More data loaded, adding it to conversation events list")
-                list.addAll(eventsList)
-                eventsList = list
-                updateEvents.postValue(Event(true))
-                isEmpty.postValue(eventsList.isEmpty())
+            try {
+                if (!historyPages.isCurrent(ticket) || !isChatRoomInitialized()) return@postOnCoreThread
+                // Grouping changes flags, never cardinality: each model owns one raw SDK EventLog.
+                // Read this serialized Core-owned window after any queued send/delete/receive.
+                val loaded = eventsList.size
+                val total = chatRoom.historyEventsSize
+                val page = ConversationHistoryPolicy.nextPage(loaded, total, MESSAGES_PER_PAGE)
+                Log.i("$TAG History page: adapter hint [$totalItemsCount], Core events [$loaded], SDK total [$total], range [${page?.begin}, ${page?.end})")
+                if (page == null) return@postOnCoreThread
+                val history = chatRoom.getHistoryRangeEvents(page.begin, page.end)
+                if (historyPages.isCurrent(ticket)) prependEvents(history)
+            } finally {
+                historyPages.finish(ticket)
             }
         }
     }
@@ -730,28 +721,8 @@ class ConversationViewModel
         list.addAll(eventsList)
         val lastEvent = list.lastOrNull()
 
-        // Prevents message duplicates
-        val eventsToAdd = arrayListOf<EventLog>()
-        for (event in eventLogs) {
-            if (event.chatMessage != null && event.chatMessage?.messageId.orEmpty().isNotEmpty()) {
-                val found = list.find {
-                    it.model is MessageModel && it.model.chatMessage.messageId == event.chatMessage?.messageId
-                }
-                if (found == null) {
-                    eventsToAdd.add(event)
-                } else {
-                    Log.w(
-                        "$TAG Received message with ID [${event.chatMessage?.messageId}] is already displayed, do not add it again"
-                    )
-                }
-            } else {
-                eventsToAdd.add(event)
-            }
-        }
-
-        val newList = getEventsListFromHistory(
-            eventsToAdd.toTypedArray()
-        )
+        val newList = getEventsListFromHistory(eventLogs, list)
+        if (newList.isEmpty()) return
         val newEvent = newList.firstOrNull()
 
         if (lastEvent != null && lastEvent.model is MessageModel && newEvent != null && newEvent.model is MessageModel && shouldWeGroupTwoEvents(
@@ -776,13 +747,8 @@ class ConversationViewModel
         val list = arrayListOf<EventLogModel>()
         val firstEvent = eventsList.firstOrNull()
 
-        // Prevents message duplicates
-        val eventsToAdd = arrayListOf<EventLog>()
-        eventsToAdd.addAll(eventLogs)
-
-        val newList = getEventsListFromHistory(
-            eventsToAdd.toTypedArray()
-        )
+        val newList = getEventsListFromHistory(eventLogs, eventsList)
+        if (newList.isEmpty()) return
         val lastEvent = newList.lastOrNull()
 
         if (lastEvent != null && lastEvent.model is MessageModel && firstEvent != null && firstEvent.model is MessageModel && shouldWeGroupTwoEvents(
@@ -864,18 +830,28 @@ class ConversationViewModel
     }
 
     @WorkerThread
+    private fun historyMessageKey(event: EventLog): ConversationHistoryPolicy.MessageKey? {
+        val message = event.chatMessage ?: return null
+        return ConversationHistoryPolicy.messageKey(message.messageId, message.isOutgoing)
+    }
+
+    @WorkerThread
     private fun getEventsListFromHistory(
-        history: Array<EventLog>
+        history: Array<EventLog>,
+        existing: List<EventLogModel> = emptyList()
     ): ArrayList<EventLogModel> {
         val eventsList = arrayListOf<EventLogModel>()
         val groupedEventLogs = arrayListOf<EventLog>()
+        // Filter raw SDK events before allocating models and their listeners.
+        val known = existing.mapNotNull { historyMessageKey(it.eventLog) }.toSet()
+        val uniqueHistory = ConversationHistoryPolicy.unseen(known, history.toList(), ::historyMessageKey)
 
-        if (history.size == 1) {
+        if (uniqueHistory.size == 1) {
             // If there is a single event, improve processing speed by skipping grouping tasks
-            val event = history[0]
+            val event = uniqueHistory[0]
             eventsList.addAll(processGroupedEvents(arrayListOf(event)))
         } else {
-            for (event in history) {
+            for (event in uniqueHistory) {
                 if (groupedEventLogs.isEmpty()) {
                     groupedEventLogs.add(event)
                     continue
