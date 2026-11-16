@@ -43,6 +43,7 @@ import org.linphone.core.RegistrationState
 import org.linphone.core.VFS
 import org.linphone.core.tools.AndroidPlatformHelper
 import org.linphone.core.tools.Log
+import org.linphone.ui.main.MainLocalNetworkPermissionGate
 import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
@@ -63,6 +64,7 @@ class MainViewModel
         const val SEND_NOTIFICATIONS_PERMISSION_NOT_GRANTED = 15
         const val DEFAULT_ACCOUNT_DISABLED = 18
         const val NETWORK_NOT_REACHABLE = 19
+        const val LOCAL_NETWORK_PERMISSION_NOT_GRANTED = 20
     }
 
     val showAlert = MutableLiveData<Boolean>()
@@ -99,9 +101,15 @@ class MainViewModel
         MutableLiveData()
     }
 
-    val askAccessLocalNetworkPermissionEvent: MutableLiveData<Event<Boolean>> by lazy {
+    val askAccessLocalNetworkPermissionEvent: MutableLiveData<Event<String>> by lazy {
         MutableLiveData()
     }
+
+    private data class LocalNetworkTarget(val account: Account, val state: MainLocalNetworkPermissionGate.AccountState)
+    private val localNetworkGate = MainLocalNetworkPermissionGate()
+    private var localNetworkTargets = emptyList<LocalNetworkTarget>()
+    private var collectingLocalNetworkTargets = false
+    @Volatile private var cleared = false
 
     val showNewAccountToastEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData()
@@ -236,7 +244,6 @@ class MainViewModel
                 return
             }
             when (state) {
-                RegistrationState.Failed -> checkAccessLocalNetworkPermission()
                 RegistrationState.Ok -> {
                     removeAlert(NETWORK_NOT_REACHABLE)
                     if (!firstAccountRegistered) triggerNativeAddressBookImport()
@@ -380,6 +387,9 @@ class MainViewModel
 
     @UiThread
     override fun onCleared() {
+        cleared = true
+        localNetworkGate.current()?.let(localNetworkGate::cancel)
+        localNetworkTargets = emptyList()
         super.onCleared()
 
         coreContext.postOnCoreThread { core ->
@@ -412,7 +422,7 @@ class MainViewModel
     }
 
     @UiThread
-    fun updateAccountsAndNetworkReachability() {
+    fun updateAccountsAndNetworkReachability(refreshFailedAccounts: Boolean = true) {
         coreContext.postOnCoreThread { core ->
             val accounts = core.accountList
             val count = accounts.size
@@ -425,7 +435,7 @@ class MainViewModel
             checkNetworkReachability()
 
             for (account in accounts) {
-                if (account.state == RegistrationState.Failed) {
+                if (refreshFailedAccounts && account.state == RegistrationState.Failed) {
                     val identity = account.params.identityAddress?.asStringUriOnly().orEmpty()
                     Log.i("$TAG Account [$identity] registration state is failed, refreshing REGISTER")
                     account.refreshRegister()
@@ -450,6 +460,8 @@ class MainViewModel
     fun onTopBarClicked() {
         if (atLeastOneCall.value == true) {
             goBackToCallEvent.value = Event(true)
+        } else if (maxAlertLevel.value == LOCAL_NETWORK_PERMISSION_NOT_GRANTED) {
+            requestLocalNetworkAccess()
         } else if (!Compatibility.hasFullScreenIntentPermission(coreContext.context)) {
             askFullScreenIntentPermissionEvent.value = Event(true)
         } else if (!Compatibility.isPostNotificationsPermissionGranted(coreContext.context)) {
@@ -622,7 +634,7 @@ class MainViewModel
                 DEFAULT_ACCOUNT_DISABLED -> {
                     R.drawable.warning_circle
                 }
-                NETWORK_NOT_REACHABLE -> {
+                NETWORK_NOT_REACHABLE, LOCAL_NETWORK_PERMISSION_NOT_GRANTED -> {
                     R.drawable.wifi_slash
                 }
                 SEND_NOTIFICATIONS_PERMISSION_NOT_GRANTED, FULL_SCREEN_INTENTS_PERMISSION_NOT_GRANTED -> {
@@ -667,6 +679,11 @@ class MainViewModel
             addAlert(NON_DEFAULT_ACCOUNT_NOT_CONNECTED, AppUtils.getString(R.string.connection_error_for_non_default_account))
         } else {
             removeAlert(NON_DEFAULT_ACCOUNT_NOT_CONNECTED)
+        }
+        if (blockedLocalNetworkTargets(core, excludedAccount).isNotEmpty()) {
+            addAlert(LOCAL_NETWORK_PERMISSION_NOT_GRANTED, AppUtils.getString(R.string.mytel_main_lan_access_needed))
+        } else {
+            removeAlert(LOCAL_NETWORK_PERMISSION_NOT_GRANTED)
         }
     }
 
@@ -720,10 +737,78 @@ class MainViewModel
     }
 
     @WorkerThread
-    private fun checkAccessLocalNetworkPermission() {
-        if (!Compatibility.isAccessLocalNetworkPermissionGranted(coreContext.context)) {
-            Log.w("$TAG ACCESS_LOCAL_NETWORK permission seems to be not granted!")
-            askAccessLocalNetworkPermissionEvent.postValue(Event(true))
+    private fun localNetworkState(account: Account): MainLocalNetworkPermissionGate.AccountState {
+        val params = account.params
+        return MainLocalNetworkPermissionGate.AccountState(
+            account.nativePointer, params.identityAddress?.asStringUriOnly().orEmpty(),
+            listOfNotNull(params.serverAddress?.asStringUriOnly()) + params.routesAddresses.map { it.asStringUriOnly() },
+            params.isRegisterEnabled, account.state == RegistrationState.Failed
+        )
+    }
+
+    @WorkerThread
+    private fun blockedLocalNetworkTargets(core: Core, excluded: Account? = null): List<LocalNetworkTarget> {
+        val targets = core.accountList.filter { it != excluded }.map { LocalNetworkTarget(it, localNetworkState(it)) }
+        val ids = MainLocalNetworkPermissionGate.blockedAccounts(
+            targets.map { it.state }, Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN,
+            Compatibility.isAccessLocalNetworkPermissionGranted(coreContext.context)
+        ).map { it.pointer }.toSet()
+        return targets.filter { it.state.pointer in ids }
+    }
+
+    @UiThread
+    private fun requestLocalNetworkAccess() {
+        if (collectingLocalNetworkTargets || localNetworkGate.current() != null || cleared) return
+        collectingLocalNetworkTargets = true
+        coreContext.postOnCoreThread { core ->
+            val targets = blockedLocalNetworkTargets(core)
+            refreshRegistrationAlerts(core)
+            coreContext.postOnMainThread {
+                collectingLocalNetworkTargets = false
+                if (cleared) return@postOnMainThread
+                val token = localNetworkGate.begin(targets.map { it.state.pointer }.toSet()) ?: return@postOnMainThread
+                // Strong SDK wrappers keep these exact accounts alive until the result is consumed.
+                localNetworkTargets = targets
+                askAccessLocalNetworkPermissionEvent.value = Event(token)
+            }
+        }
+    }
+
+    @UiThread
+    fun pendingLocalNetworkToken(): String? = localNetworkGate.current()
+
+    @UiThread
+    fun claimLocalNetworkPermissionLaunch(token: String): Boolean = localNetworkGate.claimLaunch(token)
+
+    @UiThread
+    fun localNetworkPermissionResult(token: String, granted: Boolean) {
+        localNetworkGate.result(token, granted)
+    }
+
+    @UiThread
+    fun cancelLocalNetworkPermission(token: String) {
+        if (localNetworkGate.current() != token) return
+        localNetworkGate.cancel(token)
+        localNetworkTargets = emptyList()
+    }
+
+    @UiThread
+    fun consumeLocalNetworkPermissionResult(active: Boolean) {
+        val token = localNetworkGate.current() ?: return
+        val result = localNetworkGate.consume(token, active) ?: return
+        val targets = localNetworkTargets
+        localNetworkTargets = emptyList()
+        coreContext.postOnCoreThread { core ->
+            if (cleared) return@postOnCoreThread
+            if (result.granted && Compatibility.isAccessLocalNetworkPermissionGranted(coreContext.context)) {
+                for (target in targets.filter { it.state.pointer in result.targets }) {
+                    val current = core.accountList.firstOrNull { it.nativePointer == target.account.nativePointer } ?: continue
+                    if (MainLocalNetworkPermissionGate.matchesForRefresh(target.state, localNetworkState(current))) {
+                        current.refreshRegister()
+                    }
+                }
+            }
+            refreshRegistrationAlerts(core)
         }
     }
 

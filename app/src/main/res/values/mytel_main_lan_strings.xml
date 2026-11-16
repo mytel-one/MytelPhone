@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mytel_main_lan_access_needed">Local network access needed. Tap to allow.</string>
+</resources>

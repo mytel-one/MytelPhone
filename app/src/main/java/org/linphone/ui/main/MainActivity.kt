@@ -34,6 +34,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Parcelable
+import android.provider.Settings
 import android.view.Gravity
 import android.view.ViewTreeObserver
 import android.view.WindowManager
@@ -51,6 +52,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
@@ -94,6 +96,7 @@ class MainActivity : GenericActivity() {
         private const val TAG = "[Main Activity]"
 
         private const val DEFAULT_FRAGMENT_KEY = "default_fragment"
+        private const val LOCAL_NETWORK_REQUEST_KEY = "mytel_main_local_network_request"
         private const val CONTACTS_FRAGMENT_ID = 1
         private const val HISTORY_FRAGMENT_ID = 2
         private const val CHAT_FRAGMENT_ID = 3
@@ -123,6 +126,7 @@ class MainActivity : GenericActivity() {
     private var navigatedToDefaultFragment = false
 
     private var introOverlay: MyTelIntroOverlay? = null
+    private var launchedLocalNetworkToken: String? = null
 
     // Released only once the core is up and the intro overlay decision has
     // been applied (or an alternate destination was chosen)
@@ -186,12 +190,7 @@ class MainActivity : GenericActivity() {
     private val accessLocalNetworkPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) {
-            Log.i("$TAG ACCESS_LOCAL_NETWORK permission has been granted")
-            viewModel.updateMissingPermissionAlert()
-        } else {
-            Log.w("$TAG ACCESS_LOCAL_NETWORK permission has been denied!")
-        }
+        onLocalNetworkPermissionResult(isGranted)
     }
 
     private val requestReadPhonePermissionsLauncher = registerForActivityResult(
@@ -215,8 +214,15 @@ class MainActivity : GenericActivity() {
         }
     }
 
+    private val localNetworkSettingsLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        onLocalNetworkPermissionResult(Compatibility.isAccessLocalNetworkPermissionGranted(this))
+    }
+
     @SuppressLint("InlinedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
+        launchedLocalNetworkToken = savedInstanceState?.getString(LOCAL_NETWORK_REQUEST_KEY)
         // Must be done before the setContentView
         val splashScreen = installSplashScreen()
         // Keep the system splash visible until the core is up AND the intro
@@ -392,11 +398,8 @@ class MainActivity : GenericActivity() {
         }
 
         viewModel.askAccessLocalNetworkPermissionEvent.observe(this) {
-            it.consume {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
-                    MyTelPermissionRequestHistory.record(this, Manifest.permission.ACCESS_LOCAL_NETWORK)
-                    accessLocalNetworkPermissionLauncher.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
-                }
+            it.consume { token ->
+                if (token == viewModel.pendingLocalNetworkToken()) resumeLocalNetworkPermissionRequest()
             }
         }
 
@@ -806,10 +809,69 @@ class MainActivity : GenericActivity() {
         runOnResumeTasks()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        launchedLocalNetworkToken?.let { outState.putString(LOCAL_NETWORK_REQUEST_KEY, it) }
+        super.onSaveInstanceState(outState)
+    }
+
     private fun runOnResumeTasks() {
+        // A restored old-process result has no corresponding retained intent.
+        if (launchedLocalNetworkToken != viewModel.pendingLocalNetworkToken()) launchedLocalNetworkToken = null
+        val localNetworkPending = viewModel.pendingLocalNetworkToken() != null
         viewModel.enableAccountMonitoring(true)
         viewModel.updateMissingPermissionAlert()
-        viewModel.updateAccountsAndNetworkReachability()
+        viewModel.updateAccountsAndNetworkReachability(refreshFailedAccounts = !localNetworkPending)
+        // onResume may run before Lifecycle reaches RESUMED; drain after that dispatch.
+        coreReadyHandler.post { resumeLocalNetworkPermissionRequest() }
+    }
+
+    private fun onLocalNetworkPermissionResult(granted: Boolean) {
+        val token = launchedLocalNetworkToken ?: return
+        launchedLocalNetworkToken = null
+        if (!::viewModel.isInitialized || token != viewModel.pendingLocalNetworkToken()) return
+        viewModel.localNetworkPermissionResult(token, granted)
+        resumeLocalNetworkPermissionRequest()
+    }
+
+    private fun resumeLocalNetworkPermissionRequest() {
+        if (!::viewModel.isInitialized || isFinishing || isDestroyed ||
+            !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+        ) return
+        viewModel.consumeLocalNetworkPermissionResult(true)
+        val token = viewModel.pendingLocalNetworkToken() ?: return
+        if (!viewModel.claimLocalNetworkPermissionLaunch(token)) return
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.CINNAMON_BUN) {
+            viewModel.localNetworkPermissionResult(token, true)
+            viewModel.consumeLocalNetworkPermissionResult(true)
+            return
+        }
+        val permission = Manifest.permission.ACCESS_LOCAL_NETWORK
+        try {
+            when (MyTelPermissionRequestPolicy.resolve(
+                Compatibility.isAccessLocalNetworkPermissionGranted(this),
+                MyTelPermissionRequestHistory.wasRequested(this, permission),
+                ActivityCompat.shouldShowRequestPermissionRationale(this, permission)
+            )) {
+                MyTelPermissionRequestPolicy.Action.NONE -> {
+                    viewModel.localNetworkPermissionResult(token, true)
+                    viewModel.consumeLocalNetworkPermissionResult(true)
+                }
+                MyTelPermissionRequestPolicy.Action.REQUEST -> {
+                    launchedLocalNetworkToken = token
+                    MyTelPermissionRequestHistory.record(this, permission)
+                    accessLocalNetworkPermissionLauncher.launch(permission)
+                }
+                MyTelPermissionRequestPolicy.Action.SETTINGS -> {
+                    // This path is reached only after an explicit top-bar retry tap.
+                    launchedLocalNetworkToken = token
+                    localNetworkSettingsLauncher.launch(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)))
+                }
+            }
+        } catch (_: RuntimeException) {
+            launchedLocalNetworkToken = null
+            viewModel.cancelLocalNetworkPermission(token)
+            Log.w("$TAG Could not launch local network permission action")
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
