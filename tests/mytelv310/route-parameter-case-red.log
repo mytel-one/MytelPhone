@@ -1,0 +1,220 @@
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR)
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR)
+-- Configuring done (0.8s)
+-- Generating done (0.6s)
+-- Build files have been written to: C:/Users/HajSaman/AppData/Local/Temp/mytel-v3-theme-tests
+[1/4] Automatic MOC for target mytel-setup-address-test
+[2/3] Building CXX object CMakeFiles\mytel-setup-address-test.dir\C_\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\setup_address_test.cpp.obj
+[3/3] Linking CXX executable mytel-setup-address-test.exe
+2026-11-16 19:56:46:952 belle-sip-warning- There is no object pool created in thread [18516]. Use belle_sip_object_pool_push() to create one. Unowned objects not unref'd will be leaked.
+
+PASS 192.168.8.171:5060
+PASS server host is parsed by the SDK
+PASS server port is preserved
+PASS server transport follows selection or secure scheme
+PASS server secure scheme is preserved
+PASS identity uses the parsed host
+PASS identity uses the parsed port
+PASS identity secure scheme is preserved
+PASS identity username is unchanged
+PASS  pbx.example.invalid
+PASS server host is parsed by the SDK
+PASS server port is preserved
+PASS server transport follows selection or secure scheme
+PASS server secure scheme is preserved
+PASS identity uses the parsed host
+PASS identity uses the parsed port
+PASS identity secure scheme is preserved
+PASS identity username is unchanged
+PASS sip:pbx.example.invalid:5060
+PASS server host is parsed by the SDK
+PASS server port is preserved
+PASS server transport follows selection or secure scheme
+PASS server secure scheme is preserved
+PASS identity uses the parsed host
+PASS identity uses the parsed port
+PASS identity secure scheme is preserved
+PASS identity username is unchanged
+PASS sips:pbx.example.invalid:5061
+PASS server host is parsed by the SDK
+PASS server port is preserved
+PASS server transport follows selection or secure scheme
+PASS server secure scheme is preserved
+PASS identity uses the parsed host
+PASS identity uses the parsed port
+PASS identity secure scheme is preserved
+PASS identity username is unchanged
+PASS  SiPs:pbx.example.invalid:5060
+PASS server host is parsed by the SDK
+PASS server port is preserved
+PASS server transport follows selection or secure scheme
+PASS server secure scheme is preserved
+PASS identity uses the parsed host
+PASS identity uses the parsed port
+PASS identity secure scheme is preserved
+PASS identity username is unchanged
+PASS [2001:db8::1]:5060
+PASS server host is parsed by the SDK
+PASS server port is preserved
+PASS server transport follows selection or secure scheme
+PASS server secure scheme is preserved
+PASS identity uses the parsed host
+PASS identity uses the parsed port
+PASS identity secure scheme is preserved
+PASS identity username is unchanged
+PASS sips:[2001:db8::1]:5061
+PASS server host is parsed by the SDK
+PASS server port is preserved
+PASS server transport follows selection or secure scheme
+PASS server secure scheme is preserved
+PASS identity uses the parsed host
+PASS identity uses the parsed port
+PASS identity secure scheme is preserved
+PASS identity username is unchanged
+PASS sips:pbx.example.invalid:5061;transport=udp
+PASS server host is parsed by the SDK
+PASS server port is preserved
+PASS server transport follows selection or secure scheme
+PASS server secure scheme is preserved
+PASS identity uses the parsed host
+PASS identity uses the parsed port
+PASS identity secure scheme is preserved
+PASS identity username is unchanged
+PASS sips:pbx.example.invalid:5061;transport=tcp
+PASS server host is parsed by the SDK
+PASS server port is preserved
+PASS server transport follows selection or secure scheme
+PASS server secure scheme is preserved
+PASS identity uses the parsed host
+PASS identity uses the parsed port
+PASS identity secure scheme is preserved
+PASS identity username is unchanged
+PASS sip:pbx.example.invalid:5061;transport=tcp
+PASS server host is parsed by the SDK
+PASS server port is preserved
+PASS server transport follows selection or secure scheme
+PASS server secure scheme is preserved
+PASS identity uses the parsed host
+PASS identity uses the parsed port
+PASS identity secure scheme is preserved
+PASS identity username is unchanged
+PASS
+PASS invalid input leaves the cloned identity unchanged
+PASS
+PASS invalid input leaves the cloned identity unchanged
+2026-11-16 19:56:46:952 liblinphone-warning- Cannot create Address, bad uri [sip:]
+
+PASS sip:
+PASS invalid input leaves the cloned identity unchanged
+2026-11-16 19:56:46:952 liblinphone-warning- Cannot create Address, bad uri [sips:]
+
+PASS sips:
+PASS invalid input leaves the cloned identity unchanged
+2026-11-16 19:56:46:952 liblinphone-warning- Cannot create Address, bad uri [sip::5060]
+
+PASS sip::5060
+PASS invalid input leaves the cloned identity unchanged
+PASS http://pbx.example.invalid
+PASS invalid input leaves the cloned identity unchanged
+PASS https://pbx.example.invalid
+PASS invalid input leaves the cloned identity unchanged
+PASS tel:100
+PASS invalid input leaves the cloned identity unchanged
+2026-11-16 19:56:46:952 liblinphone-warning- Cannot create Address, bad uri [sip:user@]
+
+PASS sip:user@
+PASS invalid input leaves the cloned identity unchanged
+2026-11-16 19:56:46:952 belle-sip-warning- [bellesip-sip-parser] Parsing ended prematuraly at pos 23
+
+2026-11-16 19:56:46:952 liblinphone-warning- Cannot create Address, bad uri [sip:pbx.example.invalid:invalid]
+
+2026-11-16 19:56:46:952 belle-sip-error- Cannot parse a sip/sips uri as a generic uri
+
+2026-11-16 19:56:46:952 belle-sip-error- Cannot parse a sip/sips uri as a generic uri
+
+PASS sip:pbx.example.invalid:invalid
+PASS invalid input leaves the cloned identity unchanged
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+FAIL main transport follows setup policy
+FAIL registrar follows its URI or explicit setup policy
+FAIL outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS invalid advanced URI is rejected before account creation
+PASS invalid route leaves the identity unchanged
+PASS invalid advanced URI is rejected before account creation
+PASS invalid route leaves the identity unchanged
+2026-11-16 19:56:46:955 liblinphone-warning- Cannot create Address, bad uri [sip:]
+
+PASS invalid advanced URI is rejected before account creation
+PASS invalid route leaves the identity unchanged
+2026-11-16 19:56:46:955 liblinphone-warning- Cannot create Address, bad uri [sips:]
+
+PASS invalid advanced URI is rejected before account creation
+PASS invalid route leaves the identity unchanged
+185/188 SDK-backed setup address checks passed
+2026-11-16 19:56:47:023 ortp-warning- ortp_exit() called without prior call to ortp_init(), ignored.

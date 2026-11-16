@@ -110,6 +110,8 @@ int main(int argc, char **argv) {
 	       "sips:proxy.example.invalid;transport=tcp", T::Tcp, false, T::Tls, T::Tls, T::Tls);
 	routes("sip:[2001:db8::1]:5061", "sip:[2001:db8::2]:5060;transport=tcp", "sip:[2001:db8::3]:5061", T::Tls, true,
 	       T::Tls, T::Tcp, T::Tls);
+	routes("sip:pbx.example.invalid;TrAnSpOrT=TCP", "sip:registrar.example.invalid;TRANSPORT=TLS",
+	       "sip:proxy.example.invalid:5061;Transport=UDP", T::Udp, true, T::Tcp, T::Tls, T::Udp);
 	for (const char *invalidRoute : {"https://proxy.example.invalid", "tel:100", "sip:", "sips:"}) {
 		auto identity = linphone::Factory::get()->createAddress("sip:100@initial.invalid");
 		auto addresses = SipSetupAddress::prepare("pbx.example.invalid", invalidRoute, "", T::Udp, true, identity);
