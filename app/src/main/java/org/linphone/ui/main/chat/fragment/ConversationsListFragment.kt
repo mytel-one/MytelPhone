@@ -382,7 +382,7 @@ class ConversationsListFragment : AbstractMainFragment() {
 
         // AbstractMainFragment related
 
-        listViewModel.title.value = getString(R.string.bottom_navigation_conversations_label)
+        listViewModel.title.value = getString(R.string.mytel_ux_chats)
         setViewModel(listViewModel)
         initViews(
             binding.slidingPaneLayout,

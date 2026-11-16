@@ -28,6 +28,8 @@ import android.graphics.Paint
 import android.graphics.RadialGradient
 import android.graphics.Shader
 import android.graphics.Typeface
+import android.os.Build
+import android.provider.Settings
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
@@ -101,7 +103,7 @@ class MyTelIntroOverlay(context: Context) : FrameLayout(context) {
             textSize = 26f
             letterSpacing = 0.02f
             setTextColor(SOFT_WHITE)
-            text = "MytellPhone"
+            text = context.getString(R.string.app_wordmark)
             alpha = 0f
         }
         addView(wordmark)
@@ -191,7 +193,11 @@ class MyTelIntroOverlay(context: Context) : FrameLayout(context) {
             processElapsed > 1500L -> 0.5f
             else -> 1f
         }
-        val animatorsEnabled = ValueAnimator.areAnimatorsEnabled()
+        val animatorsEnabled = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ValueAnimator.areAnimatorsEnabled()
+        } else {
+            Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
+        }
         if (!animatorsEnabled || budgetScale == 0f) {
             val budgetExhausted = budgetScale == 0f
             Log.i(

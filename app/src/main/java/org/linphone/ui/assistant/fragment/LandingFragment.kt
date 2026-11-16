@@ -82,7 +82,7 @@ class LandingFragment : GenericFragment() {
 
         binding.setBackClickListener {
             viewModel.cancelLogin()
-            requireActivity().finish()
+            if (!findNavController().popBackStack()) requireActivity().finish()
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(
@@ -177,8 +177,8 @@ class LandingFragment : GenericFragment() {
             }
         }
 
-        val telephonyManager = requireContext().getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        val countryIso = telephonyManager.networkCountryIso
+        val telephonyManager = requireContext().getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+        val countryIso = telephonyManager?.networkCountryIso.orEmpty()
         coreContext.postOnCoreThread {
             val dialPlan = PhoneNumberUtils.getDeviceDialPlan(countryIso)
             if (dialPlan != null) {

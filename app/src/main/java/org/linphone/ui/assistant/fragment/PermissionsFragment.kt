@@ -22,6 +22,7 @@ package org.linphone.ui.assistant.fragment
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -38,6 +39,7 @@ import org.linphone.databinding.AssistantPermissionsFragmentBinding
 import org.linphone.ui.GenericFragment
 import org.linphone.ui.assistant.AssistantActivity
 import org.linphone.ui.assistant.viewmodel.PermissionsViewModel
+import org.linphone.utils.MyTelPermissionRequestHistory
 import kotlin.getValue
 
 @UiThread
@@ -113,12 +115,12 @@ class PermissionsFragment : GenericFragment() {
 
         binding.setGrantAllClickListener {
             Log.i("$TAG Requesting all permissions")
-            requestPermissionLauncher.launch(
-                Compatibility.getAllRequiredPermissionsArray()
-            )
+            val permissions = Compatibility.getAllRequiredPermissionsArray()
+            permissions.forEach { MyTelPermissionRequestHistory.record(requireContext(), it) }
+            requestPermissionLauncher.launch(permissions)
         }
 
-        if (ContextCompat.checkSelfPermission(
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && ContextCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.MANAGE_OWN_CALLS
             ) != PackageManager.PERMISSION_GRANTED
@@ -188,15 +190,16 @@ class PermissionsFragment : GenericFragment() {
     }
 
     private fun areAllPermissionsGranted(): Boolean {
+        var allGranted = true
         for (permission in Compatibility.getAllRequiredPermissionsArray()) {
             val granted = ContextCompat.checkSelfPermission(requireContext(), permission) == PackageManager.PERMISSION_GRANTED
             viewModel.setPermissionGranted(permission, granted)
             if (!granted) {
                 Log.w("$TAG Permission [$permission] hasn't been granted yet!")
-                return false
+                allGranted = false
             }
 
         }
-        return Compatibility.hasFullScreenIntentPermission(requireContext())
+        return allGranted && Compatibility.hasFullScreenIntentPermission(requireContext())
     }
 }

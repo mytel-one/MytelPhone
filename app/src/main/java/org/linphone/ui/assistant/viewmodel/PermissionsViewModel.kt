@@ -20,8 +20,10 @@
 package org.linphone.ui.assistant.viewmodel
 
 import android.Manifest
+import android.content.pm.PackageManager
 import androidx.annotation.UiThread
 import androidx.lifecycle.MutableLiveData
+import androidx.core.content.ContextCompat
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.compatibility.Compatibility
 import org.linphone.core.tools.Log
@@ -45,9 +47,12 @@ constructor() : GenericViewModel() {
     val accessLocalNetworkPermissionGranted = MutableLiveData<Boolean>()
 
     init {
-        if (Compatibility.isAccessLocalNetworkPermissionGranted(coreContext.context)) {
-            accessLocalNetworkPermissionGranted.postValue(true)
-        }
+        val context = coreContext.context
+        cameraPermissionGranted.value = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        recordAudioPermissionGranted.value = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        readContactsPermissionGranted.value = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+        postNotificationsPermissionGranted.value = Compatibility.isPostNotificationsPermissionGranted(context)
+        accessLocalNetworkPermissionGranted.value = Compatibility.isAccessLocalNetworkPermissionGranted(context)
     }
 
     fun setPermissionGranted(permission: String, granted: Boolean) {

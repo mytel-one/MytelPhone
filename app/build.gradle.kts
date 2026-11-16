@@ -16,7 +16,7 @@ plugins {
 }
 
 val packageName = "one.mytel.softphone"
-val mytelVersion = "3.0.1"
+val mytelVersion = "3.1.0"
 val useDifferentPackageNameForDebugBuild = false
 
 val sdkPath = providers.gradleProperty("LinphoneSdkBuildDir").get()
@@ -101,9 +101,9 @@ android {
 
     defaultConfig {
         applicationId = packageName
-        minSdk = 28
+        minSdk = 24
         targetSdk = 37
-        versionCode = 30001
+        versionCode = 30100
         versionName = mytelVersion
 
         // Match the declared English-only interface. Message/contact text
@@ -114,7 +114,7 @@ android {
 
         ndk {
             //noinspection ChromeOsAbiSupport
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
     }
 
@@ -216,6 +216,8 @@ android {
     }
 
     compileOptions {
+        // Keep java.time available on Android 7/8 without changing date semantics.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
@@ -236,6 +238,7 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     implementation(libs.androidx.annotations)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraint.layout)

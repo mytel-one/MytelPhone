@@ -251,9 +251,9 @@
         <item name="android:background">@drawable/shape_red_round</item>
         <item name="android:textSize">13sp</item>
         <item name="android:paddingBottom">2dp</item>
-        <item name="android:autoSizeTextType">uniform</item>
-        <item name="android:autoSizeMinTextSize">8sp</item>
-        <item name="android:autoSizeStepGranularity">1sp</item>
+        <item name="autoSizeTextType">uniform</item>
+        <item name="autoSizeMinTextSize">8sp</item>
+        <item name="autoSizeStepGranularity">1sp</item>
     </style>
     <style name="numpad_button_style">
         <item name="android:layout_width">0dp</item>

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
 <!DOCTYPE resources [
-    <!ENTITY appName "MytellPhone">
+    <!ENTITY appName "MyTel Phone">
 ]>
 
 <resources>
@@ -1131,5 +1131,5 @@
     <!-- MyTel branding (v2.1.0) -->
     <string name="mytel_sign_in" translatable="false">Sign in</string>
     <string name="mytel_tagline" translatable="false">Calls and messages for your team</string>
-    <string name="app_wordmark" translatable="false">MytellPhone</string>
+    <string name="app_wordmark" translatable="false">MyTel Phone</string>
 </resources>

@@ -150,6 +150,16 @@ class SettingsFragment : GenericMainFragment() {
             goBack()
         }
 
+        binding.setAndroidSettingsClickListener {
+            (requireActivity() as GenericActivity).goToAndroidPermissionSettings()
+        }
+
+        viewModel.keepAliveServiceSettingChangedEvent.observe(viewLifecycleOwner) {
+            it.consume {
+                sharedViewModel.refreshDrawerMenuQuitButtonEvent.postValue(Event(true))
+            }
+        }
+
         binding.setAdvancedCallSettingsClickListener {
             if (findNavController().currentDestination?.id == R.id.settingsFragment) {
                 val action = SettingsFragmentDirections.actionSettingsFragmentToSettingsAdvancedCallFragment()

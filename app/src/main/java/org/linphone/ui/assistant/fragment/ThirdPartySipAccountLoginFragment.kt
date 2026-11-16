@@ -23,15 +23,20 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Build
+import android.graphics.Rect
 import android.telephony.TelephonyManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.UiThread
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navGraphViewModels
@@ -110,6 +115,38 @@ class ThirdPartySipAccountLoginFragment : GenericFragment() {
         binding.viewModel = viewModel
         observeToastEvents(viewModel)
 
+        binding.domain.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                if (viewModel.loginEnabled.value == true && viewModel.registrationInProgress.value != true) {
+                    ViewCompat.getWindowInsetsController(binding.root)?.hide(WindowInsetsCompat.Type.ime())
+                    viewModel.login()
+                }
+                true
+            } else {
+                false
+            }
+        }
+
+        viewModel.registrationInProgress.observe(viewLifecycleOwner) { connecting ->
+            if (connecting == true) {
+                ViewCompat.getWindowInsetsController(binding.root)?.hide(WindowInsetsCompat.Type.ime())
+                binding.cancelRegistration.post {
+                    binding.cancelRegistration.requestFocus()
+                    binding.cancelRegistration.requestRectangleOnScreen(
+                        Rect(0, 0, binding.cancelRegistration.width, binding.cancelRegistration.height), false
+                    )
+                }
+            }
+        }
+
+        viewModel.connectionFeedback.observe(viewLifecycleOwner) { message ->
+            if (!message.isNullOrBlank()) binding.connectionFeedback.post {
+                binding.connectionFeedback.requestRectangleOnScreen(
+                    Rect(0, 0, binding.connectionFeedback.width, binding.connectionFeedback.height), false
+                )
+            }
+        }
+
         binding.setBackClickListener {
             viewModel.cancelLogin()
             goBack()
@@ -134,6 +171,13 @@ class ThirdPartySipAccountLoginFragment : GenericFragment() {
             showOutboundProxyInfoDialog()
         }
 
+        binding.setOtherSetupClickListener {
+            if (findNavController().currentDestination?.id == R.id.thirdPartySipAccountLoginFragment) {
+                viewModel.cancelLogin()
+                findNavController().navigate(R.id.landingFragment)
+            }
+        }
+
         viewModel.showPassword.observe(viewLifecycleOwner) {
             lifecycleScope.launch {
                 delay(50)
@@ -154,7 +198,9 @@ class ThirdPartySipAccountLoginFragment : GenericFragment() {
                     message,
                     R.drawable.warning_circle
                 )
-                if (!Compatibility.isAccessLocalNetworkPermissionGranted(requireContext())) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN &&
+                    !Compatibility.isAccessLocalNetworkPermissionGranted(requireContext())
+                ) {
                     Log.w("$TAG Asking for ACCESS_LOCAL_NETWORK permission")
                     accessLocalNetworkPermissionLauncher.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
                 }
@@ -182,8 +228,8 @@ class ThirdPartySipAccountLoginFragment : GenericFragment() {
             }
         }
 
-        val telephonyManager = requireContext().getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        val countryIso = telephonyManager.networkCountryIso
+        val telephonyManager = requireContext().getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+        val countryIso = telephonyManager?.networkCountryIso.orEmpty()
         coreContext.postOnCoreThread {
             val dialPlan = PhoneNumberUtils.getDeviceDialPlan(countryIso)
             if (dialPlan != null) {
@@ -194,7 +240,7 @@ class ThirdPartySipAccountLoginFragment : GenericFragment() {
     }
 
     private fun goBack() {
-        findNavController().popBackStack()
+        if (!findNavController().popBackStack()) requireActivity().finish()
     }
 
     private fun showOutboundProxyInfoDialog() {

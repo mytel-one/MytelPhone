@@ -83,6 +83,8 @@ import org.linphone.ui.main.fragment.SlidingPaneChildFragment
 import org.linphone.utils.ConfirmationDialogModel
 import org.linphone.utils.DialogUtils
 import org.linphone.utils.Event
+import org.linphone.utils.MyTelPermissionRequestHistory
+import org.linphone.utils.MyTelPermissionRequestPolicy
 import org.linphone.utils.FileUtils
 import org.linphone.utils.RecyclerViewHeaderDecoration
 import org.linphone.utils.RecyclerViewSwipeUtils
@@ -204,8 +206,12 @@ open class ConversationFragment : SlidingPaneChildFragment() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            Log.i("$TAG RECORD_AUDIO permission has been granted, starting voice message recording")
-            sendMessageViewModel.startVoiceMessageRecording()
+            Log.i("$TAG RECORD_AUDIO permission granted; waiting for a new recording gesture")
+            if (isAdded && view != null) {
+                (activity as? GenericActivity)?.showBlueToast(
+                    getString(R.string.mytel_ux_voice_message_ready), R.drawable.info
+                )
+            }
         } else {
             Log.e("$TAG RECORD_AUDIO permission has been denied")
         }
@@ -796,13 +802,22 @@ open class ConversationFragment : SlidingPaneChildFragment() {
 
         sendMessageViewModel.askRecordAudioPermissionEvent.observe(viewLifecycleOwner) {
             it.consume {
-                requestRecordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), Manifest.permission.RECORD_AUDIO)) {
-                    Log.w("$TAG Asking for RECORD_AUDIO permission")
-                    requestRecordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                } else {
-                    Log.i("$TAG Permission request for RECORD_AUDIO will be automatically denied, go to android app settings instead")
-                    (requireActivity() as GenericActivity).goToAndroidPermissionSettings()
+                val permission = Manifest.permission.RECORD_AUDIO
+                when (MyTelPermissionRequestPolicy.resolve(
+                    ActivityCompat.checkSelfPermission(requireContext(), permission) == PackageManager.PERMISSION_GRANTED,
+                    MyTelPermissionRequestHistory.wasRequested(requireContext(), permission),
+                    ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), permission)
+                )) {
+                    MyTelPermissionRequestPolicy.Action.REQUEST -> {
+                        MyTelPermissionRequestHistory.record(requireContext(), permission)
+                        requestRecordAudioPermissionLauncher.launch(permission)
+                    }
+                    MyTelPermissionRequestPolicy.Action.SETTINGS ->
+                        (requireActivity() as GenericActivity).goToAndroidPermissionSettings()
+                    MyTelPermissionRequestPolicy.Action.NONE ->
+                        (requireActivity() as GenericActivity).showBlueToast(
+                            getString(R.string.mytel_ux_voice_message_ready), R.drawable.info
+                        )
                 }
             }
         }

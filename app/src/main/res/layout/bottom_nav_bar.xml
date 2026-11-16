@@ -92,7 +92,7 @@
             android:background="@drawable/squircle_transparent_button_background"
             android:drawablePadding="4dp"
             android:drawableTint="@{viewModel.conversationsSelected ? @color/main1_500 : @color/main2_600, default=@color/main2_600}"
-            android:text="@string/bottom_navigation_conversations_label"
+            android:text="@string/mytel_ux_chats"
             android:visibility="@{viewModel.hideConversations ? View.GONE : View.VISIBLE}"
             textFont="@{viewModel.conversationsSelected ? NotoSansFont.NotoSansBold : NotoSansFont.NotoSansRegular}"
             app:layout_constraintBottom_toBottomOf="parent"

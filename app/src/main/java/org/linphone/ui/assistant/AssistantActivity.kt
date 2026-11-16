@@ -22,7 +22,6 @@ package org.linphone.ui.assistant
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.ViewGroup
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.UiThread
 import androidx.core.content.ContextCompat
@@ -51,15 +50,6 @@ class AssistantActivity : GenericActivity() {
 
     private lateinit var binding: AssistantActivityBinding
 
-    private val backPressedCallback = object : OnBackPressedCallback(true) {
-        override fun handleOnBackPressed() {
-            val navController = binding.assistantNavContainer.findNavController()
-            if (navController.currentDestination?.id != R.id.landingFragment) {
-                navController.popBackStack()
-            }
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -80,17 +70,6 @@ class AssistantActivity : GenericActivity() {
             WindowInsetsCompat.CONSUMED
         }
 
-        coreContext.postOnCoreThread { core ->
-            if (core.accountList.isEmpty()) {
-                Log.i("$TAG No account configured, disabling back gesture")
-                coreContext.postOnMainThread {
-                    // Only allow to navigate back within the assistant nav controller,
-                    // not to leave the AssistantActivity
-                    onBackPressedDispatcher.addCallback(backPressedCallback)
-                }
-            }
-        }
-
         coreContext.mdmConfigAppliedEvent.observe(this) {
             it.consume {
                 Log.i("$TAG Managed configuration applied, checking for accounts")
@@ -106,6 +85,9 @@ class AssistantActivity : GenericActivity() {
         }
 
         (binding.root as? ViewGroup)?.doOnPreDraw {
+            // Navigation and entered fields are restored by the NavHost. Do
+            // not interrupt a restored form with another permission page.
+            if (savedInstanceState != null) return@doOnPreDraw
             if (!areAllPermissionsGranted()) {
                 Log.w("$TAG Not all required permissions are granted, showing Permissions fragment")
                 val action = PermissionsFragmentDirections.actionGlobalPermissionsFragment()

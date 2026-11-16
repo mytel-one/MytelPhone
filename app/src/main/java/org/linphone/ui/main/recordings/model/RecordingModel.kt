@@ -21,6 +21,7 @@ package org.linphone.ui.main.recordings.model
 
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
+import android.text.format.DateUtils
 import java.text.SimpleDateFormat
 import java.util.Locale
 import org.linphone.LinphoneApplication.Companion.coreContext
@@ -125,7 +126,7 @@ class RecordingModel
         if (audioPlayer != null) {
             audioPlayer.open(filePath)
             duration = audioPlayer.duration
-            formattedDuration = SimpleDateFormat("mm:ss", Locale.getDefault()).format(duration)
+            formattedDuration = DateUtils.formatElapsedTime(duration / 1000L)
         } else {
             duration = 0
             formattedDuration = "??:??"

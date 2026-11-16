@@ -56,6 +56,7 @@ class SettingsViewModel
     }
 
     val expandSecurity = MutableLiveData<Boolean>()
+    val expandMoreSettings = MutableLiveData(false)
     val expandCalls = MutableLiveData<Boolean>()
     val expandConversations = MutableLiveData<Boolean>()
     val expandContacts = MutableLiveData<Boolean>()
@@ -105,6 +106,7 @@ class SettingsViewModel
     val autoDownloadEnabled = MutableLiveData<Boolean>()
 
     val autoExportMediaToNativeGallery = MutableLiveData<Boolean>()
+    val supportsAutomaticGalleryExport = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
 
     val markAsReadWhenDismissingNotification = MutableLiveData<Boolean>()
 
@@ -312,7 +314,7 @@ class SettingsViewModel
         expandContacts.value = false
         expandMeetings.value = false
         expandNetwork.value = false
-        expandUserInterface.value = false
+        expandUserInterface.value = true
         expandTunnel.value = false
         expandAudioDevices.value = false
         expandAudioCodecs.value = false
@@ -363,7 +365,7 @@ class SettingsViewModel
             allowIpv6.postValue(core.isIpv6Enabled)
 
             autoDownloadEnabled.postValue(core.maxSizeForAutoDownloadIncomingFiles == 0)
-            autoExportMediaToNativeGallery.postValue(corePreferences.makePublicMediaFilesDownloaded && !vfsEnabled)
+            autoExportMediaToNativeGallery.postValue(supportsAutomaticGalleryExport && corePreferences.makePublicMediaFilesDownloaded && !vfsEnabled)
             markAsReadWhenDismissingNotification.postValue(
                 corePreferences.markConversationAsReadWhenDismissingMessageNotification
             )
@@ -601,6 +603,7 @@ class SettingsViewModel
 
     @UiThread
     fun toggleAutoExportMediaFilesToNativeGallery() {
+        if (!supportsAutomaticGalleryExport) return
         val newValue = autoExportMediaToNativeGallery.value == false
         coreContext.postOnCoreThread { core ->
             corePreferences.makePublicMediaFilesDownloaded = newValue
@@ -768,6 +771,11 @@ class SettingsViewModel
     @UiThread
     fun toggleUserInterfaceExpand() {
         expandUserInterface.value = expandUserInterface.value == false
+    }
+
+    @UiThread
+    fun toggleMoreSettingsExpand() {
+        expandMoreSettings.value = expandMoreSettings.value == false
     }
 
     @UiThread

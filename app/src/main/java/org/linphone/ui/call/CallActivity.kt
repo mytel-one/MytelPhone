@@ -54,6 +54,7 @@ import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
 import org.linphone.compatibility.Compatibility
+import org.linphone.core.Call
 import org.linphone.core.tools.Log
 import org.linphone.databinding.CallActivityBinding
 import org.linphone.telecom.RedirectionHandler
@@ -71,6 +72,8 @@ import org.linphone.ui.call.viewmodel.CurrentCallViewModel
 import org.linphone.ui.call.viewmodel.SharedCallViewModel
 import org.linphone.ui.main.MainActivity
 import org.linphone.utils.AppUtils
+import org.linphone.utils.MyTelPermissionRequestHistory
+import org.linphone.utils.MyTelPermissionRequestPolicy
 
 @UiThread
 class CallActivity : GenericActivity() {
@@ -89,15 +92,20 @@ class CallActivity : GenericActivity() {
     private var isPipSupported = false
 
     private var keepActivityAliveEvenIfNoCall = false
+    private var initialMicrophonePermissionChecked = false
+    private var pendingMicrophoneCall = 0L
+    private var pendingCameraCall = 0L
 
     private val requestCameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
             Log.i("$TAG CAMERA permission has been granted, enabling video")
-            callViewModel.toggleVideo()
+            resumePermissionIntent(Manifest.permission.CAMERA)
         } else {
             Log.e("$TAG CAMERA permission has been denied")
+            pendingCameraCall = 0L
+            showBlueToast(getString(R.string.mytel_ux_camera_access_off), R.drawable.info)
         }
     }
 
@@ -106,9 +114,11 @@ class CallActivity : GenericActivity() {
     ) { isGranted ->
         if (isGranted) {
             Log.i("$TAG RECORD_AUDIO permission has been granted, un-muting microphone")
-            callViewModel.toggleMuteMicrophone()
+            resumePermissionIntent(Manifest.permission.RECORD_AUDIO)
         } else {
             Log.e("$TAG RECORD_AUDIO permission has been denied")
+            pendingMicrophoneCall = 0L
+            showBlueToast(getString(R.string.mytel_ux_microphone_access_off), R.drawable.info)
         }
     }
 
@@ -136,6 +146,9 @@ class CallActivity : GenericActivity() {
         }
         enableEdgeToEdge(style, style)
         super.onCreate(savedInstanceState)
+        initialMicrophonePermissionChecked = savedInstanceState?.getBoolean("mytel_initial_microphone_checked") ?: false
+        pendingMicrophoneCall = savedInstanceState?.getLong("mytel_pending_microphone_call") ?: 0L
+        pendingCameraCall = savedInstanceState?.getLong("mytel_pending_camera_call") ?: 0L
 
         binding = DataBindingUtil.setContentView(this, R.layout.call_activity)
         binding.lifecycleOwner = this
@@ -242,25 +255,13 @@ class CallActivity : GenericActivity() {
 
         callViewModel.requestRecordAudioPermission.observe(this) {
             it.consume {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)) {
-                    Log.w("$TAG Asking for RECORD_AUDIO permission")
-                    requestRecordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                } else {
-                    Log.i("$TAG Permission request for RECORD_AUDIO will be automatically denied, go to android app settings instead")
-                    goToAndroidPermissionSettings()
-                }
+                requestCallPermission(Manifest.permission.RECORD_AUDIO)
             }
         }
 
         callViewModel.requestCameraPermission.observe(this) {
             it.consume {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
-                    Log.w("$TAG Asking for CAMERA permission")
-                    requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                } else {
-                    Log.i("$TAG Permission request for CAMERA will be automatically denied, go to android app settings instead")
-                    goToAndroidPermissionSettings()
-                }
+                requestCallPermission(Manifest.permission.CAMERA)
             }
         }
 
@@ -365,31 +366,88 @@ class CallActivity : GenericActivity() {
             callsViewModel.showTopBar.postValue(showTopBar)
         }
 
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.RECORD_AUDIO
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.e("$TAG RECORD_AUDIO permission isn't granted")
-            val message = R.string.call_audio_record_permission_not_granted_toast
-            val icon = R.drawable.warning_circle
-            showRedToast(getString(message), icon)
+        if (!initialMicrophonePermissionChecked) {
+            initialMicrophonePermissionChecked = true
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                requestCallPermission(Manifest.permission.RECORD_AUDIO, automatic = true)
+            }
         }
+    }
 
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.CAMERA
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.e("$TAG CAMERA permission isn't granted")
-            val message = R.string.call_camera_permission_not_granted_toast
-            val icon = R.drawable.warning_circle
-            showRedToast(getString(message), icon)
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean("mytel_initial_microphone_checked", initialMicrophonePermissionChecked)
+        outState.putLong("mytel_pending_microphone_call", pendingMicrophoneCall)
+        outState.putLong("mytel_pending_camera_call", pendingCameraCall)
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun requestCallPermission(permission: String, automatic: Boolean = false) {
+        coreContext.postOnCoreThread { core ->
+            val target = runCatching { callViewModel.currentCall }.getOrNull() ?: core.currentCall
+            val terminal = setOf(Call.State.End, Call.State.Error, Call.State.Released)
+            val pointer = target?.takeIf { it.state !in terminal }?.nativePointer ?: 0L
+            coreContext.postOnMainThread {
+                if (isFinishing || isDestroyed || pointer == 0L) return@postOnMainThread
+                if (permission == Manifest.permission.RECORD_AUDIO) pendingMicrophoneCall = pointer else pendingCameraCall = pointer
+                val action = MyTelPermissionRequestPolicy.resolve(
+                    ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED,
+                    MyTelPermissionRequestHistory.wasRequested(this, permission),
+                    ActivityCompat.shouldShowRequestPermissionRationale(this, permission)
+                )
+                when (action) {
+                    MyTelPermissionRequestPolicy.Action.NONE -> resumePermissionIntent(permission)
+                    MyTelPermissionRequestPolicy.Action.REQUEST -> {
+                        MyTelPermissionRequestHistory.record(this, permission)
+                        if (permission == Manifest.permission.RECORD_AUDIO) {
+                            requestRecordAudioPermissionLauncher.launch(permission)
+                        } else {
+                            requestCameraPermissionLauncher.launch(permission)
+                        }
+                    }
+                    MyTelPermissionRequestPolicy.Action.SETTINGS -> {
+                        if (automatic) {
+                            pendingMicrophoneCall = 0L
+                            showBlueToast(getString(R.string.mytel_ux_microphone_access_off), R.drawable.info)
+                        } else {
+                            goToAndroidPermissionSettings()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun resumePermissionIntent(permission: String) {
+        if (ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) return
+        val pointer = if (permission == Manifest.permission.RECORD_AUDIO) pendingMicrophoneCall else pendingCameraCall
+        if (permission == Manifest.permission.RECORD_AUDIO) pendingMicrophoneCall = 0L else pendingCameraCall = 0L
+        if (pointer == 0L) return
+        coreContext.postOnCoreThread { core ->
+            val terminal = setOf(Call.State.End, Call.State.Error, Call.State.Released)
+            val calls = core.calls.filter { it.state !in terminal }
+            if (!MyTelPermissionRequestPolicy.canResume(pointer, calls.map { it.nativePointer }.toSet(), !isFinishing && !isDestroyed)) {
+                return@postOnCoreThread
+            }
+            val target = calls.first { it.nativePointer == pointer }
+            if (permission == Manifest.permission.RECORD_AUDIO) {
+                if (target.conference != null) target.conference?.microphoneMuted = false else target.microphoneMuted = false
+            }
+            coreContext.postOnMainThread {
+                if (!isFinishing && !isDestroyed && runCatching { callViewModel.currentCall.nativePointer }.getOrDefault(0L) == pointer) {
+                    if (permission == Manifest.permission.RECORD_AUDIO) {
+                        callViewModel.refreshMicrophoneState()
+                    } else if (callViewModel.isSendingVideo.value != true) {
+                        callViewModel.toggleVideo()
+                    }
+                }
+            }
         }
     }
 
     override fun onResume() {
         super.onResume()
+        resumePermissionIntent(Manifest.permission.RECORD_AUDIO)
+        resumePermissionIntent(Manifest.permission.CAMERA)
 
         val isInPipMode = isInPictureInPictureMode
         Log.i("$TAG onResume: is in PiP mode? [$isInPipMode]")

@@ -28,6 +28,7 @@ import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
 import org.linphone.core.Account
+import org.linphone.core.Address
 import org.linphone.core.AuthInfo
 import org.linphone.core.Core
 import org.linphone.core.CoreListenerStub
@@ -37,9 +38,13 @@ import org.linphone.core.RegistrationState
 import org.linphone.core.TransportType
 import org.linphone.core.tools.Log
 import org.linphone.ui.GenericViewModel
+import org.linphone.ui.assistant.SipSetupTransport
+import org.linphone.ui.assistant.SipSetupFields
+import org.linphone.ui.assistant.SipSetupServerUri
 import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.SipLoginAttempt
+import org.linphone.utils.SipLoginAuthTransaction
 
 class ThirdPartySipAccountLoginViewModel
     @UiThread
@@ -48,6 +53,8 @@ class ThirdPartySipAccountLoginViewModel
         private const val TAG = "[Third Party SIP Account Login ViewModel]"
         private const val REGISTRATION_TIMEOUT_MS = 20_000L
     }
+
+    private var authTransaction: SipLoginAuthTransaction<AuthInfo>? = null
 
     val username = MutableLiveData<String>()
 
@@ -76,6 +83,8 @@ class ThirdPartySipAccountLoginViewModel
     val loginEnabled = MediatorLiveData<Boolean>()
 
     val registrationInProgress = MutableLiveData<Boolean>()
+
+    val connectionFeedback = MutableLiveData("")
 
     val accountLoggedInEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData()
@@ -147,21 +156,23 @@ class ThirdPartySipAccountLoginViewModel
 
         // TODO: handle formatting errors ?
 
+        availableTransports.add(AppUtils.getString(R.string.mytel_ux_transport_automatic))
         availableTransports.add(TransportType.Udp.name.uppercase(Locale.getDefault()))
         availableTransports.add(TransportType.Tcp.name.uppercase(Locale.getDefault()))
         availableTransports.add(TransportType.Tls.name.uppercase(Locale.getDefault()))
 
-        coreContext.postOnCoreThread {
+        coreContext.postOnCoreThread { core ->
             domain.postValue(corePreferences.thirdPartySipAccountDefaultDomain)
 
-            val defaultTransport = corePreferences.thirdPartySipAccountDefaultTransport.uppercase(
-                Locale.getDefault()
-            )
-            val index = if (defaultTransport.isNotEmpty()) {
-                availableTransports.indexOf(defaultTransport)
-            } else {
-                availableTransports.size - 1
-            }
+            // Respect an administrator-provided default. An unconfigured fresh
+            // account starts in Automatic, instead of silently forcing TLS.
+            val defaultTransport = core.config.getString(
+                "ui", "assistant_third_party_sip_account_transport", ""
+            ).orEmpty().uppercase(Locale.ROOT)
+            val index = availableTransports.indexOf(defaultTransport).coerceAtLeast(0)
+            // Advanced controls are initially hidden, so their first layout
+            // cannot be relied on to initialize the effective transport.
+            transport.postValue(availableTransports[index])
             defaultTransportIndexEvent.postValue(Event(index.coerceAtLeast(0)))
         }
     }
@@ -169,10 +180,15 @@ class ThirdPartySipAccountLoginViewModel
     @UiThread
     fun login() {
         if (!coreContext.isReady()) return
+        if (!isLoginButtonEnabled()) {
+            connectionFeedback.value = AppUtils.getString(R.string.mytel_ux_required_fields)
+            return
+        }
         val attempt = attempts.begin() ?: return
         // Reserve the attempt synchronously, before queueing SDK work, so two
         // taps in one frame cannot create two accounts or replace credentials.
         registrationInProgress.value = true
+        connectionFeedback.value = ""
         val usernameValue = username.value.orEmpty().trim()
         val authIdValue = authId.value.orEmpty().trim()
         val passwordValue = password.value.orEmpty()
@@ -180,11 +196,8 @@ class ThirdPartySipAccountLoginViewModel
         val displayNameValue = displayName.value.orEmpty().trim()
         val outboundValue = outboundProxy.value.orEmpty().trim()
         val proxyValue = proxy.value.orEmpty().trim()
-        val selectedTransport = when (transport.value.orEmpty().uppercase(Locale.ROOT)) {
-            "TCP" -> TransportType.Tcp
-            "TLS" -> TransportType.Tls
-            else -> TransportType.Udp
-        }
+        val transportSelection = transport.value.orEmpty()
+        val accountRoutes = listOf(serverValue, outboundValue, proxyValue)
         val prefixValue = internationalPrefix.value.orEmpty().trim()
         val prefixIsoValue = internationalPrefixIsoCountryCode.value.orEmpty()
         coreContext.postOnCoreThread { core ->
@@ -192,26 +205,24 @@ class ThirdPartySipAccountLoginViewModel
             try {
                 core.loadConfigFromXml(corePreferences.thirdPartyDefaultValuesPath)
 
-                // Remove sip: in front of domain, just in case...
                 val domainValue = serverValue
-                val domainWithoutSip = domainValue.replaceFirst(Regex("(?i)^sips?:"), "")
-                val domainAddress = Factory.instance().createAddress("sip:$domainWithoutSip")
+                val domainAddress = createServerAddress(domainValue, transportSelection, accountRoutes)
                 if (domainAddress == null || domainAddress.domain.isNullOrBlank()) {
                     failLogin(core, attempt, AppUtils.getString(R.string.assistant_login_cant_parse_address_toast))
                     return@postOnCoreThread
                 }
-                val port = domainAddress?.port ?: -1
-                if (port != -1) {
-                    Log.w("$TAG It seems a port [$port] was set in the domain [$domainValue], removing it from SIP identity but setting it to proxy server URI")
+                val port = domainAddress.port
+                if (port > 0) {
+                    Log.i("$TAG Server port is retained on the registration route only")
                 }
-                val domain = domainAddress?.domain ?: domainWithoutSip
+                val domain = domainAddress.domain.orEmpty()
 
                 // Allow to enter SIP identity instead of simply username
                 // in case identity domain doesn't match proxy domain
                 var user = usernameValue
-                if (user.startsWith("sip:")) {
+                if (user.startsWith("sip:", ignoreCase = true)) {
                     user = user.substring("sip:".length)
-                } else if (user.startsWith("sips:")) {
+                } else if (user.startsWith("sips:", ignoreCase = true)) {
                     user = user.substring("sips:".length)
                 }
                 if (user.contains("@")) {
@@ -220,22 +231,25 @@ class ThirdPartySipAccountLoginViewModel
 
                 val userId = authIdValue
 
-                Log.i("$TAG Parsed username is [$user], user ID [$userId] and domain [$domain]")
-                val identity = "sip:$user@$domain"
-                val identityAddress = Factory.instance().createAddress(identity)
-                if (identityAddress == null) {
-                    Log.e("$TAG Can't parse [$identity] as Address!")
+                // A fresh template retains the existing port-free sip identity policy.
+                // SDK setters serialize IPv6 literals and escape usernames correctly.
+                val identityAddress = Factory.instance().createAddress("sip:placeholder@identity.invalid")
+                if (identityAddress == null ||
+                    identityAddress.setDomain(domain) != 0 ||
+                    identityAddress.setUsername(user) != 0
+                ) {
+                    Log.e("$TAG Can't construct SIP identity")
                     failLogin(core, attempt, AppUtils.getString(R.string.assistant_login_cant_parse_address_toast))
                     return@postOnCoreThread
                 }
-                Log.i("$TAG Computed SIP identity is [${identityAddress.asStringUriOnly()}]")
+                Log.i("$TAG SIP identity constructed")
 
                 val accounts = core.accountList
                 val found = accounts.find {
                     it.params.identityAddress?.weakEqual(identityAddress) == true
                 }
                 if (found != null) {
-                    Log.w("$TAG An account with the same identity address [${found.params.identityAddress?.asStringUriOnly()}] already exists, do not add it again!")
+                    Log.w("$TAG An account with the same SIP identity already exists")
                     failLogin(core, attempt, AppUtils.getString(R.string.assistant_account_login_already_connected_error))
                     return@postOnCoreThread
                 }
@@ -246,7 +260,7 @@ class ThirdPartySipAccountLoginViewModel
                     passwordValue,
                     null,
                     null,
-                    domainAddress?.domain ?: domainValue
+                    domainAddress.domain ?: domainValue
                 )
 
                 val accountParams = core.createAccountParams()
@@ -258,39 +272,27 @@ class ThirdPartySipAccountLoginViewModel
 
                 val outboundProxyValue = outboundValue
                 val outboundProxyAddress = if (outboundProxyValue.isNotEmpty()) {
-                    val server = if (outboundProxyValue.startsWith("sip:")) {
-                        outboundProxyValue
-                    } else {
-                        "sip:$outboundProxyValue"
-                    }
-                    Factory.instance().createAddress(server)
+                    createServerAddress(outboundProxyValue, transportSelection, accountRoutes)
                 } else {
                     null
                 }
                 if (outboundProxyAddress != null) {
-                    outboundProxyAddress.transport = selectedTransport
-                    Log.i("$TAG Created outbound proxy server SIP address [${outboundProxyAddress.asStringUriOnly()}]")
+                    Log.i("$TAG Outbound proxy address constructed")
                     accountParams.setRoutesAddresses(arrayOf(outboundProxyAddress))
                 }
 
                 val proxyServerValue = proxyValue
                 val proxyServerAddress = if (proxyServerValue.isNotEmpty()) {
-                    val server = if (proxyServerValue.startsWith("sip:")) {
-                        proxyServerValue
-                    } else {
-                        "sip:$proxyServerValue"
-                    }
-                    Factory.instance().createAddress(server)
+                    createServerAddress(proxyServerValue, transportSelection, accountRoutes)
                 } else {
-                    outboundProxyAddress ?: domainAddress ?: Factory.instance().createAddress("sip:$domainWithoutSip")
+                    outboundProxyAddress ?: domainAddress
                 }
                 if ((outboundProxyValue.isNotEmpty() && outboundProxyAddress == null) || proxyServerAddress == null) {
                     newlyCreatedAuthInfo = null
                     failLogin(core, attempt, AppUtils.getString(R.string.assistant_login_cant_parse_address_toast))
                     return@postOnCoreThread
                 }
-                proxyServerAddress.transport = selectedTransport
-                Log.i("$TAG Created proxy server SIP address [${proxyServerAddress?.asStringUriOnly()}]")
+                Log.i("$TAG Registration server address constructed")
                 accountParams.serverAddress = proxyServerAddress
                 Log.i("$TAG Is outbound proxy enabled ? [${accountParams.isOutboundProxyEnabled}]")
 
@@ -314,7 +316,18 @@ class ThirdPartySipAccountLoginViewModel
                 newlyCreatedAccount = core.createAccount(accountParams)
                 pendingAttempt = attempt
                 core.addListener(coreListener)
-                newlyCreatedAuthInfo?.let { core.addAuthInfo(it) }
+                newlyCreatedAuthInfo?.let { auth ->
+                    authTransaction = SipLoginAuthTransaction(
+                        current = { core.authInfoList.toList() },
+                        add = { core.addAuthInfo(it) },
+                        remove = { core.removeAuthInfo(it) },
+                        pointer = { it.nativePointer },
+                        sameIdentity = { left, right ->
+                            left.isEqualButAlgorithms(right) &&
+                                (left.accessToken != null) == (right.accessToken != null)
+                        }
+                    ).also { it.begin(auth) }
+                }
                 newlyCreatedAccount?.let { core.addAccount(it) }
                 coreContext.postOnCoreThreadDelayed({ currentCore ->
                     failLogin(currentCore, attempt, AppUtils.getString(R.string.mytel_login_timeout))
@@ -329,10 +342,29 @@ class ThirdPartySipAccountLoginViewModel
     }
 
     @WorkerThread
+    private fun createServerAddress(value: String, selection: String, accountRoutes: List<String>): Address? {
+        val uri = SipSetupServerUri.normalize(value) ?: return null
+        val address = Factory.instance().createAddress(uri) ?: return null
+        if (address.domain.isNullOrBlank()) return null
+        val selectedTransport = when (SipSetupTransport.resolveRoute(uri, selection, accountRoutes)) {
+            "TCP" -> TransportType.Tcp
+            "TLS" -> TransportType.Tls
+            else -> TransportType.Udp
+        }
+        val secure = uri.startsWith("sips:")
+        // The native SDK treats URI parameter names case-sensitively.
+        SipSetupTransport.transportParameterNames(uri).forEach { address.removeUriParam(it) }
+        address.transport = if (secure) TransportType.Tls else selectedTransport
+        if (secure) address.setUriParam("transport", "tls")
+        return address
+    }
+
+    @WorkerThread
     private fun failLogin(core: Core, attempt: Long, message: String) {
         if (!attempts.finish(attempt)) return
         releasePendingAccount(core, attempt, removeAccount = true)
         registrationInProgress.postValue(false)
+        connectionFeedback.postValue(message)
         accountLoginErrorEvent.postValue(Event(message))
     }
 
@@ -342,8 +374,11 @@ class ThirdPartySipAccountLoginViewModel
         core.removeListener(coreListener)
         if (removeAccount) {
             newlyCreatedAccount?.let { core.removeAccount(it) }
-            newlyCreatedAuthInfo?.let { core.removeAuthInfo(it) }
+            authTransaction?.rollback()
+        } else {
+            authTransaction?.commit()
         }
+        authTransaction = null
         newlyCreatedAccount = null
         newlyCreatedAuthInfo = null
         pendingAttempt = null
@@ -353,6 +388,7 @@ class ThirdPartySipAccountLoginViewModel
     fun cancelLogin() {
         val attempt = attempts.cancel() ?: return
         registrationInProgress.value = false
+        connectionFeedback.value = AppUtils.getString(R.string.mytel_ux_connection_cancelled)
         coreContext.postOnCoreThread { core ->
             releasePendingAccount(core, attempt, removeAccount = true)
         }
@@ -376,7 +412,7 @@ class ThirdPartySipAccountLoginViewModel
     @UiThread
     private fun isLoginButtonEnabled(): Boolean {
         // Password isn't mandatory as authentication could be Bearer
-        return username.value.orEmpty().isNotEmpty() && domain.value.orEmpty().isNotEmpty()
+        return SipSetupFields.canConnect(username.value, domain.value)
     }
 
     @UiThread

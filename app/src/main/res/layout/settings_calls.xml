@@ -230,10 +230,25 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:layout_marginEnd="16dp"
-            android:checked="@{viewModel.callRedirectionService}"
+            android:checked="@{viewModel.callRedirectionServiceAvailable &amp;&amp; viewModel.callRedirectionService}"
             android:enabled="@{viewModel.callRedirectionServiceAvailable}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/change_ringtone" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/call_redirection_unavailable_help"
+            style="@style/MyTel.Ux.Body"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp"
+            android:textSize="13sp"
+            android:text="@string/mytel_ux_call_redirection_unavailable"
+            android:visibility="@{viewModel.callRedirectionServiceAvailable ? View.GONE : View.VISIBLE}"
+            app:layout_constraintTop_toBottomOf="@id/call_redirection_service_switch"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <androidx.appcompat.widget.AppCompatTextView
             style="@style/settings_title_style"
@@ -254,7 +269,7 @@
             app:layout_constraintHorizontal_bias="1"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/call_redirection_service_switch"/>
+            app:layout_constraintTop_toBottomOf="@id/call_redirection_unavailable_help"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

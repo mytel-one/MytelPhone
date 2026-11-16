@@ -76,10 +76,13 @@
 
                 <ImageView
                     android:id="@+id/no_calls_image"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
                     android:layout_margin="10dp"
-                    android:src="@drawable/illu"
+                    android:src="@drawable/phone"
+                    android:padding="18dp"
+                    android:background="@drawable/circle_light_blue_button_background"
+                    app:tint="?attr/color_main1_500"
                     android:contentDescription="@null"
                     app:layout_constraintHeight_max="200dp"
                     app:layout_constraintDimensionRatio="1:1"
@@ -90,12 +93,16 @@
                     app:layout_constraintBottom_toTopOf="@id/no_calls_label" />
 
                 <androidx.appcompat.widget.AppCompatTextView
-                    style="@style/section_header_style"
+                    style="@style/MyTel.Ux.Body"
                     android:id="@+id/no_calls_label"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@{viewModel.isFilterEmpty ? @string/history_list_empty_history : @string/list_filter_no_result_found, default=@string/history_list_empty_history}"
+                    android:text="@{viewModel.isFilterEmpty ? @string/mytel_ux_calls_empty_message : @string/mytel_ux_no_results, default=@string/mytel_ux_calls_empty_message}"
                     android:textAlignment="center"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:layout_marginTop="16dp"
+                    android:textSize="16sp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/no_calls_image"

@@ -78,6 +78,8 @@ import org.linphone.ui.main.viewmodel.SharedMainViewModel
 import org.linphone.ui.main.splash.MyTelIntroOverlay
 import org.linphone.ui.welcome.WelcomeActivity
 import org.linphone.utils.AppUtils
+import org.linphone.utils.MyTelPermissionRequestHistory
+import org.linphone.utils.MyTelPermissionRequestPolicy
 import org.linphone.utils.DialogUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
@@ -360,23 +362,29 @@ class MainActivity : GenericActivity() {
 
         viewModel.askPostNotificationsPermissionEvent.observe(this) {
             it.consume {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.POST_NOTIFICATIONS)) {
-                    Log.w("$TAG Asking for POST_NOTIFICATIONS permission")
-                    postNotificationsPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                } else {
-                    Log.e("$TAG Permission request for POST_NOTIFICATIONS will be automatically denied, go to android app settings instead")
-                    goToAndroidPermissionSettings()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    val permission = Manifest.permission.POST_NOTIFICATIONS
+                    when (MyTelPermissionRequestPolicy.resolve(
+                        Compatibility.isPostNotificationsPermissionGranted(this),
+                        MyTelPermissionRequestHistory.wasRequested(this, permission),
+                        ActivityCompat.shouldShowRequestPermissionRationale(this, permission)
+                    )) {
+                        MyTelPermissionRequestPolicy.Action.REQUEST -> {
+                            MyTelPermissionRequestHistory.record(this, permission)
+                            postNotificationsPermissionLauncher.launch(permission)
+                        }
+                        MyTelPermissionRequestPolicy.Action.SETTINGS -> goToAndroidPermissionSettings()
+                        MyTelPermissionRequestPolicy.Action.NONE -> Unit
+                    }
                 }
             }
         }
 
         viewModel.askFullScreenIntentPermissionEvent.observe(this) {
             it.consume {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.USE_FULL_SCREEN_INTENT)) {
-                    Log.w("$TAG Asking for USE_FULL_SCREEN_INTENT permission")
-                    fullScreenIntentPermissionLauncher.launch(Manifest.permission.USE_FULL_SCREEN_INTENT)
-                } else {
-                    Log.e("$TAG Permission request for USE_FULL_SCREEN_INTENT will be automatically denied, go to manage app full screen intent android settings instead")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+                    !Compatibility.hasFullScreenIntentPermission(this)
+                ) {
                     Compatibility.requestFullScreenIntentPermission(this)
                 }
             }
@@ -384,8 +392,10 @@ class MainActivity : GenericActivity() {
 
         viewModel.askAccessLocalNetworkPermissionEvent.observe(this) {
             it.consume {
-                Log.w("$TAG Asking for ACCESS_LOCAL_NETWORK permission")
-                accessLocalNetworkPermissionLauncher.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
+                    MyTelPermissionRequestHistory.record(this, Manifest.permission.ACCESS_LOCAL_NETWORK)
+                    accessLocalNetworkPermissionLauncher.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
+                }
             }
         }
 
@@ -393,6 +403,7 @@ class MainActivity : GenericActivity() {
             it.consume {
                 val message = getString(R.string.new_account_configured_toast)
                 showGreenToast(message, R.drawable.user_circle)
+                showBackgroundAccessHintIfNeeded()
             }
         }
 
@@ -861,8 +872,32 @@ class MainActivity : GenericActivity() {
     }
 
     fun requestCallRedirectionPermissionsAndRole() {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
+            Log.i("$TAG Call Redirection is unavailable before Android 10")
+            coreContext.postOnCoreThread { corePreferences.useCallRedirectionService = false }
+            return
+        }
         Log.i("$TAG Requesting READ_PHONE_STATE and READ_PHONE_NUMBERS permissions needed for Call Redirection feature")
         requestReadPhonePermissionsLauncher.launch(arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_PHONE_NUMBERS))
+    }
+
+    private fun showBackgroundAccessHintIfNeeded() {
+        val preferences = getPreferences(MODE_PRIVATE)
+        if (preferences.getBoolean("mytel_background_access_hint_seen", false)) return
+        val powerManager = getSystemService(POWER_SERVICE) as? android.os.PowerManager
+        if (powerManager?.isIgnoringBatteryOptimizations(packageName) != false) return
+        coreContext.postOnCoreThread { core ->
+            if (core.accountList.none { it.state == org.linphone.core.RegistrationState.Ok }) return@postOnCoreThread
+            coreContext.postOnMainThread {
+                if (isFinishing || isDestroyed) return@postOnMainThread
+                preferences.edit().putBoolean("mytel_background_access_hint_seen", true).apply()
+                com.google.android.material.snackbar.Snackbar.make(
+                    binding.root, R.string.mytel_ux_background_prompt, 10000
+                ).setAction(R.string.settings_title) {
+                    goToAndroidPermissionSettings()
+                }.show()
+            }
+        }
     }
 
     private fun goToLatestVisitedFragment() {
@@ -1222,6 +1257,10 @@ class MainActivity : GenericActivity() {
     }
 
     private fun exportFileToNativeMediaGallery(filePath: String) {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
+            showLegacyMediaExportGuidance()
+            return
+        }
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 Log.i("$TAG Export file [$filePath] to Android's MediaStore")

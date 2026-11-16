@@ -19,16 +19,11 @@
  */
 package org.linphone.ui.welcome
 
-import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.os.PowerManager
-import android.provider.Settings
 import android.view.View
 import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -36,129 +31,45 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.viewpager2.widget.ViewPager2
 import org.linphone.R
-import org.linphone.core.tools.Log
 import org.linphone.databinding.WelcomeActivityBinding
 import org.linphone.ui.GenericActivity
 import org.linphone.ui.assistant.AssistantActivity
 import org.linphone.ui.welcome.fragment.WelcomePage1Fragment
-import org.linphone.ui.welcome.fragment.WelcomePage2Fragment
-import org.linphone.ui.welcome.fragment.WelcomePage3Fragment
-import org.linphone.utils.AppUtils
 
+/** A single, skippable introduction before the usable account setup screen. */
 class WelcomeActivity : GenericActivity() {
-    companion object {
-        private const val TAG = "[Welcome Activity]"
-        private const val PAGES = 3
-    }
-
     private lateinit var binding: WelcomeActivityBinding
-
-    private lateinit var viewPager: ViewPager2
-
-    private val pageChangedCallback = PageChangedCallback()
-
-    private var batteryOptimizationDialogShown = false
-
-    private val batteryOptimizationLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            goToAssistant()
-        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-
-        // Disable back gesture / button
-        onBackPressedDispatcher.addCallback { }
-
+        onBackPressedDispatcher.addCallback { finish() }
         binding = DataBindingUtil.setContentView(this, R.layout.welcome_activity)
         binding.lifecycleOwner = this
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.updatePadding(insets.left, insets.top, insets.right, insets.bottom)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.updatePadding(bars.left, bars.top, bars.right, bars.bottom)
             WindowInsetsCompat.CONSUMED
         }
-
-        viewPager = binding.pager
-        val pagerAdapter = ScreenSlidePagerAdapter(this)
-        viewPager.adapter = pagerAdapter
-
-        binding.dotsIndicator.attachTo(viewPager)
-
-        binding.setSkipClickListener {
-            Log.i("$TAG User clicked on 'skip' button, going to Assistant")
-            goToAssistant()
-        }
-
-        binding.setNextClickListener {
-            if (viewPager.currentItem == PAGES - 1) {
-                Log.i(
-                    "$TAG User clicked on 'start' button, leaving activity and going into Assistant"
-                )
-                goToAssistant()
-            } else {
-                viewPager.currentItem += 1
-            }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewPager.registerOnPageChangeCallback(pageChangedCallback)
-    }
-
-    override fun onPause() {
-        viewPager.unregisterOnPageChangeCallback(pageChangedCallback)
-        super.onPause()
+        binding.pager.adapter = WelcomeAdapter(this)
+        binding.skip.visibility = View.GONE
+        binding.dotsIndicator.visibility = View.GONE
+        binding.setSkipClickListener { goToAssistant() }
+        binding.setNextClickListener { goToAssistant() }
     }
 
     private fun goToAssistant() {
-        // MyTel: ask once for the battery optimization exemption so the
-        // keep-alive service is never killed by the system in background.
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        if (!batteryOptimizationDialogShown &&
-            !powerManager.isIgnoringBatteryOptimizations(packageName)
-        ) {
-            batteryOptimizationDialogShown = true
-            Log.i("$TAG Asking the user to disable battery optimizations")
-            @Suppress("BatteryLife")
-            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-            intent.data = Uri.parse("package:$packageName")
-            batteryOptimizationLauncher.launch(intent)
-            return
-        }
-
+        // Background access is explained after connection and in Settings;
+        // account setup never opens an unrelated battery permission dialog.
+        startActivity(Intent(this, AssistantActivity::class.java).apply {
+            putExtra(AssistantActivity.SKIP_LANDING_EXTRA, true)
+        })
         finish()
-        val intent = Intent(this, AssistantActivity::class.java)
-        intent.putExtra(AssistantActivity.SKIP_LANDING_EXTRA, true)
-        startActivity(intent)
     }
 
-    private class ScreenSlidePagerAdapter(fa: FragmentActivity) : FragmentStateAdapter(fa) {
-        override fun getItemCount(): Int = PAGES
-
-        override fun createFragment(position: Int): Fragment {
-            return when (position) {
-                0 -> WelcomePage1Fragment()
-                1 -> WelcomePage2Fragment()
-                else -> WelcomePage3Fragment()
-            }
-        }
-    }
-
-    private inner class PageChangedCallback : ViewPager2.OnPageChangeCallback() {
-        override fun onPageSelected(position: Int) {
-            Log.i("$TAG Current page is [$position]")
-            if (position == PAGES - 1) {
-                binding.next.text = AppUtils.getString(R.string.start)
-                binding.skip.visibility = View.INVISIBLE
-            } else {
-                binding.next.text = AppUtils.getString(R.string.next)
-                binding.skip.visibility = View.VISIBLE
-            }
-        }
+    private class WelcomeAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
+        override fun getItemCount(): Int = 1
+        override fun createFragment(position: Int): Fragment = WelcomePage1Fragment()
     }
 }
