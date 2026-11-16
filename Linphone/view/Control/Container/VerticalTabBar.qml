@@ -133,17 +133,28 @@ Control.Container {
 			}
 			background: Rectangle {
 				// Black border for keyboard navigation
-				visible: tabButton.keyboardFocus
-				color: "transparent"
-				border.color: DefaultStyle.main2_900
-				border.width: Utils.getSizeWithScreenRatio(3)
-				radius: Utils.getSizeWithScreenRatio(5)
+				visible: tabButton.checked || tabButton.hovered || tabButton.keyboardFocus
+				color: tabButton.checked ? "#24FFFFFF" : tabButton.hovered ? "#12FFFFFF" : "transparent"
+				border.color: DefaultStyle.grey_0
+				border.width: tabButton.keyboardFocus ? Utils.getSizeWithScreenRatio(3) : 0
+				radius: Utils.getSizeWithScreenRatio(10)
 				anchors.fill: tabButton
+				Rectangle {
+                    visible: tabButton.checked
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.topMargin: 14
+                    anchors.bottomMargin: 14
+                    width: 3
+                    radius: 1.5
+                    color: "#FFAB2E"
+                }
 			}
 			contentItem: ColumnLayout {
 				EffectImage {
 					id: buttonIcon
-					property real buttonSize: Utils.getSizeWithScreenRatio(mainItem.currentIndex !== index && tabButton.hovered ? 26 : 24)
+					property real buttonSize: Utils.getSizeWithScreenRatio(24)
 					imageSource: mainItem.currentIndex === index ? modelData.selectedIcon : modelData.icon
 					Layout.preferredWidth: buttonSize
 					Layout.preferredHeight: buttonSize
@@ -156,7 +167,7 @@ Control.Container {
 				Text {
 					id: buttonText
 					text: modelData.label
-					visible: false
+					visible: true
 					font {
 						weight: mainItem.currentIndex === index
 							? Utils.getSizeWithScreenRatio(800)

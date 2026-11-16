@@ -11,9 +11,9 @@ import "qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js" as Utils
 AbstractMainPage {
     id: mainItem
     //: "Nouvelle conversation"
-    noItemButtonText: qsTr("chat_start_title")
+    noItemButtonText: qsTr("New chat")
     //: "Aucune conversation"
-    emptyListText: qsTr("Your conversations, together")
+    emptyListText: qsTr("Your conversations")
     newItemIconSource: AppIcons.plusCircle
 
     /**
@@ -92,7 +92,7 @@ AbstractMainPage {
     signal newChatItemOpen()
 
     showDefaultItem: mainItem.selectedChatGui === null
-    emptyListDescription: qsTr("Select a conversation or start a chat with an extension.")
+    emptyListDescription: qsTr("Choose a chat on the left, or start a conversation with an extension.")
 
     function goToNewChat() {
         if (listStackView.currentItem
@@ -141,8 +141,9 @@ AbstractMainPage {
                     Text {
                         Layout.fillWidth: true
                         //: "Conversations"
-                        text: qsTr("chat_list_title")
+                        text: qsTr("Chats")
                         maximumLineCount: 1
+                        elide: Text.ElideRight
                         color: DefaultStyle.main2_700
                         font.pixelSize: Typography.h2.pixelSize
                         font.weight: Typography.h2.weight
@@ -174,12 +175,14 @@ AbstractMainPage {
                     Button {
                         id: newChatButton
                         focus: true
-                        style: ButtonStyle.noBackground
+                        style: ButtonStyle.main
                         icon.source: AppIcons.plusCircle
-                        Layout.preferredWidth: Utils.getSizeWithScreenRatio(28)
-                        Layout.preferredHeight: Utils.getSizeWithScreenRatio(28)
-                        icon.width: Utils.getSizeWithScreenRatio(28)
-                        icon.height: Utils.getSizeWithScreenRatio(28)
+                        text: qsTr("New chat")
+                        textSize: 13
+                        Layout.preferredWidth: Utils.getSizeWithScreenRatio(116)
+                        Layout.preferredHeight: Utils.getSizeWithScreenRatio(44)
+                        icon.width: Utils.getSizeWithScreenRatio(20)
+                        icon.height: Utils.getSizeWithScreenRatio(20)
                         KeyNavigation.left: chatListMenu
                         KeyNavigation.down: searchBar
                         //: "New chat"

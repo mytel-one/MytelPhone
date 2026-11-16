@@ -51,9 +51,10 @@ Control.ComboBox {
 
     onConstantImageSourceChanged: if (constantImageSource)
         selectedItemImg.imageSource = constantImageSource
-    onCurrentIndexChanged: {
+    function updateSelectedItem() {
+        if (!model || currentIndex < 0 || !selectedItemText) return;
         var item = model[currentIndex];
-        if (!item)
+        if (!item && typeof model.getAt === "function")
             item = model.getAt(currentIndex);
         if (!item)
             return;
@@ -62,6 +63,9 @@ Control.ComboBox {
             selectedItemFlag.text = item[mainItem.flagRole];
         selectedItemImg.imageSource = constantImageSource ? constantImageSource : item.img ? item.img : "";
     }
+    onCurrentIndexChanged: updateSelectedItem()
+    onModelChanged: Qt.callLater(updateSelectedItem)
+    Component.onCompleted: updateSelectedItem()
 
     // Used for accessibility, contentItem remove value announcement from screen reader
     onCurrentTextChanged: {

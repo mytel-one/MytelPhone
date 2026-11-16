@@ -8,12 +8,13 @@ import 'qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js' as Utils
 
 Item {
 	id: mainItem
-    height: visible ? Utils.getSizeWithScreenRatio(50) : 0
+    height: visible ? Utils.getSizeWithScreenRatio(descriptionText.length > 0 ? 76 : 52) : 0
 	anchors.right: parent.right
 	anchors.left: parent.left
 	property bool keyboardOtherFocus: FocusHelper.keyboardFocus || FocusHelper.otherFocus
 
 	property string titleText
+    property string descriptionText: ""
 	property bool isSelected: false
 	
 	signal selected()
@@ -21,6 +22,7 @@ Item {
 	//: %1 settings
 	Accessible.name: qsTr("setting_tab_accessible_name").arg(titleText)
 	Accessible.role: Accessible.ListItem
+    Accessible.description: descriptionText
 	
 	Keys.onPressed: (event)=>{
 		if(event.key == Qt.Key_Space || event.key == Qt.Key_Return || event.key == Qt.Key_Enter){
@@ -30,6 +32,7 @@ Item {
 	MouseArea {
 		id: mouseArea
 		hoverEnabled: true
+		cursorShape: Qt.PointingHandCursor
 		anchors.fill: parent
 		Rectangle {
 			id: background
@@ -46,13 +49,30 @@ Item {
 			mainItem.selected()
 		}
 	}
-	Text {
-		anchors.margins: 25
+	ColumnLayout {
+		anchors.margins: 20
 		anchors.left: parent.left
 		anchors.right: parent.right
 		anchors.verticalCenter: parent.verticalCenter
-		text: mainItem.titleText
-		font: Typography.h4
+        spacing: 3
+        Text {
+            Layout.fillWidth: true
+            text: mainItem.titleText
+            color: DefaultStyle.main2_800
+            font.pixelSize: 16
+            font.weight: mainItem.isSelected ? Font.DemiBold : Font.Medium
+            elide: Text.ElideRight
+        }
+        Text {
+            visible: text.length > 0
+            Layout.fillWidth: true
+            text: mainItem.descriptionText
+            color: DefaultStyle.main2_600
+            font.pixelSize: 12
+            wrapMode: Text.WordWrap
+            maximumLineCount: 2
+            elide: Text.ElideRight
+        }
 	}
 	
 }

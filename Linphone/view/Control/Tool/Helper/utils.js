@@ -908,3 +908,34 @@ function normalizeSipDestination(raw) {
         return "0" + digits.slice(-10)
     return digits
 }
+
+// New-account setup only. URI validation and account creation remain with the SDK.
+// Keep this policy aligned with Android's SipSetupTransport resolver.
+function resolveSetupTransport(server, selection) {
+    var address = String(server || "").trim()
+    if (/^sips:/i.test(address)) return "TLS"
+
+    var explicit = String(selection || "").trim().toUpperCase()
+    if (["UDP", "TCP", "TLS"].indexOf(explicit) >= 0) return explicit
+
+    var withoutQuery = address.split("?")[0]
+    var parameters = withoutQuery.split(";").slice(1)
+    for (var i = 0; i < parameters.length; ++i) {
+        if (/^transport=/i.test(parameters[i])) {
+            var parameter = parameters[i].slice("transport=".length).toUpperCase()
+            if (["UDP", "TCP", "TLS"].indexOf(parameter) >= 0) return parameter
+            break
+        }
+    }
+
+    var authority = withoutQuery.split(";")[0].replace(/^sip:/i, "")
+    var port = ""
+    if (authority.charAt(0) === "[") {
+        var closingBracket = authority.indexOf("]")
+        var suffix = closingBracket >= 0 ? authority.slice(closingBracket + 1) : ""
+        if (suffix.charAt(0) === ":") port = suffix.slice(1)
+    } else if (authority.split(":").length === 2) {
+        port = authority.split(":")[1]
+    }
+    return port === "5061" ? "TLS" : "UDP"
+}

@@ -7,6 +7,10 @@ const test = require('node:test');
 const root = path.join(__dirname, '../..');
 const login = fs.readFileSync(path.join(root, 'Linphone/view/Page/Form/Login/SIPLoginPage.qml'), 'utf8');
 const settings = fs.readFileSync(path.join(root, 'Linphone/view/Page/Form/Settings/AbstractSettingsMenu.qml'), 'utf8');
+const helpers = fs.readFileSync(path.join(root, 'Linphone/view/Control/Tool/Helper/utils.js'), 'utf8')
+    .replace(/^\.(?:pragma|import).*$/gm, '');
+const helperContext = vm.createContext({});
+vm.runInContext(helpers, helperContext);
 function method(source, name) {
     const start = source.indexOf('function ' + name + '(');
     assert.ok(start >= 0, 'Production method exists: ' + name);
@@ -25,7 +29,8 @@ function loginFixture(values = {}, connecting = false) {
         usernameEdit: '301', passwordEdit: ' secret ', domainEdit: 'pbx.example.invalid:5060',
         displayName: 'Work', registrar: '', proxy: '', authenticationId: ''
     })) inputs[name] = { text: values[name] ?? defaultText, forceActiveFocus: () => focus.push(name) };
-    const context = vm.createContext({ ...inputs, mainItem, transport: { currentValue: 7 },
+    const context = vm.createContext({ ...inputs, mainItem, transport: { currentValue: 'TCP' },
+        Utils: helperContext, LinphoneEnums: { TransportType: { Udp: 6, Tcp: 7, Tls: 8 } },
         qsTr: text => text, LoginPageCpp: { login: (...args) => calls.push(args) } });
     for (const name of ['connecting', 'validationError', 'validationField']) Object.defineProperty(context, name, {
         get: () => mainItem[name], set: value => { mainItem[name] = value; }

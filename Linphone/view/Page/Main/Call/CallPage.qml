@@ -11,9 +11,10 @@ import "qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js" as Utils
 AbstractMainPage {
     id: mainItem
     //: "Nouvel appel"
-    noItemButtonText: qsTr("history_call_start_title")
+    noItemButtonText: qsTr("New call")
     //: "Historique d'appel vide"
-    emptyListText: qsTr("call_history_empty_title")
+    emptyListText: qsTr("Ready for your next call")
+    emptyListDescription: qsTr("Call an extension or phone number, or select a recent call on the left.")
     newItemIconSource: AppIcons.newCall
 
     property var selectedRowHistoryGui
@@ -210,6 +211,7 @@ AbstractMainPage {
                         //: "Appels"
                         text: qsTr("call_history_call_list_title")
 						maximumLineCount: 1
+                        elide: Text.ElideRight
                         color: DefaultStyle.main2_700
                         font.pixelSize: Typography.h2.pixelSize
                         font.weight: Typography.h2.weight
@@ -249,12 +251,14 @@ AbstractMainPage {
                     Button {
                         id: newCallButton
                         focus: true
-                        style: ButtonStyle.noBackground
+                        style: ButtonStyle.main
                         icon.source: AppIcons.newCall
-                        Layout.preferredWidth: Utils.getSizeWithScreenRatio(34)
-                        Layout.preferredHeight: Utils.getSizeWithScreenRatio(34)
-                        icon.width: Utils.getSizeWithScreenRatio(28)
-                        icon.height: Utils.getSizeWithScreenRatio(28)
+                        text: qsTr("New call")
+                        textSize: 13
+                        Layout.preferredWidth: Utils.getSizeWithScreenRatio(116)
+                        Layout.preferredHeight: Utils.getSizeWithScreenRatio(44)
+                        icon.width: Utils.getSizeWithScreenRatio(20)
+                        icon.height: Utils.getSizeWithScreenRatio(20)
                         KeyNavigation.left: removeHistory
                         KeyNavigation.down: listStackView
                         //: Create new call

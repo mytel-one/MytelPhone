@@ -33,6 +33,7 @@
 #include "model/core/CoreModel.hpp"
 #include "model/setting/SettingsModel.hpp"
 #include "model/tool/ToolModel.hpp"
+#include "tool/SipSetupAddress.hpp"
 #include "tool/Utils.hpp"
 
 DEFINE_ABSTRACT_OBJECT(AccountManager)
@@ -72,6 +73,7 @@ bool AccountManager::login(QString username,
 	if (mLoginAttempt && mLoginAttempt->isCancelled()) return false;
 	auto core = CoreModel::getInstance()->getCore();
 	auto factory = linphone::Factory::get();
+	domain = domain.trimmed();
 	QString assistantFile = (!QString::compare(domain, "sip.linphone.org", Qt::CaseInsensitive) || domain.isEmpty())
 	                            ? "use-app-sip-account.rc"
 	                            : "use-other-sip-account.rc";
@@ -83,17 +85,22 @@ bool AccountManager::login(QString username,
 	identity->setUsername(Utils::appStringToCoreString(username));
 
 	if (mAccountModel) return false;
+	auto computedServerAddress =
+	    SipSetupAddress::parse(domain.isEmpty() ? QStringLiteral("sip.linphone.org") : domain, transportType, identity);
+	if (!computedServerAddress) {
+		*errorMessage =
+		    tr("Enter a valid SIP server address, for example pbx.example.com:5060 or sips:pbx.example.com:5061.");
+		return false;
+	}
 
 	auto otherAccounts = core->getAccountList();
 	for (auto otherAccount : otherAccounts) {
 		auto otherParams = otherAccount->getParams();
-		if (domain.isEmpty()) {
-			lDebug() << "domain is empty, setting \"sip.linphone.org\" by default";
-			domain = "sip.linphone.org";
-		}
 		if (!QString::compare(Utils::coreStringToAppString(otherParams->getIdentityAddress()->getUsername()), username,
 		                      Qt::CaseInsensitive) &&
-		    !QString::compare(Utils::coreStringToAppString(otherParams->getDomain()), domain, Qt::CaseInsensitive)) {
+		    !QString::compare(Utils::coreStringToAppString(otherParams->getIdentityAddress()->getDomain()),
+		                      Utils::coreStringToAppString(identity->getDomain()), Qt::CaseInsensitive) &&
+		    otherParams->getIdentityAddress()->getPort() == identity->getPort()) {
 			//: "The account is already connected"
 			*errorMessage = tr("assistant_account_login_already_connected_error");
 			return false;
@@ -103,17 +110,8 @@ bool AccountManager::login(QString username,
 	if (!displayName.isEmpty()) identity->setDisplayName(Utils::appStringToCoreString(displayName));
 
 	if (!domain.isEmpty()) {
-		identity->setDomain(Utils::appStringToCoreString(domain));
 		if (QString::compare(domain, SettingsModel::getInstance()->getDefaultDomain())) {
 			params->setLimeServerUrl("");
-			auto computedServerAddress =
-			    factory->createAddress(Utils::appStringToCoreString(QStringLiteral("sip:%1").arg(domain)));
-			if (!computedServerAddress) {
-				//: "Unable to create proxy address. Please check the domain name."
-				*errorMessage = tr("assistant_account_login_proxy_address_error");
-				return false;
-			}
-			computedServerAddress->setTransport(transportType);
 			params->setServerAddress(computedServerAddress);
 		}
 	}

@@ -19,11 +19,43 @@ AbstractMainPage {
 	signal goBackRequested()
 	
 	function layoutUrl(name) {
-		return layoutsPath+"/"+name+".qml"
+		return mainItem.layoutsPath+"/"+name+".qml"
 	}
 	
 	property var families
 	property var defaultIndex: -1
+	property bool familyPageReady: false
+
+    function firstVisibleFamily(preferredIndex) {
+        var entries = mainItem.families || []
+        var preferred = entries[preferredIndex]
+        if (preferred && preferred.visible !== false && preferred.layout) return preferredIndex
+        for (var i = 0; i < entries.length; ++i) {
+            if (entries[i] && entries[i].visible !== false && entries[i].layout) return i
+        }
+        return -1
+    }
+
+    function openFamily(index) {
+        var entry = (mainItem.families || [])[index]
+        if (!entry || entry.visible === false || !entry.layout) return
+        familiesList.selectedIndex = index
+        familiesList.currentIndex = index
+        rightPanelStackView.clear()
+        rightPanelStackView.push(mainItem.layoutUrl(entry.layout), {
+            titleText: entry.title, model: entry.model, container: rightPanelStackView
+        })
+    }
+
+    onFamiliesChanged: Qt.callLater(function() {
+        if (!mainItem.familyPageReady) return
+        var index = mainItem.firstVisibleFamily(familiesList.selectedIndex)
+        if (index < 0) {
+            familiesList.selectedIndex = -1
+            familiesList.currentIndex = -1
+            rightPanelStackView.clear()
+        } else if (index !== familiesList.selectedIndex) mainItem.openFamily(index)
+    })
 	
 	leftPanelContent: ColumnLayout {
 		id: leftPanel
@@ -40,8 +72,8 @@ AbstractMainPage {
 				id: backButton
 				icon.width: Utils.getSizeWithScreenRatio(24)
 				icon.height: Utils.getSizeWithScreenRatio(24)
-				Layout.preferredWidth: Utils.getSizeWithScreenRatio(30)
-				Layout.preferredHeight: Utils.getSizeWithScreenRatio(30)
+				Layout.preferredWidth: Utils.getSizeWithScreenRatio(44)
+				Layout.preferredHeight: Utils.getSizeWithScreenRatio(44)
 				icon.source: AppIcons.leftArrow
 				style: ButtonStyle.noBackground
 				focus: true
@@ -66,9 +98,9 @@ AbstractMainPage {
 			Layout.fillWidth: true
 			Layout.fillHeight: true
 			model: mainItem.families
-            Layout.topMargin: Utils.getSizeWithScreenRatio(41)
+            Layout.topMargin: Utils.getSizeWithScreenRatio(20)
 			Layout.leftMargin: leftPanel.sideMargin
-			property int selectedIndex: mainItem.defaultIndex != -1 ? mainItem.defaultIndex : 0
+			property int selectedIndex: -1
 			activeFocusOnTab: true
 			spacing: Utils.getSizeWithScreenRatio(5)
 			Accessible.role: Accessible.List
@@ -78,22 +110,18 @@ AbstractMainPage {
 			
 			delegate: SettingsMenuItem {
 				titleText: modelData.title
+                descriptionText: modelData.description || ""
 				visible: modelData.visible != undefined ? modelData.visible : true
 				enabled: visible
 				isSelected: familiesList.selectedIndex == index
 				focus: index == 0
 				focusPolicy: visible ? Qt.StrongFocus : Qt.NoFocus
-				onSelected: {
-					familiesList.selectedIndex = index
-					rightPanelStackView.clear()
-					rightPanelStackView.push(layoutUrl(modelData.layout), { titleText: modelData.title, model: modelData.model, container: rightPanelStackView})
-				}
+				onSelected: mainItem.openFamily(index)
 			}
 		}
 		Component.onCompleted: {
-			let initialEntry = mainItem.families[familiesList.selectedIndex]
-			rightPanelStackView.push(layoutUrl(initialEntry.layout), { titleText: initialEntry.title, model: initialEntry.model, container: rightPanelStackView})
-			familiesList.currentIndex = familiesList.selectedIndex
+			mainItem.familyPageReady = true
+			mainItem.openFamily(mainItem.firstVisibleFamily(mainItem.defaultIndex))
 		}
 	}
 	Control.StackView.onActivated: {

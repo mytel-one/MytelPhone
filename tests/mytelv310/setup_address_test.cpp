@@ -46,6 +46,10 @@ int main(int argc, char **argv) {
 	valid("[2001:db8::1]:5060", linphone::TransportType::Udp, "2001:db8::1", 5060, linphone::TransportType::Udp, false);
 	valid("sips:[2001:db8::1]:5061", linphone::TransportType::Udp, "2001:db8::1", 5061, linphone::TransportType::Tls,
 	      true);
+	valid("sips:pbx.example.invalid:5061;transport=udp", linphone::TransportType::Udp, "pbx.example.invalid", 5061,
+	      linphone::TransportType::Tls, true);
+	valid("sips:pbx.example.invalid:5061;transport=tcp", linphone::TransportType::Tcp, "pbx.example.invalid", 5061,
+	      linphone::TransportType::Tls, true);
 	valid("sip:pbx.example.invalid:5061;transport=tcp", linphone::TransportType::Tcp, "pbx.example.invalid", 5061,
 	      linphone::TransportType::Tcp, false);
 	for (const char *input :

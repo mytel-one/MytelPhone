@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 const source = fs.readFileSync(path.join(__dirname, '../../Linphone/view/Control/Button/ComboBox.qml'), 'utf8');
-const start = source.indexOf('onCurrentIndexChanged:');
+const start = source.indexOf('function updateSelectedItem(');
 const begin = source.indexOf('{', start);
 let end = begin + 1, depth = 1;
 for (; depth; end++) { if (source[end] === '{') depth++; if (source[end] === '}') depth--; }
