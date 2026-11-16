@@ -1,4 +1,5 @@
 #include "WindowsNotificationBackend.hpp"
+#include "ToastXml.hpp"
 #include "core/App.hpp"
 #include "core/call/CallGui.hpp"
 #include "core/chat/ChatGui.hpp"
@@ -45,38 +46,17 @@ void NotificationBackend::sendMessageNotification(QVariantMap data) {
 		return;
 	}
 
-	auto msgTxt = data["message"].toString().toStdWString();
-	auto remoteAddress = data["remoteAddress"].toString().toStdWString();
-	auto chatRoomName = data["chatRoomName"].toString().toStdWString();
+	auto msgTxt = data["message"].toString();
+	auto remoteAddress = data["remoteAddress"].toString();
+	auto chatRoomName = data["chatRoomName"].toString();
 	auto chatRoomAddress = data["chatRoomAddress"].toString().toStdWString();
-	auto appIcon = Utils::getIconAsPng(Utils::getAppIcon("logo").toString()).toStdWString();
+	auto appIcon = Utils::getIconAsPng(Utils::getAppIcon("logo").toString());
 	auto avatarUri = data["avatarUri"].toString().toStdWString();
 	bool isGroup = data["isGroupChat"].toBool();
 	ChatGui *chat = data["chat"].value<ChatGui *>();
 
-	std::wstring xml = L"<toast>"
-	                   L"    <visual>"
-	                   L"        <binding template=\"ToastGeneric\">"
-	                   L"            <image src=\"file:///" +
-	                   appIcon +
-	                   L"\" placement=\"appLogoOverride\"/>"
-	                   L"            <text><![CDATA[" +
-	                   chatRoomName +
-	                   L"]]></text>"
-	                   L"            <text><![CDATA[" +
-	                   (isGroup ? remoteAddress : L"") +
-	                   L"]]></text>"
-	                   L"            <group>"
-	                   L"                <subgroup>"
-	                   L"                    <text hint-style=\"body\"><![CDATA[" +
-	                   msgTxt +
-	                   L"]]></text>"
-	                   L"                </subgroup>"
-	                   L"            </group>"
-	                   L"        </binding>"
-	                   L"    </visual>"
-	                   L"    <audio silent=\"true\"/>"
-	                   L"</toast>";
+	const auto xml =
+	    MyTelToastXml::message(chatRoomName, isGroup ? remoteAddress : QString(), msgTxt, appIcon).toStdWString();
 
 	ABI::Windows::Data::Xml::Dom::IXmlDocument *doc = nullptr;
 	hr = DesktopNotificationManagerCompat::CreateXmlDocumentFromString(xml.c_str(), &doc);
@@ -139,56 +119,23 @@ void NotificationBackend::sendCallNotification(QVariantMap data) {
 		return;
 	}
 
-	auto displayName = data["displayName"].toString().toStdWString();
-	auto remoteAddress = data["remoteAddress"].toString().toStdWString();
+	auto displayName = data["displayName"].toString();
+	auto remoteAddress = data["remoteAddress"].toString();
 	CallGui *call = data["call"].value<CallGui *>();
 	// int timeout = AbstractNotificationBackend::Notification[(int)NotificationType::ReceivedCall].getTimeout();
 
 	// Incoming call
-	auto callDescription = tr("incoming_call").toStdWString();
+	auto callDescription = tr("incoming_call");
 
-	QList<ToastButton> actions;
+	QList<MyTelToastXml::Action> actions;
 	QString declineIcon = Utils::getIconAsPng(Utils::getAppIcon("endCall").toString());
 	QString acceptIcon = Utils::getIconAsPng(Utils::getAppIcon("phone").toString());
-	auto appIcon = Utils::getIconAsPng(Utils::getAppIcon("logo").toString()).toStdWString();
+	auto appIcon = Utils::getIconAsPng(Utils::getAppIcon("logo").toString());
 	//: Accept
-	actions.append(ToastButton(tr("accept_button"), "accept", acceptIcon));
+	actions.append(MyTelToastXml::Action{tr("accept_button"), "accept", acceptIcon});
 	//: Decline
-	actions.append(ToastButton(tr("decline_button"), "decline", declineIcon));
-	std::wstring wActions;
-	if (!actions.isEmpty()) {
-		wActions += L"<actions>";
-		for (const auto &action : actions) {
-			std::wstring wLabel = action.label.toStdWString();
-			std::wstring wArg = action.argument.toStdWString();
-			std::wstring wIcon = action.icon.toStdWString();
-			qDebug() << "toast icon action" << wIcon;
-			wActions +=
-			    L"<action content=\"" + wLabel + L"\" arguments=\"" + wArg + L"\" imageUri=\"" + wIcon + L"\"/>";
-		}
-		wActions += L"</actions>";
-	}
-
-	std::wstring xml = L"<toast scenario=\"reminder\">"
-	                   L"    <visual>"
-	                   L"        <binding template=\"ToastGeneric\">"
-	                   L"            <image src=\"file:///" +
-	                   appIcon +
-	                   L"\" placement=\"appLogoOverride\"/>"
-	                   L"            <text hint-style=\"header\">" +
-	                   displayName +
-	                   L"</text>"
-	                   L"            <text hint-style=\"base\">" +
-	                   remoteAddress +
-	                   L"</text>"
-	                   L"            <text hint-style=\"body\">" +
-	                   callDescription +
-	                   L"</text>"
-	                   L"        </binding>"
-	                   L"    </visual>" +
-	                   wActions +
-	                   L"    <audio silent=\"true\"/>"
-	                   L"</toast>";
+	actions.append(MyTelToastXml::Action{tr("decline_button"), "decline", declineIcon});
+	const auto xml = MyTelToastXml::call(displayName, remoteAddress, callDescription, appIcon, actions).toStdWString();
 
 	ABI::Windows::Data::Xml::Dom::IXmlDocument *doc = nullptr;
 	hr = DesktopNotificationManagerCompat::CreateXmlDocumentFromString(xml.c_str(), &doc);
