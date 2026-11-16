@@ -2,7 +2,23 @@ name: Android CI
 
 on:
   push:
+    branches: [main]
+    tags: ['v*']
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
   workflow_dispatch:
+    inputs:
+      upload_apk:
+        description: Upload the debug APK for three days
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -35,7 +51,10 @@ jobs:
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process
 
       - name: Upload APK artifact
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.upload_apk }}
         uses: actions/upload-artifact@v4
         with:
-          name: MyTelSoftPhone-debug-apk
+          name: MytelPhone-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+          retention-days: 3
+          if-no-files-found: error

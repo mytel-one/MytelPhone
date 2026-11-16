@@ -4,7 +4,7 @@
 
 SIP calling and team messages for **Android and Windows**, built on the Linphone engine and the [MyTel](https://mytel.one) identity.
 
-[Download v3.0.1](https://github.com/DashSaman/MyTelSoftPhone/releases/tag/v3.0.1) · [Verification record](docs/releases/v3.0.1/VERIFICATION.md) · [Windows build tools](release/windows/README.md)
+[Download v3.0.1](https://github.com/mytel-one/MytelPhone/releases/tag/v3.0.1) · [Verification record](docs/releases/v3.0.1/VERIFICATION.md) · [Windows build tools](release/windows/README.md)
 
 ## What changed in v3.0.1
 

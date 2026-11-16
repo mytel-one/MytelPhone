@@ -1,0 +1,32 @@
+name: Copy historical releases
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: historical-release-migration
+  cancel-in-progress: false
+
+jobs:
+  copy:
+    if: github.repository == 'mytel-one/MytelPhone' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Copy and verify exact historical assets
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python .github/scripts/migrate_releases.py
+      - name: Keep the small migration audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: MytelPhone-migration-audit
+          path: migration-release-report.json
+          retention-days: 3
+          if-no-files-found: error

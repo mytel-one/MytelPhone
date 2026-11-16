@@ -20,3 +20,8 @@ google-services.json
 
 app/build/
 .mimosa/
+
+# Local Python tooling and manual migration output
+__pycache__/
+*.pyc
+migration-release-report.json
