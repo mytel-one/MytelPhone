@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory)][string]$MakeNsis,
     [Parameter(Mandatory)][string]$FixturePayload,
     [Parameter(Mandatory)][string]$Workspace,
-    [string]$Template
+    [string]$Template,
+    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '3.0.1'
 )
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
@@ -34,7 +35,7 @@ $isolated = $source.Replace('Software\MyTel', ('Software\' + $testId)).
 $script = Join-Path $root 'fixture.nsi'
 $exe = Join-Path $root 'MyTel-OwnershipFixture.exe'
 [IO.File]::WriteAllText($script, $isolated, [Text.UTF8Encoding]::new($true))
-$nsisArgs = @('/V2', '/WX', '/DMYTEL_VERSION=3.0.1', "/DMYTEL_OUTPUT=$exe",
+$nsisArgs = @('/V2', '/WX', "/DMYTEL_VERSION=$Version", "/DMYTEL_OUTPUT=$exe",
     "/DMYTEL_ICON=$repo\Linphone\data\icon.ico", "/DMYTEL_HEADER=$repo\cmake\install\windows\mytel-header.bmp",
     "/DMYTEL_WELCOME=$repo\cmake\install\windows\mytel-welcome.bmp", "/DMYTEL_LICENSE=$repo\LICENSE.txt",
     "/DMYTEL_FILES=$files", "/DMYTEL_UNINSTALL_FILES=$uninstallFiles", '/DMYTEL_SIZE_KB=1000', $script)
@@ -73,6 +74,9 @@ $marker = Join-Path $target '.mytel-install.ini'
 $installed = Join-Path $target 'mytellphone.exe'
 Check ($code -eq 0 -and (Test-Path -LiteralPath $installed) -and (Test-Path -LiteralPath $marker)) 'fresh-dedicated-directory-installed-with-ownership-marker'
 if (Test-Path -LiteralPath $marker) {
+    $aboutKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\' + $testId
+    $aboutUrl = (Get-ItemProperty -LiteralPath $aboutKey).URLInfoAbout
+    Check ($aboutUrl -eq 'https://github.com/mytel-one/MytelPhone') 'installed-about-links-to-canonical-project'
     $markerBytes = [IO.File]::ReadAllBytes($marker)
     $unknown = Join-Path $target 'keep-unknown.txt'
     [IO.File]::WriteAllText($unknown, 'UNKNOWN FILE; MUST SURVIVE')
