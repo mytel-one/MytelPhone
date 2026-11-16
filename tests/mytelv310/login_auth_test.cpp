@@ -27,10 +27,10 @@ struct IsolatedCore {
 		core = factory->createCore((directory.path() + "/core.linphonerc").toStdString(), "", nullptr);
 		core->setNetworkReachable(false);
 		auto transports = factory->createTransports();
-		transports->setUdpPort(-1);
-		transports->setTcpPort(-1);
-		transports->setTlsPort(-1);
-		transports->setDtlsPort(-1);
+		transports->setUdpPort(0);
+		transports->setTcpPort(0);
+		transports->setTlsPort(0);
+		transports->setDtlsPort(0);
 		core->setTransports(transports);
 		check(core->getAccountList().empty(), "isolated Core has no account");
 		check(core->start() == 0, "isolated Core starts with all SIP transports disabled");

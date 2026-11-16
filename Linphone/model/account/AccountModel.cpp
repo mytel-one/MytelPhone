@@ -130,7 +130,7 @@ void AccountModel::setPictureUri(QString uri) {
 	// Hack because Account doesn't provide callbacks on updated data
 	// emit pictureUriChanged(uri);
 	auto core = CoreModel::getInstance()->getCore();
-	emit CoreModel::getInstance()->defaultAccountChanged(core, core->getDefaultAccount());
+	emit CoreModel::getInstance() -> defaultAccountChanged(core, core->getDefaultAccount());
 }
 
 void AccountModel::onDefaultAccountChanged() {
@@ -144,7 +144,8 @@ void AccountModel::setDefault() {
 	core->setDefaultAccount(mMonitor);
 }
 
-void AccountModel::removeAccount() {
+void AccountModel::removeAccount(bool withData) {
+	Q_UNUSED(withData)
 	auto core = CoreModel::getInstance()->getCore();
 	auto params = mMonitor ? mMonitor->getParams() : nullptr;
 	lInfo() << log()
@@ -188,7 +189,7 @@ void AccountModel::setDisplayName(QString displayName) {
 	// Hack because Account doesn't provide callbacks on updated data
 	// emit displayNameChanged(displayName);
 	auto core = CoreModel::getInstance()->getCore();
-	emit CoreModel::getInstance()->defaultAccountChanged(core, core->getDefaultAccount());
+	emit CoreModel::getInstance() -> defaultAccountChanged(core, core->getDefaultAccount());
 }
 
 void AccountModel::setDialPlan(int index) {

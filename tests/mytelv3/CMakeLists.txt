@@ -202,4 +202,17 @@ if(MYTEL_TEST_SDK_ROOT)
     target_include_directories(mytel-login-auth-test PRIVATE "${MYTEL_SOURCE_ROOT}/Linphone"
         "${MYTEL_TEST_SDK_ROOT}/include")
     add_test(NAME mytel-login-auth-test COMMAND mytel-login-auth-test)
+    find_package(Qt6 REQUIRED COMPONENTS Network)
+    extract_production_method("Linphone/model/account/AccountModel.cpp"
+        "void AccountModel::removeAccount(" "pending_model_remove.inc")
+    extract_production_method("Linphone/model/account/AccountManager.cpp"
+        "AccountManager::~AccountManager() {" "pending_manager_destructor.inc")
+    extract_production_method("Linphone/model/account/AccountManager.cpp"
+        "void AccountManager::cancelLogin() {" "pending_manager_cancel.inc")
+    add_executable(mytel-pending-account-test "${MYTEL_SOURCE_ROOT}/tests/mytelv310/pending_account_test.cpp")
+    target_link_libraries(mytel-pending-account-test PRIVATE Qt6::Core Qt6::Gui Qt6::Network
+        "${MYTEL_TEST_SDK_ROOT}/lib/liblinphone++.lib" "${MYTEL_TEST_SDK_ROOT}/lib/liblinphone.lib")
+    target_include_directories(mytel-pending-account-test PRIVATE "${MYTEL_SOURCE_ROOT}/Linphone"
+        "${MYTEL_TEST_SDK_ROOT}/include" "${CMAKE_CURRENT_BINARY_DIR}")
+    add_test(NAME mytel-pending-account-test COMMAND mytel-pending-account-test)
 endif()

@@ -44,7 +44,7 @@ public:
 
 	void setPictureUri(QString uri);
 	void setDefault();
-	void removeAccount();
+	void removeAccount(bool withData = true);
 	std::shared_ptr<linphone::Account> getAccount() const;
 	void resetMissedCallsCount();
 	void refreshUnreadNotifications();
