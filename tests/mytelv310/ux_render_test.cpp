@@ -237,6 +237,15 @@ int main(int argc, char **argv) {
 			check(item("sipUsernameInput")->isEnabled(), prefix + " cancellation restores inputs");
 			click(item("sipConnectionOptionsButton"));
 			check(item("sipAdvancedOptions")->isVisible(), prefix + " options open by actual button");
+			QQuickItem *selectedTransportText = nullptr;
+			for (auto child : item("sipTransportInput")->findChildren<QQuickItem *>()) {
+				if (child->property("text").toString() == "Automatic (recommended)" &&
+				    child->property("lineCount").isValid())
+					selectedTransportText = child;
+			}
+			check(selectedTransportText && selectedTransportText->property("lineCount").toInt() == 1 &&
+			          !selectedTransportText->property("truncated").toBool(),
+			      prefix + " recommended transport label fits one readable line");
 			const bool overflow = scroll->property("contentHeight").toDouble() > scroll->height();
 			check(size.height() < 800 ? overflow : !overflow, prefix + " optional fields use available height");
 			capture(prefix + "-advanced");

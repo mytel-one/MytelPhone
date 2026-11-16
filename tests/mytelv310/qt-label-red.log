@@ -1,0 +1,105 @@
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
+-- Configuring done (0.8s)
+-- Generating done (0.6s)
+-- Build files have been written to: C:/Users/HajSaman/AppData/Local/Temp/mytel-v3-theme-tests
+[1/4] Automatic MOC for target mytel-ux-v310-test
+[2/3] Building CXX object CMakeFiles\mytel-ux-v310-test.dir\C_\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\ux_render_test.cpp.obj
+[3/3] Linking CXX executable mytel-ux-v310-test.exe
+light-1020x700 primary action fits PASS
+light-1020x700 optional fields collapsed PASS
+light-1020x700 new account defaults to Automatic PASS
+light-1020x700 input placeholder contrast PASS
+light-1020x700-setup rendered PASS
+light-1020x700 keyboard reaches password PASS
+light-1020x700 keyboard reaches server PASS
+light-1020x700 inline error shown PASS
+light-1020x700 missing field focused PASS
+light-1020x700-validation rendered PASS
+light-1020x700 ordinary PBX5060 passes UDP to login backend PASS
+light-1020x700 busy state PASS
+light-1020x700-connecting rendered PASS
+light-1020x700 cancellation restores inputs PASS
+light-1020x700 options open by actual button PASS
+light-1020x700 recommended transport label fits one readable line FAIL
+light-1020x700 optional fields use available height PASS
+light-1020x700-advanced rendered PASS
+light-1020x700 last optional input reachable PASS
+light-1020x700-advanced-bottom rendered PASS
+light-1020x700 secure URI cannot downgrade through explicit UDP PASS
+light-1020x700 explicit TCP survives secure-port inference PASS
+light-1020x700 SDK success state ends connecting controls PASS
+dark-1020x700 primary action fits PASS
+dark-1020x700 optional fields collapsed PASS
+dark-1020x700 new account defaults to Automatic PASS
+dark-1020x700 input placeholder contrast PASS
+dark-1020x700-setup rendered PASS
+dark-1020x700 keyboard reaches password PASS
+dark-1020x700 keyboard reaches server PASS
+dark-1020x700 inline error shown PASS
+dark-1020x700 missing field focused PASS
+dark-1020x700-validation rendered PASS
+dark-1020x700 ordinary PBX5060 passes UDP to login backend PASS
+dark-1020x700 busy state PASS
+dark-1020x700-connecting rendered PASS
+dark-1020x700 cancellation restores inputs PASS
+dark-1020x700 options open by actual button PASS
+dark-1020x700 recommended transport label fits one readable line FAIL
+dark-1020x700 optional fields use available height PASS
+dark-1020x700-advanced rendered PASS
+dark-1020x700 last optional input reachable PASS
+dark-1020x700-advanced-bottom rendered PASS
+dark-1020x700 secure URI cannot downgrade through explicit UDP PASS
+dark-1020x700 explicit TCP survives secure-port inference PASS
+dark-1020x700 SDK success state ends connecting controls PASS
+light-1512x1007 primary action fits PASS
+light-1512x1007 optional fields collapsed PASS
+light-1512x1007 new account defaults to Automatic PASS
+light-1512x1007 input placeholder contrast PASS
+light-1512x1007-setup rendered PASS
+light-1512x1007 keyboard reaches password PASS
+light-1512x1007 keyboard reaches server PASS
+light-1512x1007 inline error shown PASS
+light-1512x1007 missing field focused PASS
+light-1512x1007-validation rendered PASS
+light-1512x1007 ordinary PBX5060 passes UDP to login backend PASS
+light-1512x1007 busy state PASS
+light-1512x1007-connecting rendered PASS
+light-1512x1007 cancellation restores inputs PASS
+light-1512x1007 options open by actual button PASS
+light-1512x1007 recommended transport label fits one readable line FAIL
+light-1512x1007 optional fields use available height PASS
+light-1512x1007-advanced rendered PASS
+light-1512x1007 last optional input reachable PASS
+light-1512x1007-advanced-bottom rendered PASS
+light-1512x1007 secure URI cannot downgrade through explicit UDP PASS
+light-1512x1007 explicit TCP survives secure-port inference PASS
+light-1512x1007 SDK success state ends connecting controls PASS
+dark-1512x1007 primary action fits PASS
+dark-1512x1007 optional fields collapsed PASS
+dark-1512x1007 new account defaults to Automatic PASS
+dark-1512x1007 input placeholder contrast PASS
+dark-1512x1007-setup rendered PASS
+dark-1512x1007 keyboard reaches password PASS
+dark-1512x1007 keyboard reaches server PASS
+dark-1512x1007 inline error shown PASS
+dark-1512x1007 missing field focused PASS
+dark-1512x1007-validation rendered PASS
+dark-1512x1007 ordinary PBX5060 passes UDP to login backend PASS
+dark-1512x1007 busy state PASS
+dark-1512x1007-connecting rendered PASS
+dark-1512x1007 cancellation restores inputs PASS
+dark-1512x1007 options open by actual button PASS
+dark-1512x1007 recommended transport label fits one readable line FAIL
+dark-1512x1007 optional fields use available height PASS
+dark-1512x1007-advanced rendered PASS
+dark-1512x1007 last optional input reachable PASS
+dark-1512x1007-advanced-bottom rendered PASS
+dark-1512x1007 secure URI cannot downgrade through explicit UDP PASS
+dark-1512x1007 explicit TCP survives secure-port inference PASS
+dark-1512x1007 SDK success state ends connecting controls PASS
+production setup warning-free PASS
+light production settings menu rendered PASS
+dark production settings menu rendered PASS
+production settings menu warning-free PASS
+92/96 production UX checks passed.
