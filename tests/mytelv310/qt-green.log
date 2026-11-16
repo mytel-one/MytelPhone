@@ -1,7 +1,7 @@
 -- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR)
 -- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR)
--- Configuring done (0.9s)
--- Generating done (0.6s)
+-- Configuring done (1.1s)
+-- Generating done (0.7s)
 -- Build files have been written to: C:/Users/HajSaman/AppData/Local/Temp/mytel-v3-theme-tests
 ninja: no work to do.
 light-1020x700 primary action fits PASS
@@ -14,7 +14,7 @@ light-1020x700 keyboard reaches server PASS
 light-1020x700 inline error shown PASS
 light-1020x700 missing field focused PASS
 light-1020x700-validation rendered PASS
-light-1020x700 ordinary PBX5060 passes UDP to login backend PASS
+light-1020x700 ordinary PBX5060 passes UDP and Automatic mode to login backend PASS
 light-1020x700 busy state PASS
 light-1020x700-connecting rendered PASS
 light-1020x700 cancellation restores inputs PASS
@@ -37,7 +37,7 @@ dark-1020x700 keyboard reaches server PASS
 dark-1020x700 inline error shown PASS
 dark-1020x700 missing field focused PASS
 dark-1020x700-validation rendered PASS
-dark-1020x700 ordinary PBX5060 passes UDP to login backend PASS
+dark-1020x700 ordinary PBX5060 passes UDP and Automatic mode to login backend PASS
 dark-1020x700 busy state PASS
 dark-1020x700-connecting rendered PASS
 dark-1020x700 cancellation restores inputs PASS
@@ -60,7 +60,7 @@ light-1512x1007 keyboard reaches server PASS
 light-1512x1007 inline error shown PASS
 light-1512x1007 missing field focused PASS
 light-1512x1007-validation rendered PASS
-light-1512x1007 ordinary PBX5060 passes UDP to login backend PASS
+light-1512x1007 ordinary PBX5060 passes UDP and Automatic mode to login backend PASS
 light-1512x1007 busy state PASS
 light-1512x1007-connecting rendered PASS
 light-1512x1007 cancellation restores inputs PASS
@@ -83,7 +83,7 @@ dark-1512x1007 keyboard reaches server PASS
 dark-1512x1007 inline error shown PASS
 dark-1512x1007 missing field focused PASS
 dark-1512x1007-validation rendered PASS
-dark-1512x1007 ordinary PBX5060 passes UDP to login backend PASS
+dark-1512x1007 ordinary PBX5060 passes UDP and Automatic mode to login backend PASS
 dark-1512x1007 busy state PASS
 dark-1512x1007-connecting rendered PASS
 dark-1512x1007 cancellation restores inputs PASS

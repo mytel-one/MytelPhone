@@ -34,14 +34,16 @@ It creates Address objects only: no Core, account registration or network calls.
 
 | Check | Result |
 | --- | --- |
-| New setup validation, settings navigation, transport and ComboBox model guards | 44/44 |
+| New setup validation, settings navigation, transport and ComboBox model guards | 45/45 |
 | Existing Node regressions | 225/225 |
 | Production QML setup/control render and interaction seam | 96/96 |
-| Real installed Linphone SDK Address parsing and identity construction | 110/110 |
+| Real installed Linphone SDK Address parsing, route policy and identity construction | 188/188 |
 | Changed QML parsed by Qt qmlformat | 8 files |
 
 RED checkpoints retain the observed failures before the fixes: `red.log`,
-`transport-red.log`, `combo-red.log`, `address-red.log` and `qt-label-red.log`.
+`transport-red.log`, `combo-red.log`, `address-red.log`, `qt-label-red.log`,
+`routes-red.log`, `route-mode-red.log`, `qt-route-mode-red.log` and
+`route-parameter-case-red.log`.
 The corresponding GREEN outputs are included alongside the tests. Test counts are
 assertions/scenarios, not whole-application coverage measurements.
 
@@ -49,6 +51,12 @@ Automatic transport applies only to new setup: SIPS always selects TLS; otherwis
 an explicit UDP/TCP/TLS choice wins, followed by a SIP URI transport parameter,
 then TLS for an explicit port 5061 and UDP for an ordinary server. Bracketed IPv6
 ports are supported without treating an unbracketed IPv6 suffix as a port.
+Automatic is passed separately to the native boundary so each registrar/proxy
+resolves its own URI transport and port. An explicit UI choice wins for non-SIPS
+addresses. Any main server or advanced route using SIPS forces TLS on the complete
+setup while retaining each URI's original scheme. Case-variant transport parameter
+names are canonicalized using their SDK-parsed values before choosing the transport.
+The appended Automatic argument defaults to false for existing explicit API callers.
 
 The native AccountManager boundary uses the SDK parser for SIP/SIPS, bare host/port
 and bracketed IPv6. Identity host and port come from the parsed Address. SIPS stays

@@ -31,9 +31,20 @@ parseServer(const QString &server, linphone::TransportType transport, bool autom
 	if (!address || !address->isSip() || address->getDomain().empty() || address->getPort() < 0 ||
 	    address->getPort() > 65535)
 		return nullptr;
+	// SDK URI parameter lookup is case-sensitive. Read the real parsed key, then write one canonical key.
+	QString parameter;
+	bool foundTransport = false;
+	const auto fields = uri.section('?', 0, 0).split(';');
+	for (int i = 1; i < fields.size(); ++i) {
+		const auto name = fields[i].section('=', 0, 0);
+		if (name.compare(QStringLiteral("transport"), Qt::CaseInsensitive) || !address->hasUriParam(name.toStdString()))
+			continue;
+		if (!foundTransport) parameter = QString::fromStdString(address->getUriParam(name.toStdString())).toLower();
+		foundTransport = true;
+		address->removeUriParam(name.toStdString());
+	}
 	if (secure || requireTls) transport = linphone::TransportType::Tls;
 	else if (automaticTransport) {
-		const auto parameter = QString::fromStdString(address->getUriParam("transport")).toLower();
 		if (parameter == QStringLiteral("tls")) transport = linphone::TransportType::Tls;
 		else if (parameter == QStringLiteral("tcp")) transport = linphone::TransportType::Tcp;
 		else if (parameter == QStringLiteral("udp")) transport = linphone::TransportType::Udp;

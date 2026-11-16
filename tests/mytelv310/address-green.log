@@ -3,10 +3,9 @@
 -- Configuring done (0.8s)
 -- Generating done (0.6s)
 -- Build files have been written to: C:/Users/HajSaman/AppData/Local/Temp/mytel-v3-theme-tests
-[1/4] Automatic MOC for target mytel-setup-address-test
-[2/3] Building CXX object CMakeFiles\mytel-setup-address-test.dir\C_\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\setup_address_test.cpp.obj
-[3/3] Linking CXX executable mytel-setup-address-test.exe
-2026-11-16 19:36:25:283 belle-sip-warning- There is no object pool created in thread [45328]. Use belle_sip_object_pool_push() to create one. Unowned objects not unref'd will be leaked.
+[1/2] Building CXX object CMakeFiles\mytel-setup-address-test.dir\C_\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\setup_address_test.cpp.obj
+[2/2] Linking CXX executable mytel-setup-address-test.exe
+2026-11-16 19:57:46:592 belle-sip-warning- There is no object pool created in thread [46756]. Use belle_sip_object_pool_push() to create one. Unowned objects not unref'd will be leaked.
 
 PASS 192.168.8.171:5060
 PASS server host is parsed by the SDK
@@ -34,6 +33,8 @@ PASS server secure scheme is preserved
 PASS identity uses the parsed host
 PASS identity uses the parsed port
 PASS identity secure scheme is preserved
+2026-11-16 19:57:46:598 belle-sip-error- Cannot parse a sip/sips uri as a generic uri
+
 PASS identity username is unchanged
 PASS sips:pbx.example.invalid:5061
 PASS server host is parsed by the SDK
@@ -51,6 +52,8 @@ PASS server transport follows selection or secure scheme
 PASS server secure scheme is preserved
 PASS identity uses the parsed host
 PASS identity uses the parsed port
+2026-11-16 19:57:46:598 belle-sip-error- Cannot parse a sip/sips uri as a generic uri
+
 PASS identity secure scheme is preserved
 PASS identity username is unchanged
 PASS [2001:db8::1]:5060
@@ -102,17 +105,15 @@ PASS
 PASS invalid input leaves the cloned identity unchanged
 PASS
 PASS invalid input leaves the cloned identity unchanged
-2026-11-16 19:36:25:285 liblinphone-warning- Cannot create Address, bad uri [sip:]
+2026-11-16 19:57:46:598 liblinphone-warning- Cannot create Address, bad uri [sip:]
 
 PASS sip:
 PASS invalid input leaves the cloned identity unchanged
-2026-11-16 19:36:25:285 liblinphone-warning- Cannot create Address, bad uri [sips:]
+2026-11-16 19:57:46:598 liblinphone-warning- Cannot create Address, bad uri [sips:]
 
 PASS sips:
 PASS invalid input leaves the cloned identity unchanged
-2026-11-16 19:36:25:285 liblinphone-warning- Cannot create Address, bad uri [sip::5060]
-
-2026-11-16 19:36:25:285 belle-sip-error- Cannot parse a sip/sips uri as a generic uri
+2026-11-16 19:57:46:598 liblinphone-warning- Cannot create Address, bad uri [sip::5060]
 
 PASS sip::5060
 PASS invalid input leaves the cloned identity unchanged
@@ -122,17 +123,97 @@ PASS https://pbx.example.invalid
 PASS invalid input leaves the cloned identity unchanged
 PASS tel:100
 PASS invalid input leaves the cloned identity unchanged
-2026-11-16 19:36:25:286 liblinphone-warning- Cannot create Address, bad uri [sip:user@]
+2026-11-16 19:57:46:598 liblinphone-warning- Cannot create Address, bad uri [sip:user@]
 
 PASS sip:user@
 PASS invalid input leaves the cloned identity unchanged
-2026-11-16 19:36:25:286 belle-sip-warning- [bellesip-sip-parser] Parsing ended prematuraly at pos 23
+2026-11-16 19:57:46:598 belle-sip-warning- [bellesip-sip-parser] Parsing ended prematuraly at pos 23
 
-2026-11-16 19:36:25:286 liblinphone-warning- Cannot create Address, bad uri [sip:pbx.example.invalid:invalid]
-
-2026-11-16 19:36:25:286 belle-sip-error- Cannot parse a sip/sips uri as a generic uri
+2026-11-16 19:57:46:598 liblinphone-warning- Cannot create Address, bad uri [sip:pbx.example.invalid:invalid]
 
 PASS sip:pbx.example.invalid:invalid
 PASS invalid input leaves the cloned identity unchanged
-110/110 SDK-backed setup address checks passed
-2026-11-16 19:36:25:344 ortp-warning- ortp_exit() called without prior call to ortp_init(), ignored.
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS route set parses with the SDK
+PASS main transport follows setup policy
+PASS registrar follows its URI or explicit setup policy
+PASS outbound follows its URI or explicit setup policy
+PASS main scheme is preserved
+PASS registrar scheme is preserved
+PASS outbound scheme is preserved
+PASS invalid advanced URI is rejected before account creation
+PASS invalid route leaves the identity unchanged
+PASS invalid advanced URI is rejected before account creation
+PASS invalid route leaves the identity unchanged
+2026-11-16 19:57:46:599 liblinphone-warning- Cannot create Address, bad uri [sip:]
+
+PASS invalid advanced URI is rejected before account creation
+PASS invalid route leaves the identity unchanged
+2026-11-16 19:57:46:599 liblinphone-warning- Cannot create Address, bad uri [sips:]
+
+PASS invalid advanced URI is rejected before account creation
+PASS invalid route leaves the identity unchanged
+188/188 SDK-backed setup address checks passed
+2026-11-16 19:57:46:652 ortp-warning- ortp_exit() called without prior call to ortp_init(), ignored.
