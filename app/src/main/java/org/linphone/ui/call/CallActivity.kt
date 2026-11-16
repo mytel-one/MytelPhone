@@ -53,7 +53,6 @@ import kotlinx.coroutines.launch
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
-import org.linphone.compatibility.Api28Compatibility
 import org.linphone.compatibility.Compatibility
 import org.linphone.core.tools.Log
 import org.linphone.databinding.CallActivityBinding
@@ -509,7 +508,7 @@ class CallActivity : GenericActivity() {
     fun goToMainActivity() {
         if (isPipSupported && callViewModel.isVideoEnabled.value == true) {
             Log.i("$TAG User is going back to MainActivity, try entering PiP mode")
-            val pipMode = Api28Compatibility.enterPipMode(this)
+            val pipMode = Compatibility.enterPipMode(this)
             if (!pipMode) {
                 Log.e("$TAG Failed to enter PiP mode, finishing Activity")
                 callViewModel.pipMode.value = false

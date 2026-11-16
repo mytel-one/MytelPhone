@@ -50,7 +50,9 @@ class TelecomManager
             arrayListOf("dm3q", "dm1q", "dm2q", "r11s", "r11q", "SC-52D", "SCG19", "SC-51D", "SCG24", "SCG20")
     }
 
-    private val callsManager = CallsManager(context)
+    // AndroidX CallsManager requires Android 8. Keep it completely uncreated
+    // on Android 7, where the SIP SDK retains its own audio-focus handling.
+    private var callsManager: CallsManager? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val sessions = MyTelTelecomSessions<Call>()
     // Android permits only one addCall setup until its CallControlScope is ready.
@@ -75,9 +77,11 @@ class TelecomManager
 
     init {
         Log.i("$TAG Feature is [${if (hasTelecomFeature) "available" else "not available"}]")
-        if (hasTelecomFeature) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hasTelecomFeature) {
             try {
-                callsManager.registerAppWithTelecom(CallsManager.CAPABILITY_SUPPORTS_VIDEO_CALLING)
+                val manager = CallsManager(context)
+                manager.registerAppWithTelecom(CallsManager.CAPABILITY_SUPPORTS_VIDEO_CALLING)
+                callsManager = manager
                 Log.i("$TAG App has been registered with Telecom")
             } catch (e: Exception) {
                 Log.e("$TAG Can't init TelecomManager: $e")
@@ -87,6 +91,8 @@ class TelecomManager
 
     @WorkerThread
     fun onCallCreated(call: Call) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val manager = callsManager ?: return
         val session = sessions.begin(call)
         if (session == null) {
             Log.i("$TAG SIP call already owns a pending or active Telecom session")
@@ -124,8 +130,8 @@ class TelecomManager
             try {
                 setupMutex.lock(session)
                 // An early SIP failure can finish the call while Android setup is queued.
-                if (!sessions.isLive(session)) return@launch
-                callsManager.addCall(
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !sessions.isLive(session)) return@launch
+                manager.addCall(
                     attributes,
                     { // onAnswer
                         coreContext.postOnCoreThread {
@@ -179,7 +185,7 @@ class TelecomManager
 
     @WorkerThread
     fun onCoreStarted(core: Core) {
-        if (hasTelecomFeature) {
+        if (callsManager != null) {
             core.addListener(coreListener)
         } else {
             Log.w("$TAG Telecom unavailable; enabling SDK audio focus requests")
@@ -189,7 +195,7 @@ class TelecomManager
 
     @WorkerThread
     fun onCoreStopped(core: Core) {
-        if (hasTelecomFeature) {
+        if (callsManager != null) {
             core.removeListener(coreListener)
             sessions.endAll()
             controls.values.toList().forEach { it.onCoreStopped() }

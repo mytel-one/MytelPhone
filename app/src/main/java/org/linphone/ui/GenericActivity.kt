@@ -31,6 +31,7 @@ import android.provider.Settings
 import android.provider.DocumentsContract
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.webkit.MimeTypeMap
 import androidx.annotation.DrawableRes
 import androidx.annotation.MainThread
 import androidx.activity.result.contract.ActivityResultContracts
@@ -175,8 +176,7 @@ open class GenericActivity : AppCompatActivity() {
 
     /** Save a user-selected copy without requesting broad storage permissions. */
     fun exportFileToDocuments(filePath: String) {
-        val sourceUri = FileUtils.getProperFilePath(filePath).toUri()
-        val source = if (sourceUri.scheme == "file") sourceUri.path?.let { File(it) } else null
+        val source = MyTelDocumentExport.sourceFilePath(filePath)?.let { File(it) }
         if (source == null || !source.isFile || !source.canRead()) {
             Log.e("$TAG Document export source is not a readable file")
             showDocumentExportError()
@@ -187,10 +187,13 @@ open class GenericActivity : AppCompatActivity() {
             return
         }
         val name = MyTelDocumentExport.safeFileName(source.name)
-        val mime = FileUtils.getMimeTypeFromExtension(FileUtils.getExtensionFromFileName(name))
+        val extension = FileUtils.getExtensionFromFileName(name)
+        val mime = MyTelDocumentExport.exportMimeType(
+            MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+        )
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
-            type = mime.ifBlank { "application/octet-stream" }
+            type = mime
             putExtra(Intent.EXTRA_TITLE, name)
         }
         try {
