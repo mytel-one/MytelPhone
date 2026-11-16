@@ -49,7 +49,8 @@ public:
 	                       LinphoneEnums::TransportType transportType = LinphoneEnums::TransportType::Tls,
 	                       QString registrarUri = QString(),
 	                       QString outboundProxyAddress = QString(),
-	                       QString connectionId = QString());
+	                       QString connectionId = QString(),
+	                       bool automaticTransport = false);
 	Q_INVOKABLE bool cancelLogin();
 
 	linphone::RegistrationState getRegistrationState() const;

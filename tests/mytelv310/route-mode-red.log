@@ -1,0 +1,77 @@
+✔ Missing extension focuses its input and prevents registration (3.8646ms)
+✔ Missing password focuses its input and prevents registration (0.8128ms)
+✔ Missing server focuses its input and prevents registration (1.0253ms)
+✖ Valid credentials keep password bytes and configured transport untouched (2.4857ms)
+✖ Automatic setup carries its mode to the SDK boundary for each advanced route (1.5802ms)
+✔ Connecting cannot submit a duplicate registration (0.6624ms)
+✔ Correcting one field clears only its own inline validation (0.5923ms)
+✔ Initial settings selection skips unavailable features (0.7962ms)
+✔ An available requested settings section remains selected (0.5827ms)
+✔ No settings family never pushes an undefined component (1.5737ms)
+✔ Opening an unavailable section preserves current settings content (0.7286ms)
+✔ Valid settings navigation loads the requested section and synchronizes keyboard selection (0.6426ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 10
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 134.8638
+
+✖ failing tests:
+
+test at tests\mytelv310\onboarding-settings.test.cjs:54:1
+✖ Valid credentials keep password bytes and configured transport untouched (2.4857ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+
+    [
+      [
+        '301',
+        ' secret ',
+        'Work',
+  ...
+        '',
+  -     false
+      ]
+    ]
+
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:57:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ [ '301', ' secret ', 'Work', 'pbx.example.invalid:5060', 7, '', '', '' ] ],
+    expected: [ [ '301', ' secret ', 'Work', 'pbx.example.invalid:5060', 7, '', '', '', false ] ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\mytelv310\onboarding-settings.test.cjs:60:1
+✖ Automatic setup carries its mode to the SDK boundary for each advanced route (1.5802ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - true
+
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:64:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

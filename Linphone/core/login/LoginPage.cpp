@@ -81,7 +81,8 @@ void LoginPage::login(const QString &username,
                       LinphoneEnums::TransportType transportType,
                       QString registrarUri,
                       QString outboundProxyAddress,
-                      QString connectionId) {
+                      QString connectionId,
+                      bool automaticTransport) {
 	if (mRegistrationState == linphone::RegistrationState::Progress ||
 	    mRegistrationState == linphone::RegistrationState::Refreshing)
 		return;
@@ -95,7 +96,7 @@ void LoginPage::login(const QString &username,
 	const auto token = mAttemptState;
 	const QPointer<LoginPage> page(this);
 	App::postModelAsync([page, token, attempt, username, password, displayName, domain, transportType, registrarUri,
-	                     outboundProxyAddress, connectionId]() {
+	                     outboundProxyAddress, connectionId, automaticTransport]() {
 		if (!page || token->isCancelled()) return;
 		QPointer<AccountManager> manager = new AccountManager();
 		QObject::connect(page.data(), &QObject::destroyed, manager.data(), [manager, token]() {
@@ -146,7 +147,7 @@ void LoginPage::login(const QString &username,
 		    });
 		QString error;
 		if (!manager->login(username, password, displayName, domain, LinphoneEnums::toLinphone(transportType), &error,
-		                    registrarUri, outboundProxyAddress, connectionId, token)) {
+		                    registrarUri, outboundProxyAddress, connectionId, token, automaticTransport)) {
 			manager->cancelLogin();
 			manager->deleteLater();
 			if (page)

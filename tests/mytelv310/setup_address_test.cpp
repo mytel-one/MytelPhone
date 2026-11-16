@@ -31,6 +31,35 @@ static void valid(const char *input,
 	check(identity->getUsername() == "100", "identity username is unchanged");
 }
 
+static void routes(const char *server,
+                   const char *registrar,
+                   const char *outbound,
+                   linphone::TransportType selected,
+                   bool automatic,
+                   linphone::TransportType expectedServer,
+                   linphone::TransportType expectedRegistrar,
+                   linphone::TransportType expectedOutbound) {
+	auto identity = linphone::Factory::get()->createAddress("sip:100@initial.invalid");
+	auto addresses = SipSetupAddress::prepare(QString::fromUtf8(server), QString::fromUtf8(registrar),
+	                                          QString::fromUtf8(outbound), selected, automatic, identity);
+	check(bool(addresses), "route set parses with the SDK");
+	if (!addresses) return;
+	check(addresses->server->getTransport() == expectedServer, "main transport follows setup policy");
+	if (*registrar)
+		check(addresses->registrar->getTransport() == expectedRegistrar,
+		      "registrar follows its URI or explicit setup policy");
+	if (*outbound)
+		check(addresses->outbound->getTransport() == expectedOutbound,
+		      "outbound follows its URI or explicit setup policy");
+	check(addresses->server->getSecure() == QString::fromUtf8(server).startsWith("sips:"), "main scheme is preserved");
+	if (*registrar)
+		check(addresses->registrar->getSecure() == QString::fromUtf8(registrar).startsWith("sips:"),
+		      "registrar scheme is preserved");
+	if (*outbound)
+		check(addresses->outbound->getSecure() == QString::fromUtf8(outbound).startsWith("sips:"),
+		      "outbound scheme is preserved");
+}
+
 int main(int argc, char **argv) {
 	QCoreApplication app(argc, argv);
 	valid("192.168.8.171:5060", linphone::TransportType::Udp, "192.168.8.171", 5060, linphone::TransportType::Udp,
@@ -60,6 +89,32 @@ int main(int argc, char **argv) {
 		check(!server, input);
 		check(identity->asStringUriOnly() == "sip:100@initial.invalid",
 		      "invalid input leaves the cloned identity unchanged");
+	}
+
+	using T = linphone::TransportType;
+	routes("pbx.example.invalid:5060", "sip:registrar.example.invalid;transport=tcp", "sip:proxy.example.invalid:5061",
+	       T::Udp, true, T::Udp, T::Tcp, T::Tls);
+	routes("pbx.example.invalid:5061", "sip:registrar.example.invalid:5060", "sip:proxy.example.invalid;transport=tcp",
+	       T::Tls, true, T::Tls, T::Udp, T::Tcp);
+	routes("pbx.example.invalid:5060", "sip:registrar.example.invalid;transport=tcp",
+	       "sip:proxy.example.invalid;transport=udp", T::Tls, false, T::Tls, T::Tls, T::Tls);
+	routes("pbx.example.invalid:5061", "sip:registrar.example.invalid;transport=tls", "sip:proxy.example.invalid:5061",
+	       T::Udp, false, T::Udp, T::Udp, T::Udp);
+	routes("pbx.example.invalid:5060", "sip:registrar.example.invalid;transport=udp",
+	       "sip:proxy.example.invalid;transport=tls", T::Tcp, false, T::Tcp, T::Tcp, T::Tcp);
+	routes("sips:pbx.example.invalid", "sip:registrar.example.invalid;transport=udp",
+	       "sip:proxy.example.invalid;transport=tcp", T::Udp, true, T::Tls, T::Tls, T::Tls);
+	routes("pbx.example.invalid:5060", "sips:registrar.example.invalid;transport=udp",
+	       "sip:proxy.example.invalid;transport=tcp", T::Udp, false, T::Tls, T::Tls, T::Tls);
+	routes("pbx.example.invalid:5060", "sip:registrar.example.invalid;transport=udp",
+	       "sips:proxy.example.invalid;transport=tcp", T::Tcp, false, T::Tls, T::Tls, T::Tls);
+	routes("sip:[2001:db8::1]:5061", "sip:[2001:db8::2]:5060;transport=tcp", "sip:[2001:db8::3]:5061", T::Tls, true,
+	       T::Tls, T::Tcp, T::Tls);
+	for (const char *invalidRoute : {"https://proxy.example.invalid", "tel:100", "sip:", "sips:"}) {
+		auto identity = linphone::Factory::get()->createAddress("sip:100@initial.invalid");
+		auto addresses = SipSetupAddress::prepare("pbx.example.invalid", invalidRoute, "", T::Udp, true, identity);
+		check(!addresses, "invalid advanced URI is rejected before account creation");
+		check(identity->asStringUriOnly() == "sip:100@initial.invalid", "invalid route leaves the identity unchanged");
 	}
 	std::cout << (checks - failures) << '/' << checks << " SDK-backed setup address checks passed\n";
 	return failures ? 1 : 0;

@@ -4,6 +4,7 @@
 #include <QRegularExpression>
 #include <QString>
 #include <linphone++/linphone.hh>
+#include <optional>
 
 namespace SipSetupAddress {
 // Keep first-time setup address construction separate from stored account settings.
@@ -34,6 +35,34 @@ parse(const QString &server, linphone::TransportType transport, const std::share
 	if (identity->setDomain(address->getDomain()) || identity->setPort(address->getPort())) return nullptr;
 	identity->setSecure(secure);
 	return address;
+}
+
+struct Addresses {
+	std::shared_ptr<linphone::Address> server;
+	std::shared_ptr<linphone::Address> registrar;
+	std::shared_ptr<linphone::Address> outbound;
+};
+
+inline std::optional<Addresses> prepare(const QString &server,
+                                        const QString &registrar,
+                                        const QString &outbound,
+                                        linphone::TransportType transport,
+                                        bool automaticTransport,
+                                        const std::shared_ptr<linphone::Address> &identity) {
+	Q_UNUSED(automaticTransport)
+	Addresses addresses;
+	addresses.server = parse(server, transport, identity);
+	if (!addresses.server) return std::nullopt;
+	auto factory = linphone::Factory::get();
+	if (!registrar.isEmpty()) {
+		addresses.registrar = factory->createAddress(registrar.toStdString());
+		if (!addresses.registrar) return std::nullopt;
+	}
+	if (!outbound.isEmpty()) {
+		addresses.outbound = factory->createAddress(outbound.toStdString());
+		if (!addresses.outbound) return std::nullopt;
+	}
+	return addresses;
 }
 } // namespace SipSetupAddress
 

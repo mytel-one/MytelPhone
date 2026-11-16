@@ -31,6 +31,7 @@ public:
 	int state = 0;
 	int submissions = 0;
 	int lastTransport = -1;
+	bool lastAutomaticTransport = false;
 	QString lastServer;
 	QString error;
 	QString themeMainColor() const {
@@ -58,10 +59,12 @@ public:
 	                       int transportType,
 	                       const QString &,
 	                       const QString &,
-	                       const QString &) {
+	                       const QString &,
+	                       bool automaticTransport = false) {
 		submissions++;
 		lastTransport = transportType;
 		lastServer = server;
+		lastAutomaticTransport = automaticTransport;
 		state = 1;
 		emit registrationChanged();
 	}
@@ -228,8 +231,9 @@ int main(int argc, char **argv) {
 			item("sipPasswordInput")->setProperty("text", "demo-password");
 			item("sipServerInput")->setProperty("text", " pbx.example.invalid:5060 ");
 			click(connect);
-			check(context.lastTransport == 0 && context.lastServer == "pbx.example.invalid:5060",
-			      prefix + " ordinary PBX5060 passes UDP to login backend");
+			check(context.lastTransport == 0 && context.lastAutomaticTransport &&
+			          context.lastServer == "pbx.example.invalid:5060",
+			      prefix + " ordinary PBX5060 passes UDP and Automatic mode to login backend");
 			check(!item("sipUsernameInput")->isEnabled() && item("sipCancelButton")->isVisible(),
 			      prefix + " busy state");
 			capture(prefix + "-connecting");

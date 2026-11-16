@@ -46,7 +46,8 @@ public:
 	           QString registrarUri = QString(),
 	           QString outboundProxyAddress = QString(),
 	           QString connectionId = QString(),
-	           std::shared_ptr<LoginAttempt> attempt = nullptr);
+	           std::shared_ptr<LoginAttempt> attempt = nullptr,
+	           bool automaticTransport = false);
 
 	std::shared_ptr<linphone::Account> createAccount(const QString &assistantFile);
 	void cancelLogin();

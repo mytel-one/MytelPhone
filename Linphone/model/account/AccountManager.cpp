@@ -67,7 +67,8 @@ bool AccountManager::login(QString username,
                            QString registrarUri,
                            QString outboundProxyAddress,
                            QString connectionId,
-                           std::shared_ptr<LoginAttempt> attempt) {
+                           std::shared_ptr<LoginAttempt> attempt,
+                           bool automaticTransport) {
 	mustBeInLinphoneThread(log().arg(Q_FUNC_INFO));
 	mLoginAttempt = std::move(attempt);
 	if (mLoginAttempt && mLoginAttempt->isCancelled()) return false;
@@ -85,9 +86,10 @@ bool AccountManager::login(QString username,
 	identity->setUsername(Utils::appStringToCoreString(username));
 
 	if (mAccountModel) return false;
-	auto computedServerAddress =
-	    SipSetupAddress::parse(domain.isEmpty() ? QStringLiteral("sip.linphone.org") : domain, transportType, identity);
-	if (!computedServerAddress) {
+	auto addresses =
+	    SipSetupAddress::prepare(domain.isEmpty() ? QStringLiteral("sip.linphone.org") : domain, registrarUri,
+	                             outboundProxyAddress, transportType, automaticTransport, identity);
+	if (!addresses) {
 		*errorMessage =
 		    tr("Enter a valid SIP server address, for example pbx.example.com:5060 or sips:pbx.example.com:5061.");
 		return false;
@@ -112,7 +114,7 @@ bool AccountManager::login(QString username,
 	if (!domain.isEmpty()) {
 		if (QString::compare(domain, SettingsModel::getInstance()->getDefaultDomain())) {
 			params->setLimeServerUrl("");
-			params->setServerAddress(computedServerAddress);
+			params->setServerAddress(addresses->server);
 		}
 	}
 	if (params->setIdentityAddress(identity)) {
@@ -126,28 +128,10 @@ bool AccountManager::login(QString username,
 		return false;
 	}
 
-	if (!registrarUri.isEmpty()) {
-		auto linRegistrarUri = factory->createAddress(Utils::appStringToCoreString(registrarUri));
-		if (linRegistrarUri) params->setServerAddress(linRegistrarUri);
-		else {
-			//: Registrar uri is invalid. Please make sure it matches the following format :
-			//: sip:host>:<port>;transport=<transport> (:<port> is optional)
-			*errorMessage = tr("assistant_account_login_registrar_uri_error");
-			return false;
-		}
-	}
-
-	if (!outboundProxyAddress.isEmpty()) {
-		auto linOutboundProxyAddress = factory->createAddress(Utils::appStringToCoreString(outboundProxyAddress));
-		if (linOutboundProxyAddress) {
-			params->setRoutesAddresses({linOutboundProxyAddress});
-			if (registrarUri.isEmpty()) params->setServerAddress(linOutboundProxyAddress);
-		} else {
-			//: Outbound proxy uri is invalid. Please make sure it matches the following format :
-			//: sip:host>:<port>;transport=<transport> (:<port> is optional)
-			*errorMessage = tr("assistant_account_login_outbound_proxy_uri_error");
-			return false;
-		}
+	if (addresses->registrar) params->setServerAddress(addresses->registrar);
+	if (addresses->outbound) {
+		params->setRoutesAddresses({addresses->outbound});
+		if (!addresses->registrar) params->setServerAddress(addresses->outbound);
 	}
 
 	if (account->setParams(params)) {

@@ -54,8 +54,14 @@ for (const [field, missing, focusName] of [
 test('Valid credentials keep password bytes and configured transport untouched', () => {
     const f = loginFixture({ usernameEdit: ' 301 ', domainEdit: ' pbx.example.invalid:5060 ', displayName: ' Work ' });
     f.context.connectAccount();
-    assert.deepEqual(f.calls, [['301', ' secret ', 'Work', 'pbx.example.invalid:5060', 7, '', '', '']]);
+    assert.deepEqual(f.calls, [['301', ' secret ', 'Work', 'pbx.example.invalid:5060', 7, '', '', '', false]]);
     assert.equal(f.mainItem.validationError, '');
+});
+test('Automatic setup carries its mode to the SDK boundary for each advanced route', () => {
+    const f = loginFixture();
+    f.context.transport.currentValue = 'Automatic';
+    f.context.connectAccount();
+    assert.equal(f.calls[0][8], true);
 });
 test('Connecting cannot submit a duplicate registration', () => {
     const f = loginFixture({}, true);
