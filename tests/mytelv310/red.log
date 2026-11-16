@@ -1,0 +1,213 @@
+✖ Missing extension focuses its input and prevents registration (4.322ms)
+✖ Missing password focuses its input and prevents registration (1.1261ms)
+✖ Missing server focuses its input and prevents registration (0.8387ms)
+✔ Valid credentials keep password bytes and configured transport untouched (1.1491ms)
+✔ Connecting cannot submit a duplicate registration (0.804ms)
+✖ Correcting one field clears only its own inline validation (0.7662ms)
+✖ Initial settings selection skips unavailable features (0.7292ms)
+✖ An available requested settings section remains selected (0.9607ms)
+✖ No settings family never pushes an undefined component (1.1352ms)
+✖ Opening an unavailable section preserves current settings content (1.0242ms)
+✖ Valid settings navigation loads the requested section and synchronizes keyboard selection (2.4857ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 2
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 115.8545
+
+✖ failing tests:
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:41:4
+✖ Missing extension focuses its input and prevents registration (4.322ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'usernameEdit'
+  - ]
+  
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:45:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'usernameEdit' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:41:4
+✖ Missing password focuses its input and prevents registration (1.1261ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'passwordEdit'
+  - ]
+  
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:45:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'passwordEdit' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:41:4
+✖ Missing server focuses its input and prevents registration (0.8387ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'domainEdit'
+  - ]
+  
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:45:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'domainEdit' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:61:1
+✖ Correcting one field clears only its own inline validation (0.7662ms)
+  AssertionError [ERR_ASSERTION]: Production method exists: clearValidation
+      at method (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:12:12)
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:63:21)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:83:1
+✖ Initial settings selection skips unavailable features (0.7292ms)
+  AssertionError [ERR_ASSERTION]: Production method exists: firstVisibleFamily
+      at method (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:12:12)
+      at settingsFixture (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:78:25)
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:84:15)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:89:1
+✖ An available requested settings section remains selected (0.9607ms)
+  AssertionError [ERR_ASSERTION]: Production method exists: firstVisibleFamily
+      at method (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:12:12)
+      at settingsFixture (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:78:25)
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:90:15)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:93:1
+✖ No settings family never pushes an undefined component (1.1352ms)
+  AssertionError [ERR_ASSERTION]: Production method exists: firstVisibleFamily
+      at method (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:12:12)
+      at settingsFixture (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:78:25)
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:95:19)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:101:1
+✖ Opening an unavailable section preserves current settings content (1.0242ms)
+  AssertionError [ERR_ASSERTION]: Production method exists: firstVisibleFamily
+      at method (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:12:12)
+      at settingsFixture (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:78:25)
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:102:15)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ..\..\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:106:1
+✖ Valid settings navigation loads the requested section and synchronizes keyboard selection (2.4857ms)
+  AssertionError [ERR_ASSERTION]: Production method exists: firstVisibleFamily
+      at method (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:12:12)
+      at settingsFixture (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:78:25)
+      at TestContext.<anonymous> (C:\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\onboarding-settings.test.cjs:107:15)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
