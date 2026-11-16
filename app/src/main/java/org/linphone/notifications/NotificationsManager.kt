@@ -76,6 +76,7 @@ import org.linphone.core.MediaDirection
 import org.linphone.core.RegistrationState
 import org.linphone.core.tools.Log
 import org.linphone.utils.MyTelAccountErrorNotifications
+import org.linphone.utils.MyTelCallNotificationPolicy
 import org.linphone.utils.MyTelLegacyCompatibility
 import org.linphone.ui.main.MainActivity
 import org.linphone.ui.main.MainActivity.Companion.ARGUMENTS_CHAT
@@ -1555,17 +1556,16 @@ class NotificationsManager
             setSmallIcon(smallIcon)
             setCategory(NotificationCompat.CATEGORY_CALL)
             setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            if (isIncoming) {
-                setPriority(NotificationCompat.PRIORITY_MAX)
-            } else {
-                setPriority(NotificationCompat.PRIORITY_HIGH)
-            }
+            val alert = MyTelCallNotificationPolicy.forCall(isIncoming)
+            setPriority(alert.priority)
             setWhen(call.callLog.startDate * 1000) // Linphone timestamps are in seconds
             setShowWhen(true)
             setAutoCancel(false)
             setOngoing(true)
             setContentIntent(pendingIntent)
-            setFullScreenIntent(pendingIntent, true)
+            // Android 7 treats any full-screen intent as a sticky heads-up.
+            // Only a ringing call needs to interrupt the current screen.
+            if (alert.fullScreen) setFullScreenIntent(pendingIntent, true)
         }
 
         if (!isIncoming) {
@@ -1607,7 +1607,10 @@ class NotificationsManager
             return
         }
 
-        val pendingIntent = notification.fullScreenIntent
+        val pendingIntent = MyTelCallNotificationPolicy.contentIntentForUpdate(
+            notification.contentIntent,
+            notification.fullScreenIntent
+        )
         val newNotification = createCallNotification(
             call,
             notifiable,
