@@ -20,7 +20,6 @@
 package org.linphone.compatibility
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ActivityOptions
 import android.app.Notification
@@ -28,16 +27,16 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.util.Patterns
 import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
 import org.linphone.core.tools.Log
-import org.linphone.mediastream.Version
 
-@SuppressLint("NewApi")
 class Compatibility {
     companion object {
         private const val TAG = "[Compatibility]"
@@ -53,7 +52,7 @@ class Compatibility {
             notification: Notification,
             foregroundServiceType: Int
         ): Boolean {
-            return if (Version.sdkAboveOrEqual(Version.API34_ANDROID_14_UPSIDE_DOWN_CAKE)) {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 Api34Compatibility.startServiceForeground(
                     service,
                     id,
@@ -66,13 +65,13 @@ class Compatibility {
         }
 
         fun setBlurRenderEffect(view: View) {
-            if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 Api31Compatibility.setBlurRenderEffect(view)
             }
         }
 
         fun removeBlurRenderEffect(view: View) {
-            if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 Api31Compatibility.removeBlurRenderEffect(view)
             }
         }
@@ -82,7 +81,7 @@ class Compatibility {
             isVideo: Boolean = false,
             isAudio: Boolean = false
         ): Uri {
-            return if (Version.sdkAboveOrEqual(Version.API29_ANDROID_10)) {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 Api29Compatibility.getMediaCollectionUri(isImage, isVideo, isAudio)
             } else {
                 Api28Compatibility.getMediaCollectionUri(isImage, isVideo, isAudio)
@@ -90,9 +89,9 @@ class Compatibility {
         }
 
         fun getAllRequiredPermissionsArray(): Array<String> {
-            if (Version.sdkAboveOrEqual(Version.API37_ANDROID_17_CINNAMON_BUN)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
                 return Api37Compatibility.getAllRequiredPermissionsArray()
-            } else if (Version.sdkAboveOrEqual(Version.API33_ANDROID_13_TIRAMISU)) {
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 return Api33Compatibility.getAllRequiredPermissionsArray()
             }
             return arrayOf(
@@ -103,23 +102,23 @@ class Compatibility {
         }
 
         fun hasTelecomManagerFeature(context: Context): Boolean {
-            if (Version.sdkAboveOrEqual(Version.API33_ANDROID_13_TIRAMISU)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 return Api33Compatibility.hasTelecomManagerFeature(context)
-            } else if (Version.sdkAboveOrEqual(Version.API26_O_80)) {
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 return Api28Compatibility.hasTelecomManagerFeature(context)
             }
             return false
         }
 
         fun hasFullScreenIntentPermission(context: Context): Boolean {
-            if (Version.sdkAboveOrEqual(Version.API34_ANDROID_14_UPSIDE_DOWN_CAKE)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 return Api34Compatibility.hasFullScreenIntentPermission(context)
             }
             return true
         }
 
         fun requestFullScreenIntentPermission(context: Context): Boolean {
-            if (Version.sdkAboveOrEqual(Version.API34_ANDROID_14_UPSIDE_DOWN_CAKE)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 Api34Compatibility.requestFullScreenIntentPermission(context)
                 return true
             }
@@ -127,35 +126,40 @@ class Compatibility {
         }
 
         fun isPostNotificationsPermissionGranted(context: Context): Boolean {
-            if (Version.sdkAboveOrEqual(Version.API33_ANDROID_13_TIRAMISU)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 return Api33Compatibility.isPostNotificationsPermissionGranted(context)
             }
             return true
         }
 
         fun isAccessLocalNetworkPermissionGranted(context: Context): Boolean {
-            if (Version.sdkAboveOrEqual(Version.API37_ANDROID_17_CINNAMON_BUN)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
                 return Api37Compatibility.isAccessLocalNetworkPermissionGranted(context)
             }
             return true
         }
 
         fun enterPipMode(activity: Activity): Boolean {
-            if (Version.sdkStrictlyBelow(Version.API31_ANDROID_12)) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
+                !activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+            ) {
+                return false
+            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
                 return Api28Compatibility.enterPipMode(activity)
             }
             return activity.isInPictureInPictureMode
         }
 
         fun enableAutoEnterPiP(activity: Activity, enable: Boolean) {
-            if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 Api31Compatibility.enableAutoEnterPiP(activity, enable)
             }
         }
 
         fun forceDarkMode(context: Context) {
             Log.i("$TAG Forcing dark/night theme")
-            if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 Api31Compatibility.forceDarkMode(context)
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
@@ -164,7 +168,7 @@ class Compatibility {
 
         fun forceLightMode(context: Context) {
             Log.i("$TAG Forcing light/day theme")
-            if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 Api31Compatibility.forceLightMode(context)
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
@@ -173,7 +177,7 @@ class Compatibility {
 
         fun setAutoLightDarkMode(context: Context) {
             Log.i("$TAG Following Android's choice for light/dark theme")
-            if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 Api31Compatibility.setAutoLightDarkMode(context)
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
@@ -181,14 +185,14 @@ class Compatibility {
         }
 
         fun extractLocusIdFromIntent(intent: Intent): String? {
-            if (Version.sdkAboveOrEqual(Version.API29_ANDROID_10)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 return Api29Compatibility.extractLocusIdFromIntent(intent)
             }
             return null
         }
 
         fun setLocusIdInContentCaptureSession(root: View, conversationId: String) {
-            if (Version.sdkAboveOrEqual(Version.API29_ANDROID_10)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 return Api29Compatibility.setLocusIdInContentCaptureSession(
                     root,
                     conversationId
@@ -197,38 +201,38 @@ class Compatibility {
         }
 
         fun getRecordingsDirectory(): String {
-            if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 return Api31Compatibility.getRecordingsDirectory()
             }
             return Environment.DIRECTORY_PODCASTS
         }
 
         fun setupAppStartupListener(context: Context) {
-            if (Version.sdkAboveOrEqual(Version.API35_ANDROID_15_VANILLA_ICE_CREAM)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                 Api35Compatibility.setupAppStartupListener(context)
             }
         }
 
         fun isIpAddress(string: String): Boolean {
-            if (Version.sdkAboveOrEqual(Version.API29_ANDROID_10)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 return Api29Compatibility.isIpAddress(string)
             }
             return Patterns.IP_ADDRESS.matcher(string).matches()
         }
 
         fun sendPendingIntent(pendingIntent: PendingIntent, bundle: Bundle) {
-            if (Version.sdkAboveOrEqual(Version.API34_ANDROID_14_UPSIDE_DOWN_CAKE)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 return Api34Compatibility.sendPendingIntent(pendingIntent, bundle)
             }
             pendingIntent.send()
         }
 
         fun getPendingIntentActivityOptions(creator: Boolean): ActivityOptions {
-            if (Version.sdkAboveOrEqual(Version.API36_ANDROID_16_BAKLAVA)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
                 return Api36Compatibility.getPendingIntentActivityOptions(creator)
-            } else if (Version.sdkAboveOrEqual(Version.API34_ANDROID_14_UPSIDE_DOWN_CAKE)) {
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 return Api34Compatibility.getPendingIntentActivityOptions(creator)
-            } else if (Version.sdkAboveOrEqual(Version.API33_ANDROID_13_TIRAMISU)) {
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 return Api33Compatibility.getPendingIntentActivityOptions()
             }
 

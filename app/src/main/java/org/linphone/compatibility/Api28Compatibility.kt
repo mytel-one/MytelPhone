@@ -27,6 +27,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.MediaStore
+import androidx.annotation.RequiresApi
 import org.linphone.core.tools.Log
 import org.linphone.utils.AppUtils
 
@@ -47,6 +48,7 @@ class Api28Compatibility {
             return false
         }
 
+        @RequiresApi(26)
         fun enterPipMode(activity: Activity): Boolean {
             val params = PictureInPictureParams.Builder()
                 .setAspectRatio(AppUtils.getPipRatio(activity))

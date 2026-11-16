@@ -34,9 +34,11 @@ import android.graphics.BitmapFactory
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.annotation.AnyThread
 import androidx.annotation.MainThread
+import androidx.annotation.RequiresApi
 import androidx.annotation.WorkerThread
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -74,6 +76,7 @@ import org.linphone.core.MediaDirection
 import org.linphone.core.RegistrationState
 import org.linphone.core.tools.Log
 import org.linphone.utils.MyTelAccountErrorNotifications
+import org.linphone.utils.MyTelLegacyCompatibility
 import org.linphone.ui.main.MainActivity
 import org.linphone.ui.main.MainActivity.Companion.ARGUMENTS_CHAT
 import org.linphone.ui.main.MainActivity.Companion.ARGUMENTS_CONVERSATION_ID
@@ -621,6 +624,8 @@ class NotificationsManager
 
     @MainThread
     private fun createChannels(clearPreviousChannels: Boolean) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+
         if (clearPreviousChannels) {
             Log.w("$TAG We were asked to remove all existing notification channels")
             for (channel in notificationManager.notificationChannels) {
@@ -888,8 +893,7 @@ class NotificationsManager
         }
 
         val channelId = context.getString(R.string.notification_channel_call_id)
-        val channel = notificationManager.getNotificationChannel(channelId)
-        val importance = channel?.importance ?: NotificationManagerCompat.IMPORTANCE_NONE
+        val importance = getNotificationImportance(channelId, NotificationManagerCompat.IMPORTANCE_LOW)
         if (importance == NotificationManagerCompat.IMPORTANCE_NONE) {
             Log.e("$TAG Calls channel has been disabled, can't start foreground Service!")
             stopInCallForegroundService()
@@ -1525,10 +1529,12 @@ class NotificationsManager
         } else {
             context.getString(R.string.notification_channel_call_id)
         }
-        val channel = notificationManager.getNotificationChannel(channelId)
-        val importance = channel?.importance ?: NotificationManagerCompat.IMPORTANCE_NONE
+        val importance = getNotificationImportance(
+            channelId,
+            if (isIncoming) NotificationManagerCompat.IMPORTANCE_HIGH else NotificationManagerCompat.IMPORTANCE_LOW
+        )
         Log.i(
-            "Creating notification for ${if (isIncoming) "[incoming] " else ""}[${if (isConference) "conference" else "call"}] with video [${if (isVideo) "enabled" else "disabled"}] on channel [$channel] with importance [$importance]"
+            "Creating notification for ${if (isIncoming) "[incoming] " else ""}[${if (isConference) "conference" else "call"}] with video [${if (isVideo) "enabled" else "disabled"}] on channel [$channelId] with importance [$importance]"
         )
 
         val builder = NotificationCompat.Builder(
@@ -1920,8 +1926,7 @@ class NotificationsManager
         )
 
         val channelId = context.getString(R.string.notification_channel_service_id)
-        val channel = notificationManager.getNotificationChannel(channelId)
-        val importance = channel?.importance ?: NotificationManagerCompat.IMPORTANCE_NONE
+        val importance = getNotificationImportance(channelId, NotificationManagerCompat.IMPORTANCE_LOW)
         if (importance == NotificationManagerCompat.IMPORTANCE_NONE) {
             Log.e(
                 "$TAG Keep alive for third party accounts Service channel has been disabled, can't start foreground Service!"
@@ -2017,6 +2022,22 @@ class NotificationsManager
         currentKeepAliveThirdPartyAccountsForegroundServiceNotificationId = -1
     }
 
+    @AnyThread
+    private fun getNotificationImportance(channelId: String, legacyImportance: Int): Int {
+        val channelImportance = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationManager.getNotificationChannel(channelId)?.importance
+        } else {
+            null
+        }
+        return MyTelLegacyCompatibility.notificationImportance(
+            Build.VERSION.SDK_INT,
+            notificationManager.areNotificationsEnabled(),
+            channelImportance,
+            legacyImportance
+        )
+    }
+
+    @RequiresApi(26)
     @MainThread
     private fun createIncomingCallNotificationChannelWithoutRingtone() {
         val id = context.getString(R.string.notification_channel_without_ringtone_incoming_call_id)
@@ -2030,6 +2051,7 @@ class NotificationsManager
         notificationManager.createNotificationChannel(channel)
     }
 
+    @RequiresApi(26)
     @MainThread
     private fun createMissedCallNotificationChannel() {
         val id = context.getString(R.string.notification_channel_missed_call_id)
@@ -2045,6 +2067,7 @@ class NotificationsManager
         notificationManager.createNotificationChannel(channel)
     }
 
+    @RequiresApi(26)
     @MainThread
     private fun createActiveCallNotificationChannel() {
         val id = context.getString(R.string.notification_channel_call_id)
@@ -2060,6 +2083,7 @@ class NotificationsManager
         notificationManager.createNotificationChannel(channel)
     }
 
+    @RequiresApi(26)
     @MainThread
     private fun createMessageChannel() {
         val id = context.getString(R.string.notification_channel_chat_id)
@@ -2075,6 +2099,7 @@ class NotificationsManager
         notificationManager.createNotificationChannel(channel)
     }
 
+    @RequiresApi(26)
     @MainThread
     private fun createThirdPartyAccountKeepAliveServiceChannel() {
         val id = context.getString(R.string.notification_channel_service_id)
@@ -2089,6 +2114,7 @@ class NotificationsManager
         notificationManager.createNotificationChannel(channel)
     }
 
+    @RequiresApi(26)
     @MainThread
     private fun createAccountErrorNotificationChannel() {
         val id = context.getString(R.string.notification_channel_account_error_id)
@@ -2104,6 +2130,7 @@ class NotificationsManager
         notificationManager.createNotificationChannel(channel)
     }
 
+    @RequiresApi(26)
     @MainThread
     private fun createCallRedirectionUserChoiceNotificationChannel() {
         val id = context.getString(R.string.notification_channel_call_redirection_id)

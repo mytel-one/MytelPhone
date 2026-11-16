@@ -22,7 +22,6 @@ package org.linphone.utils
 import androidx.annotation.AnyThread
 import java.text.DateFormat
 import java.text.SimpleDateFormat
-import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -72,7 +71,7 @@ class TimestampUtils {
             calendar.timeInMillis = if (timestampInSecs) timestamp * 1000 else timestamp
             val dayName = calendar.getDisplayName(
                 Calendar.DAY_OF_WEEK,
-                TextStyle.SHORT.ordinal,
+                Calendar.SHORT,
                 Locale.getDefault()
             )
             val upperCased = dayName?.replaceFirstChar {
@@ -105,14 +104,14 @@ class TimestampUtils {
             val firstDayOfWeek = calendar.get(Calendar.DAY_OF_MONTH).toString()
             val firstDayOfWeekMonth = calendar.getDisplayName(
                 Calendar.MONTH,
-                TextStyle.SHORT.ordinal,
+                Calendar.SHORT,
                 Locale.getDefault()
             )
             calendar.add(Calendar.DAY_OF_MONTH, 6)
             val lastDayOfWeek = calendar.get(Calendar.DAY_OF_MONTH).toString()
             val lastDayOfWeekMonth = calendar.getDisplayName(
                 Calendar.MONTH,
-                TextStyle.SHORT.ordinal,
+                Calendar.SHORT,
                 Locale.getDefault()
             )
             return if (firstDayOfWeekMonth == lastDayOfWeekMonth) {
@@ -128,7 +127,7 @@ class TimestampUtils {
             calendar.timeInMillis = if (timestampInSecs) timestamp * 1000 else timestamp
             val month = calendar.getDisplayName(
                 Calendar.MONTH,
-                TextStyle.SHORT.ordinal,
+                Calendar.SHORT,
                 Locale.getDefault()
             )
                 ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }

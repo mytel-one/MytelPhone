@@ -22,13 +22,19 @@ package org.linphone.utils
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.ImageDecoder
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
+import android.media.ExifInterface
+import android.net.Uri
+import android.os.Build
 import androidx.annotation.AnyThread
+import androidx.annotation.RequiresApi
 import androidx.annotation.WorkerThread
 import java.io.FileNotFoundException
 import org.linphone.contacts.AvatarGenerator
@@ -72,13 +78,11 @@ class ImageUtils {
             if (path != null) {
                 try {
                     val fromPictureUri = path.toUri()
-                    // We make a copy to ensure Bitmap will be Software and not Hardware, required for shortcuts
-                    val bitmap = ImageDecoder.decodeBitmap(
-                        ImageDecoder.createSource(context.contentResolver, fromPictureUri)
-                    ).copy(
-                        Bitmap.Config.ARGB_8888,
-                        true
-                    )
+                    val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        decodeModernBitmap(context, fromPictureUri)
+                    } else {
+                        decodeLegacyBitmap(context, fromPictureUri)
+                    } ?: return null
                     return if (round) {
                         getRoundBitmap(bitmap)
                     } else {
@@ -95,6 +99,44 @@ class ImageUtils {
 
             Log.e("$TAG Can't get bitmap from null URI")
             return null
+        }
+
+        @RequiresApi(28)
+        private fun decodeModernBitmap(context: Context, uri: Uri): Bitmap {
+            // Shortcuts require software pixels, even if ImageDecoder used a
+            // hardware bitmap internally. Keep the existing modern behavior.
+            return ImageDecoder.decodeBitmap(
+                ImageDecoder.createSource(context.contentResolver, uri)
+            ).copy(Bitmap.Config.ARGB_8888, true)
+        }
+
+        private fun decodeLegacyBitmap(context: Context, uri: Uri): Bitmap? {
+            val bitmap = context.contentResolver.openInputStream(uri)?.use { stream ->
+                BitmapFactory.decodeStream(stream)
+            } ?: return null
+
+            // ImageDecoder applies camera EXIF orientation automatically.
+            // BitmapFactory on Android 7/8 needs the equivalent transform.
+            val orientation = try {
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    ExifInterface(stream).getAttributeInt(
+                        ExifInterface.TAG_ORIENTATION,
+                        ExifInterface.ORIENTATION_NORMAL
+                    )
+                } ?: ExifInterface.ORIENTATION_NORMAL
+            } catch (e: Exception) {
+                // PNGs, generated avatars and other formats may have no EXIF.
+                Log.d("$TAG Image has no readable EXIF orientation: $e")
+                ExifInterface.ORIENTATION_NORMAL
+            }
+            val transform = MyTelLegacyCompatibility.bitmapOrientation(orientation)
+            if (transform == MyTelImageOrientation()) return bitmap
+
+            val matrix = Matrix().apply {
+                postRotate(transform.rotationDegrees.toFloat())
+                if (transform.mirrorHorizontally) postScale(-1f, 1f)
+            }
+            return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
         }
 
         @AnyThread

@@ -19,8 +19,10 @@
  */
 package org.linphone.ui.assistant.fragment
 
+import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -92,7 +94,11 @@ class RegisterCodeConfirmationFragment : GenericFragment() {
                     viewModel.smsCodeSecondDigit.value = clip[1].toString()
                     viewModel.smsCodeThirdDigit.value = clip[2].toString()
                     viewModel.smsCodeLastDigit.value = clip[3].toString()
-                    clipboard.clearPrimaryClip()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        clipboard.clearPrimaryClip()
+                    } else {
+                        clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
+                    }
                 }
             }
         }
