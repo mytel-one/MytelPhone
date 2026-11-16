@@ -107,7 +107,7 @@
             android:drawablePadding="10dp"
             android:drawableTint="?attr/color_on_main"
             android:background="@drawable/squircle_transparent_button_background_2"
-            android:text="@string/bottom_navigation_conversations_label"
+            android:text="@string/mytel_ux_chats"
             android:visibility="@{viewModel.hideConversations ? View.GONE : View.VISIBLE}"
             textFont="@{viewModel.conversationsSelected ? NotoSansFont.NotoSansBold : NotoSansFont.NotoSansRegular}"
             app:layout_constraintBottom_toTopOf="@id/meetings"

@@ -37,6 +37,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.annotation.UiThread
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navGraphViewModels
@@ -140,10 +141,14 @@ class ThirdPartySipAccountLoginFragment : GenericFragment() {
         }
 
         viewModel.connectionFeedback.observe(viewLifecycleOwner) { message ->
-            if (!message.isNullOrBlank()) binding.connectionFeedback.post {
-                binding.connectionFeedback.requestRectangleOnScreen(
-                    Rect(0, 0, binding.connectionFeedback.width, binding.connectionFeedback.height), false
-                )
+            val feedbackView = binding.connectionFeedback
+            if (!message.isNullOrBlank() && feedbackView != null) {
+                binding.executePendingBindings()
+                feedbackView.doOnLayout { feedback ->
+                    feedback.requestRectangleOnScreen(
+                        Rect(0, 0, feedback.width, feedback.height), false
+                    )
+                }
             }
         }
 

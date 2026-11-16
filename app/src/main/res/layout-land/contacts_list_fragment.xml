@@ -135,29 +135,37 @@
 
                 <ImageView
                     android:id="@+id/no_contacts_image"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
                     android:layout_margin="10dp"
-                    android:src="@drawable/illu"
+                    android:src="@drawable/address_book"
                     android:contentDescription="@null"
                     app:layout_constraintHeight_max="200dp"
                     app:layout_constraintBottom_toTopOf="@id/no_contacts_label"
                     app:layout_constraintDimensionRatio="1:1"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/bottom_nav_bar"
-                    app:layout_constraintTop_toBottomOf="@id/lists" />
+                    android:padding="14dp"
+                    android:background="@drawable/circle_light_blue_button_background"
+                    app:tint="?attr/color_main1_500"
+                    app:layout_constraintVertical_chainStyle="packed"
+                    app:layout_constraintTop_toTopOf="@id/lists"/>
 
                 <androidx.appcompat.widget.AppCompatTextView
-                    style="@style/section_header_style"
+                    style="@style/MyTel.Ux.Body"
                     android:id="@+id/no_contacts_label"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@{viewModel.isFilterEmpty ? (viewModel.areAllContactsDisplayed ? @string/contacts_list_empty : @string/contacts_list_sip_empty) : @string/list_filter_no_result_found, default=@string/contacts_list_sip_empty}"
+                    android:text="@{viewModel.isFilterEmpty ? (viewModel.areAllContactsDisplayed ? @string/mytel_ux_contacts_empty_message : @string/contacts_list_sip_empty) : @string/mytel_ux_no_results, default=@string/mytel_ux_contacts_empty_message}"
                     android:textAlignment="center"
                     app:layout_constraintBottom_toTopOf="@id/show_contacts_filter"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/bottom_nav_bar"
-                    app:layout_constraintTop_toBottomOf="@id/no_contacts_image" />
+                    app:layout_constraintTop_toBottomOf="@id/no_contacts_image"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:layout_marginTop="12dp"
+                    android:textSize="14sp"/>
 
                 <androidx.appcompat.widget.AppCompatTextView
                     style="@style/default_text_style_600"
@@ -177,9 +185,9 @@
                     android:background="@drawable/secondary_button_background"
                     android:visibility="@{viewModel.contactsList.empty &amp;&amp; !viewModel.areAllContactsDisplayed ? View.VISIBLE : View.GONE}"
                     app:layout_constraintTop_toBottomOf="@id/no_contacts_label"
-                    app:layout_constraintBottom_toTopOf="@id/lists"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/bottom_nav_bar"/>
+                    app:layout_constraintStart_toEndOf="@id/bottom_nav_bar"
+                    app:layout_constraintBottom_toBottomOf="@id/lists"/>
 
                 <com.google.android.material.progressindicator.CircularProgressIndicator
                     android:id="@+id/fetch_in_progress"
