@@ -32,8 +32,6 @@ import androidx.annotation.WorkerThread
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.media.AudioFocusRequestCompat
-import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.regex.Pattern
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +61,7 @@ import org.linphone.utils.AudioUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.MyTelElapsedTime
 import org.linphone.utils.PatternClickableSpan
 import org.linphone.utils.SpannableClickedListener
 import org.linphone.utils.TimestampUtils
@@ -871,8 +870,7 @@ class MessageModel
         if (voiceRecordPlayer.open(path) == 0) {
             val duration = voiceRecordPlayer.duration
             voiceRecordingDuration.postValue(duration)
-            val formattedDuration =
-                SimpleDateFormat("mm:ss", Locale.getDefault()).format(duration) // duration is in ms
+            val formattedDuration = MyTelElapsedTime.formatMilliseconds(duration.toLong())
             formattedVoiceRecordingDuration.postValue(formattedDuration)
         } else {
             Log.e("$TAG Player failed to open file at [$path]")
@@ -1043,10 +1041,7 @@ class MessageModel
         val duration = content.fileDuration
         voiceRecordingDuration.postValue(duration)
 
-        val formattedDuration = SimpleDateFormat(
-            "mm:ss",
-            Locale.getDefault()
-        ).format(duration) // duration is in ms
+        val formattedDuration = MyTelElapsedTime.formatMilliseconds(duration.toLong())
         formattedVoiceRecordingDuration.postValue(formattedDuration)
         Log.i(
             "$TAG Found voice record with path [$voiceRecordPath] and duration [$formattedDuration]"

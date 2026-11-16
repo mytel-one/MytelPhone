@@ -29,8 +29,6 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.media.AudioFocusRequestCompat
-import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
@@ -59,6 +57,7 @@ import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.MyTelElapsedTime
 
 class SendMessageInConversationViewModel
     @UiThread
@@ -774,16 +773,14 @@ class SendMessageInConversationViewModel
         chatRoom.composeVoiceMessage()
 
         val duration = voiceMessageRecorder.duration
-        val formattedDuration = SimpleDateFormat("mm:ss", Locale.getDefault()).format(duration) // duration is in ms
+        val formattedDuration = MyTelElapsedTime.formatMilliseconds(duration.toLong())
         formattedVoiceRecordingDuration.postValue(formattedDuration)
 
         val maxVoiceRecordDuration = corePreferences.voiceRecordingMaxDuration
         recorderTickerFlow().onEach {
             coreContext.postOnCoreThread {
                 val duration = voiceMessageRecorder.duration
-                val formattedDuration = SimpleDateFormat("mm:ss", Locale.getDefault()).format(
-                    duration
-                ) // duration is in ms
+                val formattedDuration = MyTelElapsedTime.formatMilliseconds(duration.toLong())
                 formattedVoiceRecordingDuration.postValue(formattedDuration)
 
                 if (duration >= maxVoiceRecordDuration) {
