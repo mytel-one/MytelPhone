@@ -23,6 +23,7 @@ Runtime review also reproduced failed-setup credential retention, incorrect firs
 | Production-QML component assertions | 96 passed |
 | Real SDK SIP address/transport scenarios | 188 passed |
 | Real SDK authentication ownership/persistence scenarios | 16 passed |
+| Production account cleanup/destructor with real SDK registration and prior history | 22 passed |
 | Isolated installer contract, including installed project URL | 13 passed |
 
 The production Android certificate fingerprint is `60ebd14405aeb1fe58e277297182fb48cb77d07f8046982a07e494ba49b4d7f4`. Published compatibility reports bind their results to the final artifact hashes. They do not replace runtime acceptance.
