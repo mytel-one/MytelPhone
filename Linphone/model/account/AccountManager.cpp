@@ -44,6 +44,7 @@ AccountManager::AccountManager(QObject *parent) : QObject(parent) {
 
 AccountManager::~AccountManager() {
 	mustBeInLinphoneThread("~" + getClassName());
+	cancelLogin();
 }
 
 std::shared_ptr<linphone::Account> AccountManager::createAccount(const QString &assistantFile) {
@@ -155,7 +156,6 @@ bool AccountManager::login(QString username,
 		        QString errorMessage = QString::fromStdString(message);
 		        if (mAccountModel && account == mAccountModel->getAccount()) {
 			        if (state == linphone::RegistrationState::Failed) {
-				        mLoginAuth.rollback();
 				        connect(
 				            mAccountModel.get(), &AccountModel::removed, this, [this]() { mAccountModel = nullptr; },
 				            Qt::SingleShotConnection);
@@ -165,7 +165,8 @@ bool AccountManager::login(QString username,
 				        //: "Error during connection, please verify your parameters"
 				        else errorMessage = tr("assistant_account_login_error");
 				        AccessibilityHelper::announceMessage(errorMessage);
-				        mAccountModel->removeAccount();
+				        mAccountModel->removeAccount(false);
+				        mLoginAuth.rollback();
 			        } else if (state == linphone::RegistrationState::Ok) {
 				        if (mLoginAttempt && !mLoginAttempt->tryAccept()) {
 					        cancelLogin();
@@ -197,7 +198,7 @@ void AccountManager::cancelLogin() {
 	// Completed/existing accounts must survive cancelling a later login.
 	if (mAccountModel) {
 		disconnect(mAccountModel.get(), nullptr, this, nullptr);
-		mAccountModel->removeAccount();
+		mAccountModel->removeAccount(false);
 		mAccountModel = nullptr;
 	}
 	mLoginAuth.rollback();

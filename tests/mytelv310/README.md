@@ -23,6 +23,7 @@ node --test tests/mytelv3/*.test.cjs
 tests/mytelv310/build-ux.cmd C:/path/to/evidence
 tests/mytelv310/build-address.cmd
 tests/mytelv310/build-auth.cmd
+tests/mytelv310/build-pending.cmd
 ```
 
 The small native test scripts use the existing temporary theme-test build tree,
@@ -43,6 +44,7 @@ without reading a production profile or connecting to a PBX.
 | Production QML setup/control render and interaction seam | 96/96 |
 | Real installed Linphone SDK Address parsing, route policy and identity construction | 188/188 |
 | Isolated real SDK auth rollback, persistence and existing-credential protection | 16/16 |
+| Production account cleanup/destructor bodies with real loopback REGISTER and history | 22/22 |
 | Actual isolated NSIS ownership, upgrade and project URL checks | 13/13 |
 | Changed QML parsed by Qt qmlformat | 8 files |
 
@@ -52,6 +54,8 @@ RED checkpoints retain the observed failures before the fixes: `red.log`,
 `route-parameter-case-red.log`.
 `auth-red.log` reproduces the SDK clone ownership issue and `installer-url-red.log`
 captures the old installed project URL before their fixes.
+`pending-account-red.log` reproduces deferred SDK cleanup erasing restored auth,
+independent auth and prior history, plus unfinished account persistence on destruction.
 The corresponding GREEN outputs are included alongside the tests. Test counts are
 assertions/scenarios, not whole-application coverage measurements.
 
@@ -75,6 +79,11 @@ Unfinished setup owns the SDK-stored auth clone rather than the supplied object.
 Cancellation/failure removes that clone and restores any preexisting credential
 it displaced, while leaving later independent replacements/deletions untouched.
 Successful setup commits its credential; an abandoned transaction rolls back.
+Unfinished account cleanup uses the SDK's plain removeAccount operation. Explicit
+user deletion retains removeAccountWithData as the default. A local-only test
+compiles the production cleanup/cancel/destructor bodies and verifies real delayed
+registration-cleared behavior, synthetic history preservation and normal manager
+destruction. It uses an ephemeral 127.0.0.1 registrar and no PBX/phone traffic.
 
 ## Scope and remaining acceptance
 

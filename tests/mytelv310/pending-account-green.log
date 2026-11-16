@@ -1,0 +1,45 @@
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR)
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR)
+-- Configuring done (1.0s)
+-- Generating done (0.7s)
+-- Build files have been written to: C:/Users/HajSaman/AppData/Local/Temp/mytel-v3-theme-tests
+[1/4] Automatic MOC for target mytel-pending-account-test
+[2/3] Building CXX object CMakeFiles\mytel-pending-account-test.dir\C_\Users\HajSaman\Documents\GLM\SoftPhone\linphone-desktop\tests\mytelv310\pending_account_test.cpp.obj
+[3/3] Linking CXX executable mytel-pending-account-test.exe
+2026-11-16 21:08:22:899 mediastreamer-error- Fail to load plugin ./lib/mediastreamer/plugins\libmsopenh264.dll: error 126
+
+2026-11-16 21:08:22:914 liblinphone-warning- No ringtone has been defined in sound config, using default one
+
+2026-11-16 21:08:22:957 liblinphone-warning- nothing to migrate, skipping...
+
+PASS temporary Core starts with only loopback UDP
+PASS registrar binds only ephemeral loopback
+PASS isolated account added
+2026-11-16 21:08:22:976 liblinphone-error- Unable to subscribe to the conference event package (RFC 4575) of all chatrooms linked to Account [0000020D44822F40] (sip:restored-fixture@example.invalid) because no handler is available
+
+PASS real loopback REGISTER reaches Ok
+PASS synthetic prior call history exists
+PASS pending removal reaches delayed Cleared
+PASS delayed Cleared preserves restored credentials
+PASS pending cleanup preserves prior call history
+PASS isolated account added
+2026-11-16 21:08:23:004 liblinphone-error- Unable to subscribe to the conference event package (RFC 4575) of all chatrooms linked to Account [0000020D448A5BF0] (sip:independent-fixture@example.invalid) because no handler is available
+
+PASS second real loopback registration reaches Ok
+PASS cancel reaches delayed Cleared
+PASS delayed Cleared preserves independent replacement
+PASS isolated account added
+2026-11-16 21:08:23:025 liblinphone-error- Unable to subscribe to the conference event package (RFC 4575) of all chatrooms linked to Account [0000020D4488A980] (sip:explicit-delete-fixture@example.invalid) because no handler is available
+
+PASS explicit delete fixture registers
+PASS explicit delete fixture has synthetic history
+PASS explicit user deletion reaches Cleared
+PASS explicit user deletion retains existing auth deletion behavior
+PASS explicit user deletion retains history deletion behavior
+PASS isolated account added
+PASS manager destruction removes its unfinished account
+PASS manager destruction removes unfinished credentials
+PASS manager destruction removes persisted pending account
+2026-11-16 21:08:23:129 liblinphone-warning- Unable to get valid core instance.
+
+22/22 actual pending-account lifecycle checks passed

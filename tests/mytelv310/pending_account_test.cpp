@@ -191,6 +191,9 @@ int main(int argc, char **argv) {
 		check(stored.size() == 1 && stored.front()->getPassword() == "old-fixture-password",
 		      "delayed Cleared preserves restored credentials");
 		check(!core->getCallLogs().empty(), "pending cleanup preserves prior call history");
+		// Reset only this isolated Core's synthetic log before the independent explicit-delete case.
+		for (const auto &entry : core->getCallLogs())
+			core->removeCallLog(entry);
 		for (const auto &info : core->getAuthInfoList())
 			core->removeAuthInfo(info);
 	}
@@ -220,7 +223,7 @@ int main(int argc, char **argv) {
 		      "explicit delete fixture registers");
 		core->createCallLog(factory->createAddress("sip:" + user + "@example.invalid"),
 		                    factory->createAddress("sip:history@example.invalid"), linphone::Call::Dir::Outgoing, 10,
-		                    1700000000, 1700000001, linphone::Call::Status::Success, false, 4);
+		                    1700000060, 1700000061, linphone::Call::Status::Success, false, 4);
 		check(hasHistory(core, user), "explicit delete fixture has synthetic history");
 		AccountModel model(selected);
 		model.removeAccount();

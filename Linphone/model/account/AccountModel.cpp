@@ -145,7 +145,6 @@ void AccountModel::setDefault() {
 }
 
 void AccountModel::removeAccount(bool withData) {
-	Q_UNUSED(withData)
 	auto core = CoreModel::getInstance()->getCore();
 	auto params = mMonitor ? mMonitor->getParams() : nullptr;
 	lInfo() << log()
@@ -154,7 +153,10 @@ void AccountModel::removeAccount(bool withData) {
 	                        ? Utils::coreStringToAppString(params->getIdentityAddress()->asString())
 	                        : "Null");
 	mToRemove = true;
-	if (mMonitor) core->removeAccountWithData(mMonitor);
+	if (mMonitor) {
+		if (withData) core->removeAccountWithData(mMonitor);
+		else core->removeAccount(mMonitor);
+	}
 }
 
 std::shared_ptr<linphone::Account> AccountModel::getAccount() const {
