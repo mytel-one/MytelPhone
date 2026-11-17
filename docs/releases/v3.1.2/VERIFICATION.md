@@ -25,4 +25,4 @@ Observed native acceptance:
 - The persisted updater endpoint was empty; current-process startup/Help logs contained no updater markers (`20-no-updater`). This is not packet-capture proof.
 - The saved theme setting `1` was restored (`21-restored`); normal app Quit returned to the Android home screen.
 
-Limits: this fixture was isolated and its SIP peer was not started, so it was offline. This presentation release did not repeat call/chat/PSTN tests. An earlier unused run had a transient System UI startup stall; acceptance uses `branding-02`. These results cover the observed environment and do not guarantee every phone or absence of all bugs.
+Limits: this fixture was isolated and its SIP peer was not started, so it was offline. This presentation release did not repeat call/chat/PSTN tests. During the cold boot of `branding-02`, Android System UI briefly showed a nonresponsive dialog before MyTel started; choosing Wait resolved it, and the app flow completed. Both owned VM runs subsequently closed normally. These results cover the observed environment and do not guarantee every phone or absence of all bugs.
