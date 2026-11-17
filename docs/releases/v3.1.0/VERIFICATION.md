@@ -1,57 +1,91 @@
 # MyTel 3.1.0 verification
 
-Status: validation in progress. This record must be completed before publication.
+Status: the build, packaging, native runtime, API 31 upgrade and actual Windows installation checks below are complete and passed. Final integrity sealing, publication and verification of the published bytes remain separate stages. No publication is claimed here.
 
-## Change scope
+## Artifact identity and install contract
 
-Android and Windows now have a compact three-field SIP setup with optional advanced connection settings, automatic transport selection, readable light/dark controls and clearer connection feedback. Appearance and background-access settings are easier to reach. Internal executable, profile, notification, Android package and production signing identities remain stable.
+| Compiled application | Clean build commit |
+|---|---|
+| Android APK and AAB | `d7cb149cb8033f9f07e2ea786ff3a8d973baa651` |
+| Windows application and installer | `432520db8257ab7a09d7ae79eddd0b432799e2fc` |
 
-Android's minimum supported version is API 24 (Android 7), with ARMv7, ARM64, x86 and x86_64 native libraries. Java-time desugaring and explicit API guards cover older notification, Telecom, image, clipboard and picture-in-picture paths. An App Bundle accompanies the universal APK for store delivery. Optional camera, Bluetooth, Wi-Fi and telephony hardware does not become an unnecessary install filter.
+| Artifact | Bytes | SHA256 |
+|---|---:|---|
+| Android release/R8 APK | 178,544,800 | `4b508dd6cc229d774f5c889967f75814863de0279d5d9f3edc660ddf4b6be835` |
+| Android release AAB | 83,145,214 | `3bf7861e9dc42588925f5329c2c3d9259ac0a42e4696cf4801fbe9025c2e99c6` |
+| Windows x64 application | 82,745,856 | `62af966cec9cc9c73a559a0453510eb5d4aec9f661c20dd017371af3b95a9d93` |
+| Windows x64 installer | 105,796,156 | `643cc3400ccb5a92508ccef7b1ff8568ca0ecb08f3e63bcd7ef4d7a8bfdef24e` |
 
-Runtime review also reproduced failed-setup credential retention, incorrect first microphone-permission handling, a persistent connected-call heads-up and a recording duration affected by Tehran's half-hour timezone offset. Fixes are being validated against these reproductions.
+The Android package is `one.mytel.softphone`, version 3.1.0 / code 30100, with **minSdk 24 (Android 7), targetSdk 37**, and `armeabi-v7a`, `arm64-v8a`, `x86` and `x86_64` libraries. The universal APK/AAB distribution checks passed: production signing continuity, native ELF alignment, APK ZIP alignment and AAB `PAGE_ALIGNMENT_16K`. Production certificate SHA256 is `60ebd14405aeb1fe58e277297182fb48cb77d07f8046982a07e494ba49b4d7f4`.
+
+These are compiled build revisions. A later documentation/source-archive/tag revision must be recorded separately in the final release manifest; a documentation commit does not change the identity of the tested binaries.
 
 ## Automated checks
 
-| Check | Result |
+| Suite | Recorded result |
 |---|---|
-| Final Android unit suite, strict lint and signed release/R8 APK+AAB | Pending final clean build |
-| APK/AAB package/version/minimum SDK/signing continuity | Pending final artifacts |
-| Four-ABI JNI inventory, 64-bit ELF page alignment and APK ZIP alignment | Pending final artifacts |
-| AAB `PAGE_ALIGNMENT_16K` and generated device APKs | Pending final artifacts |
-| Windows application regression tests | 225 passed |
-| Windows setup/navigation tests | 45 passed |
-| Production-QML component assertions | 96 passed |
-| Real SDK SIP address/transport scenarios | 188 passed |
-| Real SDK authentication ownership/persistence scenarios | 16 passed |
-| Production account cleanup/destructor with real SDK registration and prior history | 22 passed |
-| Isolated installer contract, including installed project URL | 13 passed |
+| Final Android unit suite | **204 tests in 22 XML reports; 0 failures, errors or skipped tests** |
+| Final Android strict lint | **0 errors; 173 reviewed warnings** |
+| Signed Android release/R8 APK, AAB and artifact-bound distribution checks | Passed |
+| Windows existing application regressions | 225 passed |
+| Windows setup/navigation checks | 45 passed |
+| Production-QML setup/control assertions | 96 passed |
+| Real SDK SIP address/route scenarios | 188 passed |
+| Real SDK authentication ownership/persistence | 16 passed |
+| Production account cleanup/destructor and prior-history scenarios | 22 passed |
+| Real SDK chat identity migration, history, rollback and restart checks | 193 passed |
+| Isolated installer contract | 13 passed |
+| Production toast XML cases | 14 passed after 9 baseline failures |
+| Production pre-dial popup with real Qt controls, both themes | 23 passed after 12 baseline failures |
 
-The production Android certificate fingerprint is `60ebd14405aeb1fe58e277297182fb48cb77d07f8046982a07e494ba49b4d7f4`. Published compatibility reports bind their results to the final artifact hashes. They do not replace runtime acceptance.
+Counts belong to their individual suites and are not added into a combined coverage figure. Focused Android regressions are already included in the 204-test total. Actual installation has its own acceptance below, separate from the installer-contract tests and packaging checks.
 
-## Runtime matrix
+## Native acceptance of the current builds
 
-| Environment | Scope | Result |
-|---|---|---|
-| Android 7/API 24, x86_64, 4 KB | Prototype fresh install, setup failure/retry/cancel/403/Online, contacts, UTF-8 messages, incoming/outgoing call, hold/resume, native RTP and recording | Passed; final regression pending |
-| Android 7/API 24, x86 | Forced 32-bit native startup, retained lab contacts/messages and Online registration | Prototype passed; final regression pending |
-| Android 17/API 37, x86_64, 16 KB | Final native startup, permissions, setup, call/chat and display | Pending |
-| Android 12/API 31 | Existing signed 3.0.1 to signed 3.1.0, account/message/contact preservation | Pending |
-| Windows x64 | Full native application, light/dark setup/main/settings, local SIP/media, profile preservation and installer | Pending |
+| Environment | Observed scope and result |
+|---|---|
+| Final Android, API 37/x86_64, 16 KB | Production device-selected splits ran through `app_process64` with 13 executable native mappings. The selected variant reports minSdk 32; the universal install floor remains 24. |
+| Final Android conversation | Copy/delete/paste/send and new incoming messages stayed unique in the live view and after reopening. Fresh messages each appeared once on the wire; the pagination sweep covered **41/41 unique messages with no visible duplicates**. No storage reset was used. |
+| Final Android local SIP/media | Before the call, 119 MESSAGE requests and no INVITE were recorded. The later PCMU call completed INVITE/ACK/BYE with **1,952 RTP packets received and 1,700 sent**, no fixture socket resets or recorded errors. |
+| Final Android, API 24/x86, 4 KB | Actual `app_process32` with 12 executable native mappings; real PBX registration/messages/calls and retained account, contact/history and encrypted-recording data. Physical ARM execution is not established by this emulator result. |
+| Production-signed 3.0.1 to final 3.1.0, API 31 | **Passed using only package install-r:** versionCode 30001 to 30100, same application data-directory inode/UID. The account/auth records, UDP transport and nonempty credential-field hashes matched; dark mode, two exact Persian messages, the native contact-provider row and both independent call-history records remained. The prior failed outgoing call and prior connected outgoing call stayed distinct. Native contact visibility and Online registration passed. |
+| Final Windows x64 lab profile | Light/dark pre-dial destination, Call/Cancel labels and native Cancel flow passed. Persian messages and a contact name containing `&` were retained. The contact popup started a connected call to the intended lab SIP peer using G.711u. At 41 seconds Windows RX/TX were **1,169/1,067**, with reciprocal peer counters. Correct call-window hangup left zero test channels; normal Quit completed. |
+| Installed Windows x64, original profile | The installed application opened the retained initial setup draft; this original profile had no configured account. Dark-theme Automatic/UDP/TCP/TLS choices were readable. Restored-account Online recovery is not claimed. |
 
-The old 3.0.1 APK failed installation on the API 24 x86_64 environment with `INSTALL_FAILED_NO_MATCHING_ABIS`; the new prototype installed and ran. This emulator's initial kernel entropy starvation was corrected in the isolated test environment using host-generated cryptographic entropy. No application workaround replaced secure randomness.
+The final Android screenshots were checked visually and the six-image CafeBazaar gallery was prepared. Store upload has not occurred.
 
-The test fixtures use fictional accounts and bounded local SIP/RTP traffic. Native call state, exchanged audio packets and tone generation establish protocol/media-path evidence. They do not establish microphone/speaker quality on a physical handset. Prior 3.0.1 physical Android/Windows/PSTN feedback is historical evidence, and is not represented as a fresh 3.1.0 physical-device test.
+The API 37 cold-boot System UI ANR recovered through Wait; MyTel startup remained healthy. The bounded API 24 emulator entropy correction was test infrastructure using host-generated cryptographic entropy; no application change replaced secure randomness.
 
-## Preservation and package provenance
+The API 31 upgrade used the official x86_64 emulator image: the old ARM64 application ran through native translation; the final application ran natively as x86_64 with 13 executable JNI mappings. No uninstall, storage clear, data restoration or AVD recreation occurred during the upgrade. This is emulator upgrade evidence, not physical ARM-device coverage.
 
-Only final clean source revisions may produce the release artifacts. The release manifest records separate Android and Windows application build revisions, the complete source archive revisions and their hashes. Post-build source changes are limited to reviewed documentation and installer/release-support paths; application changes require rebuilding.
+## Earlier, separately identified runtime evidence
 
-Windows lab testing uses a closed-application full-profile snapshot and a separately held original directory. File hashes and backing file IDs distinguish the native Windows profile from Codex's separate MSIX view. They are never merged. Private profiles, databases, recordings, keys and test logs are excluded from public runtime/source packages.
+Windows revision `d500b65659ed77e7f06053c033714f31b964e4c7` interoperated with the final Android build on an isolated real PBX. Registered contacts, native Persian messages in both directions, incoming/outgoing answered calls, Windows hold/resume and normal hangups passed. Reciprocal RTP counters grew by 1,570 packets on the outgoing path, 323 packets over 6 seconds after resume, and 318 packets over 6 seconds on the reverse path. Initial unanswered attempts are excluded from those successful-call results.
 
-The existing SDK source ZIP and manifest remain byte-identical historical assets. Their disclosed missing external source pins and unverified prebuilt-dependency correspondence remain unresolved. This release does not claim a complete offline SDK rebuild. Windows application/installer binaries are not Authenticode-signed.
+**One Asterisk TX lost packet was reported on a held/resumed leg.** Zero packet loss or physical speech quality is not claimed. Registered contacts were not OPTIONS-qualified, and the native message observation is not a captured MESSAGE/200 exchange or a read receipt.
 
-## Limits
+On that Windows revision, OS history contained exactly one own message toast preserving a Persian contact title, literal `&`, `<test>` and `]]>`, and the MyTel logo. The incoming call window opened and was answered, but its separate OS call-toast history query returned **`UNVERIFIED_NO_MATCH`**. A standalone call-toast acceptance is therefore not claimed.
 
-Passing the tested matrix does not guarantee every phone, PBX, network or codec combination. Android versions below 7 and unsupported CPU architectures are outside this package's install contract. ARM libraries receive artifact checks; physical ARM handset testing must be distinguished from x86/x86_64 emulator testing.
+Earlier Android revision `b482d146a69de0f6bbca64d54a288554f66b1b9e` passed 32-bit API 24 startup/encrypted SAF export and API 37 existing-account LAN denial/retry checks. Revision `bf25ac566024c6c612b290096c34f1eb405e0a8c` separately passed encrypted SAF Cancel/rotation/Save, modern MediaStore export, one-action LAN setup continuation and elapsed-time preview checks. Original encrypted files remained unchanged and owned temporary plaintext was cleaned. These results remain attached to those revisions; they are not described as reruns on the final chat-fix binary.
 
-SIP SIMPLE text delivery, external calling, transfers, video, push and background reception depend on compatible PBX/provider configuration, permissions and network reachability. A SIP server acknowledgement is not a read receipt. The application supplies no PSTN subscription or universal push service. This record must state explicitly which of these paths were actually exercised in the final acceptance run.
+The earlier transient duplicate-message display was reproduced on b482 and then resolved and natively replayed on the final Android build. The earlier empty/raw-key pre-dial popup was reproduced on d500 and then resolved and natively replayed on the final Windows build.
+
+## Preservation, actual installation and remaining gates
+
+Temporary PBX configuration has been cleaned and runtime reconciliation reached **`CLEANED_RUNTIME_VERIFIED`**. Unrelated configuration bytes were preserved and no PBX restart was performed.
+
+The original Windows profile was restored with all eight backing file IDs and hashes verified. The separate ten-file MSIX view was unchanged; registry and shortcut restoration checks passed. These distinct profiles were not merged.
+
+Actual Windows installation passed with status **`INSTALLED_VERIFIED_BEFORE_FIRST_APP_LAUNCH`**, installer exit 0 and **1,523 payload files verified**. Before first application launch, the original profile IDs/hashes and separate MSIX view matched their pre-install state. App/uninstaller icons, installation/uninstallation metadata, three expected shortcuts, the preserved legacy shortcut root, protected registry and the original full installation backup passed their checks.
+
+An earlier preflight refused before installer launch. The workspace-only verifier was corrected to use the verified PowerShell 7 runtime instead of the failing Windows PowerShell path; no application or packaged-artifact changes were needed. The earlier refusal is not counted as an installation.
+
+The actual MyTel uninstaller wizard displayed the MyTel title, logo, `mytel.one` website and data-preservation text. Native Cancel closed it; a separate check after that observed Cancel confirmed all 1,523 installed payload files unchanged. The premature check taken before Cancel is excluded from that result. No uninstall was performed.
+
+The tested API 31 upgrade and Windows installation gates are complete. Remaining work is final source/archive provenance and integrity sealing, publication, and anonymous verification of the published files. No release or store publication is claimed here.
+
+## Limits and source correspondence
+
+The install contract starts at Android 7/API 24 and covers the four packaged ABIs. Artifact checks on ARM libraries do not establish physical ARM handset or every-phone compatibility. No fresh 3.1.0 physical-handset/PSTN speech-quality, video, transfer/conference, Bluetooth or attachment-network round trip is claimed. Native RTP counters demonstrate packet flow, not microphone/speaker quality.
+
+Windows binaries are not Authenticode-signed; clean-machine acceptance is unverified. The inherited SDK source ZIP/manifest remain byte-identical historical assets, with 26 unavailable exact external source pins and unverified prebuilt-dependency correspondence disclosed separately. A complete offline SDK rebuild is not established. Private credentials, profiles, recordings and test captures are excluded from public packages.

@@ -14,6 +14,9 @@ SIP calling and team messages for **Android and Windows**, built on the Linphone
 - Android 7+ support with ARMv7, ARM64, x86 and x86_64 native libraries; Java time backport and guarded modern notification, Telecom, image and picture-in-picture APIs.
 - User-initiated document export on older Android releases, preserving original recordings and downloaded files without broad storage permission.
 - A signed Android App Bundle for stores and a universal APK for direct installation. Store delivery can select the device ABI; the universal APK contains all four and is larger.
+- Stable conversation history after deleting, sending and loading earlier messages; corrected voice timers, first microphone access and encrypted recording exports.
+- Explicit local-network permission recovery for newer Android versions, without repeated automatic prompts.
+- Windows legacy-history recovery, safe Persian/special-character notifications and correctly prefilled contact-call dialogs.
 
 ## What changed in v3.0.1
 

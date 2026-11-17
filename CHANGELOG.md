@@ -10,7 +10,7 @@ Group changes to describe their impact on the project, as follows:
     Fixed for any bug fixes.
     Security to invite users to upgrade in case of vulnerabilities.
 
-## MyTel [3.1.0] - 2026-11-16
+## MyTel [3.1.0] - 2026-11-17
 
 ### Changed
 - One-screen Android introduction and direct three-field SIP setup on Android and Windows, with technical fields in Advanced.
@@ -24,6 +24,11 @@ Group changes to describe their impact on the project, as follows:
 - Legacy user-selected document exports, preserving original files, provider failure/cancellation handling and filenames with URI metacharacters.
 - Adaptive launcher icon placement for pre-Android-8 devices and resource compatibility on Android 7.
 - Secure/mixed-case SIP route parsing and explicit transport selection without leaking credential-bearing server URIs into setup logs.
+- Failed-setup credential cleanup, first microphone access and connected-call notification lifecycle.
+- Elapsed voice/recording timers across fractional timezone offsets and decrypted recording export ownership.
+- New-account local-network permission continuation and explicit existing-account retry without automatic prompt loops.
+- Conversation pagination overlap and transient duplicate rows after delete/send, preserving distinct messages and history.
+- Windows legacy account/history matching, XML-safe Persian notifications and prefilled translated contact-call dialogs.
 
 ## MyTel [3.0.1] - 2026-11-15
 
