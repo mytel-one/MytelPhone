@@ -268,6 +268,7 @@
                         <androidx.appcompat.widget.AppCompatTextView
                             style="@style/MyTel.Ux.Section"
                             android:text="@string/mytel_ux_other_setup"
+                            android:visibility="gone"
                             android:enabled="@{!viewModel.registrationInProgress}"
                             android:drawableEnd="@drawable/caret_right"
                             android:drawableTint="?attr/color_main2_600"
