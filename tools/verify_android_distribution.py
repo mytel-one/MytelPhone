@@ -196,6 +196,92 @@ def parse_bundle_alignment(text):
     return declared.pop().upper()
 
 
+def parse_bundle_native_config(text):
+    """Read the actual JSON native message; absence is not disabled/defaultfalse."""
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise VerificationError("Bundle config contains duplicate JSON fields")
+            result[key] = value
+        return result
+    try:
+        config = json.loads(text, object_pairs_hook=unique)
+        optimizations = config.get("optimizations", {})
+        if not isinstance(optimizations, dict):
+            raise VerificationError("Bundle optimizations must be an object")
+        native = optimizations.get("uncompressNativeLibraries")
+        if native is None and "uncompressNativeLibraries" not in optimizations:
+            return {"native_config_present": False, "uncompress_native_libraries": None, "page_alignment": None}
+        if not isinstance(native, dict) or set(native) - {"enabled", "alignment"}:
+            raise VerificationError("Bundle native compression message is malformed/unsupported")
+        enabled, alignment = native.get("enabled", False), native.get("alignment")
+        if type(enabled) is not bool or alignment not in (None, "PAGE_ALIGNMENT_4K", "PAGE_ALIGNMENT_16K", "PAGE_ALIGNMENT_UNSPECIFIED"):
+            raise VerificationError("Bundle native compression/alignment value is invalid")
+        return {"native_config_present": True, "uncompress_native_libraries": enabled, "page_alignment": alignment}
+    except (json.JSONDecodeError, AttributeError, TypeError) as error:
+        raise VerificationError("Invalid bundletool config JSON") from error
+
+
+def _boolean(text):
+    value = re.sub(r"^\(type 0x12\)", "", text.strip(), flags=re.IGNORECASE).lower()
+    if value in ("true", "false"):
+        return value == "true"
+    if re.fullmatch(r"0x[0-9a-f]+", value) and int(value, 16) in (0, 1, 0xFFFFFFFF):
+        return int(value, 16) != 0
+    raise VerificationError("extractNativeLibs is not an explicit supported boolean")
+
+
+def parse_apk_extract_native_libs(text):
+    lines = text.splitlines()
+    applications = [(index, len(match[1].expandtabs())) for index, line in enumerate(lines) if (match := re.match(r"^([ \t]*)E: application\b", line))]
+    if len(applications) != 1 or not re.search(r"(?m)^[ \t]*E: manifest\b", text):
+        raise VerificationError("aapt XMLtree must contain one application")
+    index, depth = applications[0]
+    values = []
+    for line in lines[index + 1:]:
+        if re.match(r"^[ \t]*E:", line):
+            break  # Application attributes precede its child elements.
+        match = re.match(r"^([ \t]*)A: android:extractNativeLibs(?:\([^)]*\))?[ \t]*=[ \t]*(.*)$", line)
+        if "A: android:extractNativeLibs" in line and match is None:
+            raise VerificationError("Application extractNativeLibs attribute is malformed")
+        if match:
+            if len(match[1].expandtabs()) <= depth:
+                raise VerificationError("extractNativeLibs is outside application attributes")
+            values.append(_boolean(match[2]))
+    if len(values) > 1:
+        raise VerificationError("Application contains duplicate extractNativeLibs attributes")
+    return values[0] if values else None
+
+
+def native_packaging_policy(native, extract_native_libs, config=None):
+    if native.get("kind") not in ("apk", "aab"):
+        raise VerificationError("Unknown native packaging artifact kind")
+    records = native.get("native_libraries", [])
+    if not all(type(row.get("stored")) is bool for row in records):
+        raise VerificationError("Native compression inventory is incomplete")
+    compressed = sum(not row["stored"] for row in records)
+    if native["kind"] == "aab":
+        if not config or config.get("native_config_present") is not True:
+            raise VerificationError("Bundle native compression message is absent/ambiguous")
+        if config.get("uncompress_native_libraries") is False:
+            if extract_native_libs is not True:
+                raise VerificationError("Compressed bundle mode requires explicit extractNativeLibs=true")
+            mode = "COMPRESSED_EXTRACTED"
+        elif config.get("uncompress_native_libraries") is True and config.get("page_alignment") == "PAGE_ALIGNMENT_16K":
+            mode = "UNCOMPRESSED_16K"
+        else:
+            raise VerificationError("Uncompressed bundle native libraries require PAGE_ALIGNMENT_16K")
+    elif compressed:
+        if extract_native_libs is not True:
+            raise VerificationError("Compressed APK native libraries require explicit extractNativeLibs=true")
+        mode = "COMPRESSED_EXTRACTED"
+    else:
+        mode = "STORED_16K"
+    return {"mode": mode, "extract_native_libs": extract_native_libs, "native_members": len(records),
+            "compressed_native_members": compressed, "stored_native_members": len(records) - compressed}
+
+
 def _parse_bundle_manifest(text):
     try:
         root = ET.fromstring(text)
@@ -209,12 +295,19 @@ def _parse_bundle_manifest(text):
                 if not permission:
                     raise VerificationError("Bundle permission record does not contain android:name")
                 permissions.add(permission)
+        applications = root.findall("application")
+        if len(applications) > 1:
+            raise VerificationError("Bundle manifest contains multiple applications")
+        extract = applications[0].get(ANDROID_XML + "extractNativeLibs") if applications else None
+        if extract not in (None, "true", "false"):
+            raise VerificationError("Bundle extractNativeLibs is not a boolean")
         return {
             "package_name": root.attrib["package"], "version_code": int(root.attrib[ANDROID_XML + "versionCode"]),
             "version_name": root.attrib[ANDROID_XML + "versionName"], "min_sdk": int(sdk.attrib[ANDROID_XML + "minSdkVersion"]),
             "target_sdk": int(sdk.attrib[ANDROID_XML + "targetSdkVersion"]),
             "required_features": sorted({x.get(ANDROID_XML + "name") for x in root.findall("uses-feature") if x.get(ANDROID_XML + "name") and x.get(ANDROID_XML + "required", "true") != "false"}),
             "permissions": sorted(permissions),
+            "extract_native_libs": None if extract is None else extract == "true",
         }
     except (ET.ParseError, KeyError, ValueError) as error:
         raise VerificationError("Invalid or incomplete bundletool manifest: " + str(error)) from error
@@ -282,6 +375,14 @@ def verify_distribution(options):
                     report["errors"].append(_issue("ABI_METADATA_MISMATCH", "aapt native-code differs from ZIP ABI directories"))
             except VerificationError as error:
                 report["errors"].append(_issue("METADATA_INVALID", str(error)))
+        manifest = _run_tool(options.aapt, ["dump", "xmltree", str(path), "AndroidManifest.xml"], "aapt_manifest", options, report)
+        if manifest is not None:
+            try:
+                extract = parse_apk_extract_native_libs(manifest)
+                report["metadata"]["extract_native_libs"] = extract
+                report["native"]["packaging"] = native_packaging_policy(native, extract)
+            except VerificationError as error:
+                report["errors"].append(_issue("NATIVE_PACKAGING", str(error)))
         _run_tool(options.zipalign, ["-c", "-P", "16", "-v", "4", str(path)], "zipalign", options, report)
         signing = _run_tool(options.apksigner, ["verify", "--verbose", "--print-certs", "--min-sdk-version", str(options.min_sdk), str(path)], "apksigner", options, report)
         if signing is not None:
@@ -298,12 +399,10 @@ def verify_distribution(options):
         config = _run_tool(options.bundletool, ["dump", "config", "--bundle=" + str(path)], "bundletool_config", options, report)
         if config is not None:
             try:
-                alignment = parse_bundle_alignment(config)
-                report["native"]["bundle_page_alignment"] = alignment
-                if alignment is None:
-                    report["unverified"].append(_issue("BUNDLE_ALIGNMENT_UNDECLARED", "bundletool did not expose an explicit native page alignment"))
-                elif alignment != "PAGE_ALIGNMENT_16K":
-                    report["errors"].append(_issue("BUNDLE_ALIGNMENT", "Bundle native alignment is " + alignment))
+                packaging_config = parse_bundle_native_config(config)
+                report["native"]["bundle_native_config"] = packaging_config
+                report["native"]["bundle_page_alignment"] = packaging_config["page_alignment"]
+                report["native"]["packaging"] = native_packaging_policy(native, report["metadata"].get("extract_native_libs"), packaging_config)
             except VerificationError as error:
                 report["errors"].append(_issue("BUNDLE_ALIGNMENT", str(error)))
         signing = _run_tool(options.jarsigner, ["-J-Duser.language=en", "-J-Duser.country=US", "-verify", "-verbose", "-certs", str(path)], "jarsigner", options, report)
@@ -327,7 +426,7 @@ def verify_distribution(options):
         report["unverified"].append(_issue("SIGNING_IDENTITY_UNSPECIFIED", "Expected production certificate fingerprint was not supplied"))
     if report["metadata"]:
         for feature in options.optional_features:
-            if feature in report["metadata"]["required_features"]:
+            if feature in report["metadata"].get("required_features", []):
                 report["errors"].append(_issue("HARDWARE_FILTER", feature + " must not be a required install feature"))
     report["status"] = "FAIL" if report["errors"] else "UNVERIFIED" if report["unverified"] else "PASS"
     report["scope"] = "Distribution structure, metadata and signature; runtime and real-device acceptance are separate."

@@ -259,10 +259,11 @@ class DistributionReportTests(unittest.TestCase):
     def official_output(tool, arguments, label, options, report):
         return {
             "aapt": "package: name='one.example.phone' versionCode='30100' versionName='3.1.0'\nsdkVersion:'24'\ntargetSdkVersion:'37'\nnative-code: 'armeabi-v7a' 'arm64-v8a' 'x86' 'x86_64'\n",
+            "aapt_manifest": "E: manifest (line=1)\n  E: application (line=2)\n    A: android:extractNativeLibs(0x010104ea)=(type 0x12)0x0\n",
             "zipalign": "Verification successful",
             "apksigner": "Signer #1 certificate SHA-256 digest: " + "a" * 64,
-            "bundletool_manifest": '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="one.example.phone" android:versionCode="30100" android:versionName="3.1.0"><uses-sdk android:minSdkVersion="24" android:targetSdkVersion="37" /></manifest>',
-            "bundletool_config": "alignment: PAGE_ALIGNMENT_16K",
+            "bundletool_manifest": '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="one.example.phone" android:versionCode="30100" android:versionName="3.1.0"><uses-sdk android:minSdkVersion="24" android:targetSdkVersion="37" /><application android:extractNativeLibs="false" /></manifest>',
+            "bundletool_config": '{"optimizations":{"uncompressNativeLibraries":{"enabled":true,"alignment":"PAGE_ALIGNMENT_16K"}}}',
             "jarsigner": "jar verified.",
             "keytool": "SHA256: " + "a" * 64,
         }[label]
@@ -298,12 +299,77 @@ class DistributionReportTests(unittest.TestCase):
         archive(self.path, kind="aab", aligned=False)
         def output(tool, arguments, label, options, report):
             if label == "bundletool_config":
-                return "alignment: PAGE_ALIGNMENT_4K"
+                return '{"optimizations":{"uncompressNativeLibraries":{"enabled":true,"alignment":"PAGE_ALIGNMENT_4K"}}}'
             return self.official_output(tool, arguments, label, options, report)
         with patch.object(verification, "_run_tool", side_effect=output):
             report = verification.verify_distribution(self.options("--certificate-sha256", "a" * 64))
         self.assertEqual("FAIL", report["status"])
         self.assertIn("BUNDLE_ALIGNMENT", [item["code"] for item in report["errors"]])
+
+    def test_compressed_apk_requires_actual_manifest_extraction_true(self):
+        archive(self.path, compressed=True)
+        for value, expected in (("0xffffffff", "PASS"), ("0x0", "FAIL")):
+            def output(tool, arguments, label, options, report):
+                if label == "aapt_manifest":
+                    return "E: manifest (line=1)\n  E: application (line=2)\n    A: android:extractNativeLibs(0x010104ea)=(type 0x12)" + value + "\n"
+                return self.official_output(tool, arguments, label, options, report)
+            with self.subTest(value=value), patch.object(verification, "_run_tool", side_effect=output):
+                report = verification.verify_distribution(self.options("--certificate-sha256", "a" * 64))
+                self.assertEqual(expected, report["status"])
+
+    def test_compressed_bundle_accepts_disabled_native_uncompression_with_4k_config(self):
+        self.path = self.path.with_suffix(".aab")
+        archive(self.path, kind="aab", compressed=True)
+        def output(tool, arguments, label, options, report):
+            value = self.official_output(tool, arguments, label, options, report)
+            if label == "bundletool_config":
+                return '{"optimizations":{"uncompressNativeLibraries":{"enabled":false,"alignment":"PAGE_ALIGNMENT_4K"}}}'
+            return value.replace('extractNativeLibs="false"', 'extractNativeLibs="true"') if label == "bundletool_manifest" else value
+        with patch.object(verification, "_run_tool", side_effect=output):
+            report = verification.verify_distribution(self.options("--certificate-sha256", "a" * 64))
+        self.assertEqual("PASS", report["status"])
+        self.assertEqual("COMPRESSED_EXTRACTED", report["native"]["packaging"]["mode"])
+
+
+class PackagingMetadataTests(unittest.TestCase):
+    def test_bundle_native_message_presence_distinguishes_false_default_from_absence(self):
+        for body in ('{}', '{"enabled":false}', '{"enabled":false,"alignment":"PAGE_ALIGNMENT_4K"}'):
+            config = verification.parse_bundle_native_config('{"optimizations":{"uncompressNativeLibraries":' + body + '}}')
+            self.assertIs(config["uncompress_native_libraries"], False)
+            self.assertTrue(config["native_config_present"])
+        config = verification.parse_bundle_native_config('{"optimizations":{}}')
+        self.assertIsNone(config["uncompress_native_libraries"])
+        self.assertFalse(config["native_config_present"])
+
+    def test_bundle_config_rejects_malformed_bool_duplicate_keys_or_native_message(self):
+        for text in ('{"optimizations":{"uncompressNativeLibraries":{"enabled":"false"}}}',
+                     '{"optimizations":{"uncompressNativeLibraries":[]}}',
+                     '{"optimizations":{"uncompressNativeLibraries":{"enabled":true,"enabled":false}}}',
+                     '{"optimizations":{"uncompressNativeLibraries":{"alignment":"UNKNOWN"}}}', 'not JSON'):
+            with self.subTest(text=text), self.assertRaises(verification.VerificationError):
+                verification.parse_bundle_native_config(text)
+
+    def test_apk_xmltree_reads_only_direct_application_boolean(self):
+        for value, expected in (("0xffffffff", True), ("0x0", False), ("true", True), ("false", False)):
+            text = "E: manifest\n  E: application\n    A: android:extractNativeLibs(0x010104ea)=(type 0x12)" + value + "\n    E: activity\n      A: android:extractNativeLibs(0x010104ea)=(type 0x12)0x0\n"
+            self.assertIs(verification.parse_apk_extract_native_libs(text), expected)
+        self.assertIsNone(verification.parse_apk_extract_native_libs("E: manifest\n  E: application\n    E: activity\n      A: android:extractNativeLibs(0x010104ea)=(type 0x12)0xffffffff\n"))
+
+    def test_apk_xmltree_rejects_missing_application_duplicate_or_invalid_boolean(self):
+        for text in ("E: manifest", "E: manifest\n  E: application\n  E: application", "E: manifest\n  E: application\n    A: android:extractNativeLibs(0x010104ea)=(type 0x12)0x2", "E: manifest\n  E: application\n    A: android:extractNativeLibs(0x010104ea)true", "E: manifest\n  E: application\n    A: android:extractNativeLibs(0x010104ea)=true\n    A: android:extractNativeLibs(0x010104ea)=false"):
+            with self.subTest(text=text), self.assertRaises(verification.VerificationError):
+                verification.parse_apk_extract_native_libs(text)
+
+    def test_compressed_policy_rejects_ambiguous_or_unsafe_flags(self):
+        native = {"kind": "aab", "native_libraries": [{"stored": False}]}
+        for config in ({"native_config_present": False, "uncompress_native_libraries": None, "page_alignment": None},
+                       {"native_config_present": True, "uncompress_native_libraries": True, "page_alignment": "PAGE_ALIGNMENT_4K"}):
+            with self.subTest(config=config), self.assertRaises(verification.VerificationError):
+                verification.native_packaging_policy(native, True, config)
+        disabled = {"native_config_present": True, "uncompress_native_libraries": False, "page_alignment": None}
+        for extract in (False, None):
+            with self.subTest(extract=extract), self.assertRaises(verification.VerificationError):
+                verification.native_packaging_policy(native, extract, disabled)
 
 if __name__ == "__main__":
     unittest.main()
