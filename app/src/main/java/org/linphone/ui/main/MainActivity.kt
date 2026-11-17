@@ -196,21 +196,18 @@ class MainActivity : GenericActivity() {
     private val requestReadPhonePermissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        var allGranted = true
-        for (permission in permissions) {
-            val isGranted = permission.value
-            if (isGranted) {
-                Log.i("$TAG [${permission.key}] permission has been granted")
-            } else {
-                allGranted = false
-                Log.w("$TAG [${permission.key}] permission has been denied, toggling OFF Call Redirection setting")
-                corePreferences.useCallRedirectionService = false
+        when (MyTelCallRedirectionPermissionPolicy.onResult(permissions, !isFinishing && !isDestroyed)) {
+            MyTelCallRedirectionPermissionPolicy.Action.REQUEST_ROLE -> {
+                Log.i("$TAG Permission required for Call Redirection has been granted, requesting redirection role")
+                requestCallRedirectionRole()
             }
-        }
-
-        if (allGranted) {
-            Log.i("$TAG Permissions required for Call Redirection have been granted, requesting redirection role")
-            requestCallRedirectionRole()
+            MyTelCallRedirectionPermissionPolicy.Action.DISABLE -> {
+                Log.w("$TAG READ_PHONE_STATE was denied or cancelled, toggling OFF Call Redirection setting")
+                coreContext.postOnCoreThread { corePreferences.useCallRedirectionService = false }
+            }
+            MyTelCallRedirectionPermissionPolicy.Action.IGNORE -> {
+                Log.i("$TAG Ignoring Call Redirection permission result for a finishing activity")
+            }
         }
     }
 
