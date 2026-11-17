@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mytel_help_title">About MyTel</string>
+    <string name="mytel_product_name" translatable="false">MyTel</string>
+    <string name="mytel_about_summary">Your business calls and conversations, together.
+Connect with MyTel for VoIP and business communication services.</string>
+    <string name="mytel_official_website_title" translatable="false">mytel.one</string>
+    <string name="mytel_brand_copyright" translatable="false">© 2026 MyTel</string>
+    <string name="mytel_contact_title">Contact MyTel</string>
+    <string name="mytel_about_company_title">About our services</string>
+    <string name="mytel_resources_title">Help and VoIP resources</string>
+    <string name="mytel_diagnostics_title">Diagnostics</string>
+    <string name="mytel_support_phone" translatable="false">021-91018746</string>
+    <string name="mytel_support_email" translatable="false">info@mytel.one</string>
+    <string name="mytel_official_website_url" translatable="false">https://mytel.one/</string>
+    <string name="mytel_about_company_url" translatable="false">https://mytel.one/about/</string>
+    <string name="mytel_support_phone_uri" translatable="false">tel:+982191018746</string>
+    <string name="mytel_support_email_uri" translatable="false">mailto:info@mytel.one</string>
+    <string name="mytel_software_licenses_title">Software licenses</string>
+    <string name="mytel_software_licenses_intro">MyTel product and improvements © 2026 MyTel.
+
+Corresponding application source and notices: https://github.com/mytel-one/MytelPhone
+
+The following notices and license terms apply to the included software. These licenses do not grant rights to the MyTel name or logo.</string>
+    <string name="mytel_third_party_notices_title">Component license information</string>
+    <string name="mytel_contact_action_unavailable">This action is unavailable on this device. Contact MyTel at mytel.one/contact/.</string>
+</resources>

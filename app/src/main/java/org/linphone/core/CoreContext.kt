@@ -739,6 +739,10 @@ class CoreContext
             Log.w("$TAG Set account [${firstAccount?.params?.identityAddress?.asStringUriOnly()}] as default")
         }
 
+        // MyTel releases are distributed by the user's selected store/channel.
+        // Disable the SDK update endpoint for both existing profiles and new installs.
+        core.config.setString("misc", "version_check_url_root", "")
+
         computeUserAgent()
         Log.i("$TAG Core has been configured with user-agent [${core.userAgent}], starting it")
         core.start()
@@ -1454,10 +1458,7 @@ class CoreContext
         Log.i("$TAG Disabling hiding of empty chat rooms (MyTel: outgoing-only rooms must stay visible)")
         core.config.setBool("misc", "hide_empty_chat_rooms", false)
 
-        // Replace old URLs by new ones
-        if (corePreferences.checkForUpdateServerUrl == "https://www.linphone.org/releases") {
-            corePreferences.checkForUpdateServerUrl = "https://download.linphone.org/releases"
-        }
+        // Retain existing media and diagnostic server migrations.
         if (core.fileTransferServer == "https://www.linphone.org:444/lft.php") {
             core.fileTransferServer = "https://files.linphone.org/http-file-transfer-server/hft.php"
         }

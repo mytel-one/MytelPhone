@@ -32,7 +32,6 @@ import org.linphone.R
 import org.linphone.core.Core
 import org.linphone.core.CoreListenerStub
 import org.linphone.core.Factory
-import org.linphone.core.VersionUpdateCheckResult
 import org.linphone.core.tools.Log
 import org.linphone.ui.GenericViewModel
 import org.linphone.utils.AppUtils
@@ -66,8 +65,6 @@ class HelpViewModel
 
     val firebaseProjectId = MutableLiveData<String>()
 
-    val checkUpdateAvailable = MutableLiveData<Boolean>()
-
     val uploadLogsAvailable = MutableLiveData<Boolean>()
 
     val logsUploadInProgress = MutableLiveData<Boolean>()
@@ -77,18 +74,6 @@ class HelpViewModel
     val developerSettingsEnabled = MutableLiveData<Boolean>()
 
     val canConfigFileBeViewed = MutableLiveData<Boolean>()
-
-    val newVersionAvailableEvent: MutableLiveData<Event<Pair<String, String>>> by lazy {
-        MutableLiveData()
-    }
-
-    val versionUpToDateEvent: MutableLiveData<Event<Boolean>> by lazy {
-        MutableLiveData()
-    }
-
-    val errorEvent: MutableLiveData<Event<Boolean>> by lazy {
-        MutableLiveData()
-    }
 
     val debugLogsCleanedEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData()
@@ -113,31 +98,6 @@ class HelpViewModel
     private var versionClickCount: Int = 0
 
     private val coreListener = object : CoreListenerStub() {
-        @WorkerThread
-        override fun onVersionUpdateCheckResultReceived(
-            core: Core,
-            result: VersionUpdateCheckResult,
-            version: String?,
-            url: String?
-        ) {
-            when (result) {
-                VersionUpdateCheckResult.NewVersionAvailable -> {
-                    Log.i("$TAG Update available, version [$version], url [$url]")
-                    if (!version.isNullOrEmpty() && !url.isNullOrEmpty()) {
-                        newVersionAvailableEvent.postValue(Event(Pair(version, url)))
-                    }
-                }
-                VersionUpdateCheckResult.UpToDate -> {
-                    Log.i("$TAG This version is up-to-date")
-                    versionUpToDateEvent.postValue(Event(true))
-                }
-                else -> {
-                    Log.e("$TAG Can't check for update, an error happened [$result]")
-                    errorEvent.postValue(Event(true))
-                }
-            }
-        }
-
         @WorkerThread
         override fun onLogCollectionUploadStateChanged(
             core: Core,
@@ -186,7 +146,6 @@ class HelpViewModel
 
             printLogsInLogcat.postValue(corePreferences.printLogsInLogcat)
             developerSettingsEnabled.postValue(corePreferences.showDeveloperSettings)
-            checkUpdateAvailable.postValue(corePreferences.checkForUpdateServerUrl.isNotEmpty())
             // Always allow sharing logs locally as text, no upload server required
             uploadLogsAvailable.postValue(true)
         }
@@ -243,7 +202,7 @@ class HelpViewModel
             val context = coreContext.context
             val builder = StringBuilder()
 
-            builder.appendLine("MytellPhone debug report")
+            builder.appendLine("MyTel debug report")
             builder.appendLine("=========================")
             builder.appendLine(
                 "Time: " + java.text.SimpleDateFormat(
@@ -303,15 +262,6 @@ class HelpViewModel
     }
 
     @UiThread
-    fun checkForUpdate() {
-        val currentVersion = version.value.orEmpty()
-        coreContext.postOnCoreThread { core ->
-            Log.i("$TAG Checking for update using current version [$currentVersion]")
-            core.checkForUpdate(currentVersion)
-        }
-    }
-
-    @UiThread
     fun toggleLogcat() {
         val newValue = printLogsInLogcat.value == false
         coreContext.postOnCoreThread {
@@ -328,7 +278,7 @@ class HelpViewModel
             Log.i("$TAG Dumping & displaying Core's config")
             val config = core.config.dump()
             val file = FileUtils.getFileStorageCacheDir(
-                "linphonerc.txt",
+                "mytel-settings.txt",
                 overrideExisting = true
             )
             viewModelScope.launch {

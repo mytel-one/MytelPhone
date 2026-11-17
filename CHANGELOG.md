@@ -10,6 +10,13 @@ Group changes to describe their impact on the project, as follows:
     Fixed for any bug fixes.
     Security to invite users to upgrade in case of vulnerabilities.
 
+## MyTel [3.1.2] - 2026-11-17
+
+### Changed
+- MyTel Help/About with the official website, verified contact details and service resources.
+- Removed the Privacy Policy entry and manual/background update checking.
+- Kept component licenses in an accessible separate screen; cleaned customer-visible examples and Diagnostics labels.
+
 ## MyTel [3.1.1] - 2026-11-17
 
 ### Fixed

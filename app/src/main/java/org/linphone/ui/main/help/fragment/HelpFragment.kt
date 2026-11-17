@@ -22,10 +22,16 @@ package org.linphone.ui.main.help.fragment
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
+import android.text.method.LinkMovementMethod
+import android.text.util.Linkify
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.annotation.UiThread
+import androidx.appcompat.app.AlertDialog
+import androidx.core.net.toUri
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import org.linphone.R
 import org.linphone.core.tools.Log
@@ -33,10 +39,6 @@ import org.linphone.databinding.HelpFragmentBinding
 import org.linphone.ui.GenericActivity
 import org.linphone.ui.main.fragment.GenericMainFragment
 import org.linphone.ui.main.help.viewmodel.HelpViewModel
-import org.linphone.utils.ConfirmationDialogModel
-import org.linphone.utils.DialogUtils
-import androidx.core.net.toUri
-import androidx.lifecycle.ViewModelProvider
 
 @UiThread
 class HelpFragment : GenericMainFragment() {
@@ -45,7 +47,6 @@ class HelpFragment : GenericMainFragment() {
     }
 
     private lateinit var binding: HelpFragmentBinding
-
     private lateinit var viewModel: HelpViewModel
 
     override fun onCreateView(
@@ -53,122 +54,85 @@ class HelpFragment : GenericMainFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = HelpFragmentBinding.inflate(layoutInflater)
+        binding = HelpFragmentBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.lifecycleOwner = viewLifecycleOwner
-
         viewModel = ViewModelProvider(this)[HelpViewModel::class.java]
         binding.viewModel = viewModel
         observeToastEvents(viewModel)
 
-        binding.setBackClickListener {
-            goBack()
+        binding.setBackClickListener { goBack() }
+        binding.setWebsiteClickListener {
+            openExternalLink(getString(R.string.mytel_official_website_url))
         }
-
+        binding.setAboutClickListener {
+            openExternalLink(getString(R.string.mytel_about_company_url))
+        }
+        binding.setUserGuideClickListener {
+            openExternalLink(getString(R.string.website_user_guide_url))
+        }
+        binding.setSupportClickListener {
+            openExternalLink(getString(R.string.website_contact_url))
+        }
+        binding.setPhoneClickListener {
+            openExternalLink(getString(R.string.mytel_support_phone_uri), Intent.ACTION_DIAL)
+        }
+        binding.setEmailClickListener {
+            openExternalLink(getString(R.string.mytel_support_email_uri), Intent.ACTION_SENDTO)
+        }
+        binding.setLicensesClickListener { showSoftwareLicenses() }
         binding.setDebugClickListener {
             if (findNavController().currentDestination?.id == R.id.helpFragment) {
                 val action = HelpFragmentDirections.actionHelpFragmentToDebugFragment()
                 findNavController().navigate(action)
             }
         }
-
-        binding.setUserGuideClickListener {
-            val url = getString(R.string.website_user_guide_url)
-            openUrlInBrowser(url)
-        }
-
-        binding.setPrivacyPolicyClickListener {
-            val url = getString(R.string.website_privacy_policy_url)
-            openUrlInBrowser(url)
-        }
-
-        binding.setLicensesClickListener {
-            val url = getString(R.string.website_open_source_licences_usage_url)
-            openUrlInBrowser(url)
-        }
-
-        binding.setTranslateClickListener {
-            val url = getString(R.string.website_translate_weblate_url)
-            openUrlInBrowser(url)
-        }
-
-        // MyTel: translation row points to Linphone's Weblate, not relevant for our users
-        binding.translateIcon.visibility = View.GONE
-        binding.translateTitle.visibility = View.GONE
-
-        viewModel.newVersionAvailableEvent.observe(viewLifecycleOwner) {
-            it.consume { pair ->
-                val version = pair.first
-                val url = pair.second
-                showUpdateAvailableDialog(version, url)
-            }
-        }
-
-        viewModel.versionUpToDateEvent.observe(viewLifecycleOwner) {
-            it.consume {
-                (requireActivity() as GenericActivity).showGreenToast(
-                    getString(R.string.help_version_up_to_date_toast_message),
-                    R.drawable.info
-                )
-            }
-        }
-
-        viewModel.errorEvent.observe(viewLifecycleOwner) {
-            it.consume {
-                (requireActivity() as GenericActivity).showRedToast(
-                    getString(R.string.help_error_checking_version_toast_message),
-                    R.drawable.warning_circle
-                )
-            }
-        }
     }
 
-    private fun showUpdateAvailableDialog(version: String, url: String) {
-        val message = getString(R.string.help_dialog_update_available_message, version)
-
-        val model = ConfirmationDialogModel()
-        val dialog = DialogUtils.getUpdateAvailableDialog(
-            requireActivity(),
-            model,
-            message
-        )
-
-        model.dismissEvent.observe(viewLifecycleOwner) {
-            it.consume {
-                dialog.dismiss()
+    private fun showSoftwareLicenses() {
+        val notices = resources.openRawResource(R.raw.mytel_notices)
+            .bufferedReader(Charsets.UTF_8).use { it.readText() }
+        val license = resources.openRawResource(R.raw.mytel_gpl_v3)
+            .bufferedReader(Charsets.UTF_8).use { it.readText() }
+        val message = getString(R.string.mytel_software_licenses_intro) +
+            "\n\n" + notices + "\n\n" + license
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle(R.string.mytel_software_licenses_title)
+            .setMessage(message)
+            .setPositiveButton(android.R.string.ok, null)
+            .setNeutralButton(R.string.mytel_third_party_notices_title) { _, _ ->
+                openExternalLink(getString(R.string.website_open_source_licences_usage_url))
             }
-        }
-
-        model.confirmEvent.observe(viewLifecycleOwner) {
-            it.consume {
-                openUrlInBrowser(url)
-                dialog.dismiss()
-            }
-        }
-
+            .create()
         dialog.show()
+        dialog.findViewById<TextView>(android.R.id.message)?.let { textView ->
+            textView.setTextIsSelectable(true)
+            Linkify.addLinks(textView, Linkify.WEB_URLS)
+            textView.movementMethod = LinkMovementMethod.getInstance()
+        }
     }
 
-    private fun openUrlInBrowser(url: String) {
+    private fun openExternalLink(url: String, action: String = Intent.ACTION_VIEW) {
         try {
-            val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri())
-            startActivity(browserIntent)
-        } catch (ise: IllegalStateException) {
-            Log.e(
-                "$TAG Can't start ACTION_VIEW intent for URL [$url], IllegalStateException: $ise"
+            startActivity(Intent(action, url.toUri()))
+        } catch (error: ActivityNotFoundException) {
+            Log.w("$TAG No application is available for this MyTel contact action: $error")
+            (activity as? GenericActivity)?.showRedToast(
+                getString(R.string.mytel_contact_action_unavailable),
+                R.drawable.warning_circle
             )
-        } catch (anfe: ActivityNotFoundException) {
-            Log.e(
-                "$TAG Can't start ACTION_VIEW intent for URL [$url], ActivityNotFoundException: $anfe"
+        } catch (error: SecurityException) {
+            Log.w("$TAG This device does not permit the MyTel contact action: $error")
+            (activity as? GenericActivity)?.showRedToast(
+                getString(R.string.mytel_contact_action_unavailable),
+                R.drawable.warning_circle
             )
-        } catch (e: Exception) {
-            Log.e(
-                "$TAG Can't start ACTION_VIEW intent for URL [$url]: $e"
-            )
+        } catch (error: IllegalStateException) {
+            Log.w("$TAG Cannot open this MyTel contact action while the screen is closing: $error")
         }
     }
 }

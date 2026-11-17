@@ -16,7 +16,7 @@ plugins {
 }
 
 val packageName = "one.mytel.softphone"
-val mytelVersion = "3.1.1"
+val mytelVersion = "3.1.2"
 val useDifferentPackageNameForDebugBuild = false
 
 val sdkPath = providers.gradleProperty("LinphoneSdkBuildDir").get()
@@ -103,7 +103,7 @@ android {
         applicationId = packageName
         minSdk = 24
         targetSdk = 37
-        versionCode = 30101
+        versionCode = 30102
         versionName = mytelVersion
 
         // Match the declared English-only interface. Message/contact text

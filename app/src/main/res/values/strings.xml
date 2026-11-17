@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
 <!DOCTYPE resources [
-    <!ENTITY appName "MyTel Phone">
+    <!ENTITY appName "MyTel">
 ]>
 
 <resources>
@@ -10,8 +10,8 @@
     <!-- Not translatable strings -->
     <string name="vertical_separator" translatable="false">|</string>
 
-    <string name="assistant_web_platform_link" translatable="false">subscribe.linphone.org</string>
-    <string name="assistant_linphone_contact_us_link" translatable="false">linphone.org/contact</string>
+    <string name="assistant_web_platform_link" translatable="false">mytel.one</string>
+    <string name="assistant_linphone_contact_us_link" translatable="false">mytel.one/contact</string>
 
     <string name="notification_channel_call_id" translatable="false">linphone_6.0_notification_call_id</string>
     <string name="notification_channel_incoming_call_id" translatable="false">linphone_6.0_notification_incoming_call_id</string>
@@ -30,18 +30,18 @@
 
     <string name="help_about_open_source_licenses_title" translatable="false">GNU General Public License v3.0</string>
     <string name="help_about_open_source_licenses_subtitle" translatable="false">© Belledonne Communications 2010-2025</string>
-    <string name="help_advanced_send_debug_logs_email_address" translatable="false">linphone-android@belledonne-communications.com</string>
+    <string name="help_advanced_send_debug_logs_email_address" translatable="false">info@mytel.one</string>
 
-    <string name="website_contact_url" translatable="false">https://linphone.org/contact</string>
-    <string name="website_download_url" translatable="false">https://linphone.org/linphone-softphone</string>
-    <string name="website_user_guide_url" translatable="false">https://mytel.one</string>
-    <string name="website_privacy_policy_url" translatable="false">https://mytel.one</string>
+    <string name="website_contact_url" translatable="false">https://mytel.one/contact/</string>
+    <string name="website_download_url" translatable="false">https://mytel.one/voip-tools/</string>
+    <string name="website_user_guide_url" translatable="false">https://mytel.one/voip-tools/</string>
+    <string name="website_privacy_policy_url" translatable="false">https://mytel.one/privacy-policy/</string>
     <string name="website_terms_and_conditions_url" translatable="false">https://linphone.org/en/terms-of-use</string>
     <string name="web_platform_register_email_url" translatable="false">https://subscribe.linphone.org/register/email</string>
     <string name="web_platform_forgotten_password_url" translatable="false">https://subscribe.linphone.org</string>
-    <string name="website_translate_weblate_url" translatable="false">https://weblate.linphone.org/</string>
+    <string name="website_translate_weblate_url" translatable="false">https://mytel.one/contact/</string>
     <string name="website_open_source_licences_usage_url" translatable="false">https://wiki.linphone.org/xwiki/wiki/public/view/Linphone/Third%20party%20components%20/#Hlinphone-android</string>
-    <string name="conversation_end_to_end_encrypted_bottom_sheet_link" translatable="false"><u>https://linphone.org/en/features/#security</u></string>
+    <string name="conversation_end_to_end_encrypted_bottom_sheet_link" translatable="false"><u>https://mytel.one/voip-tools/</u></string>
 
     <string name="conversation_one_to_one_hidden_subject" translatable="false">Dummy subject</string>
 
@@ -189,7 +189,7 @@
     <string name="assistant_transport_sip">SIP</string>
     <string name="assistant_auto_detect">Don\'t know these settings? Detect automatically</string>
     <string name="assistant_auto_detect_title">Detect server settings</string>
-    <string name="assistant_auto_detect_explanation">MytellPhone will probe your SIP server on the standard ports (5060 &amp; 5061) plus the custom port from the login screen, using SIP over TLS, TCP and UDP, and list the working combinations. Pick the one you want to continue with.</string>
+    <string name="assistant_auto_detect_explanation">MyTel will probe your SIP server on the standard ports (5060 &amp; 5061) plus the custom port from the login screen, using SIP over TLS, TCP and UDP, and list the working combinations. Pick the one you want to continue with.</string>
     <string name="assistant_auto_detect_scan">Start detection</string>
     <string name="assistant_auto_detect_scanning">Probing %s…</string>
     <string name="assistant_auto_detect_no_results">No SIP service was detected. Check the server address or enter the settings manually.</string>
@@ -277,13 +277,13 @@
     <string name="help_dialog_update_available_title">Update available</string>
     <string name="help_dialog_update_available_message">A new version %s is available. Do you want to update?</string>
     <string name="help_quit_title">Quit app</string>
-    <string name="help_troubleshooting_title">Troubleshooting</string>
-    <string name="help_troubleshooting_subtitle">Transmit your diagnostic logs to facilitate bug resolution.</string>
+    <string name="help_troubleshooting_title">Diagnostics</string>
+    <string name="help_troubleshooting_subtitle">Review and share a diagnostic report for support.</string>
     <string name="help_troubleshooting_print_logs_in_logcat">Print logs in logcat</string>
     <string name="help_troubleshooting_clean_logs">Clean logs</string>
     <string name="help_troubleshooting_share_logs">Share logs</string>
-    <string name="help_troubleshooting_app_version_title">App version</string>
-    <string name="help_troubleshooting_sdk_version_title">SDK version</string>
+    <string name="help_troubleshooting_app_version_title">MyTel build</string>
+    <string name="help_troubleshooting_sdk_version_title">Voice engine version</string>
     <string name="help_troubleshooting_firebase_project_title">Firebase project ID</string>
     <string name="help_troubleshooting_share_logs_dialog_title">Share debug logs link using…</string>
     <string name="help_troubleshooting_debug_logs_cleaned_toast_message">Debug logs have been cleaned</string>
@@ -468,7 +468,7 @@
     <string name="manage_account_device_remove">Remove</string>
     <string name="manage_account_device_last_connection">Last connection:</string>
     <string name="manage_account_dialog_remove_account_title">Sign out of your account?</string>
-    <string name="manage_account_dialog_remove_account_message">If you wish to delete your account permanently, go to: https://sip.linphone.org</string>
+    <string name="manage_account_dialog_remove_account_message">To close your SIP account permanently, contact your phone system administrator.</string>
     <string name="manage_account_outbound_proxy">Outbound SIP Proxy</string>
     <string name="manage_account_dialog_outbound_proxy_help_message">If this field is filled, the outbound proxy will be enabled automatically. Leave it empty to disable it.</string>
 
@@ -1131,5 +1131,5 @@
     <!-- MyTel branding (v2.1.0) -->
     <string name="mytel_sign_in" translatable="false">Sign in</string>
     <string name="mytel_tagline" translatable="false">Calls and messages for your team</string>
-    <string name="app_wordmark" translatable="false">MyTel Phone</string>
+    <string name="app_wordmark" translatable="false">MyTel</string>
 </resources>
