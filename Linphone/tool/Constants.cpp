@@ -91,6 +91,7 @@ constexpr qint64 Constants::FileSizeLimit;
 
 constexpr char Constants::DefaultXmlrpcUri[];
 constexpr char Constants::DefaultUploadLogsServer[];
+constexpr char Constants::RetiredDefaultUploadLogsServer[];
 constexpr char Constants::RetiredUploadLogsServer[];
 constexpr char Constants::DefaultConferenceURI[];
 constexpr char Constants::DefaultVideoConferenceURI[];

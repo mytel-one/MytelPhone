@@ -1,4 +1,6 @@
-list(APPEND _LINPHONEAPP_RC_FILES data/assistant/use-app-sip-account.rc
+list(APPEND _LINPHONEAPP_RC_FILES data/licenses/GPL-3.0.txt
+	data/licenses/LGPL-3.0.txt
+	data/assistant/use-app-sip-account.rc
 	data/assistant/create-app-sip-account.rc
 	data/assistant/use-other-sip-account.rc
 	data/shaders/roundEffect.frag.qsb

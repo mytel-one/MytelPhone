@@ -71,8 +71,8 @@ endif()
 
 set(CMAKE_INSTALL_PREFIX "${APPLICATION_OUTPUT_DIR}")
 
-set(LINPHONEAPP_APPLICATION_NAME "Linphone" CACHE STRING "Application name" )
-set(LINPHONEAPP_EXECUTABLE_NAME "linphone" CACHE STRING "Executable name" )
+set(LINPHONEAPP_APPLICATION_NAME "MyTel" CACHE STRING "Application name" )
+set(LINPHONEAPP_EXECUTABLE_NAME "mytellphone" CACHE STRING "Executable name" )
 
 # Include application_info.cmake here as the LINPHONEAPP_APPLICATION_NAME variable must be known as it is set to the APPLICATION_NAME variable.
 include(Linphone/application_info.cmake)
@@ -176,7 +176,7 @@ add_option(OPTION_LIST ENABLE_TESTS "Build with testing binaries of SDK" OFF)
 add_option(OPTION_LIST ENABLE_TESTS_COMPONENTS "Build libbctoolbox-tester" OFF)
 add_option(OPTION_LIST ENABLE_TOOLS "Enable tools of SDK" OFF)
 add_option(OPTION_LIST ENABLE_UNIT_TESTS "Enable unit test of SDK." OFF)
-add_option(OPTION_LIST ENABLE_UPDATE_CHECK "Enable update check." ON)
+add_option(OPTION_LIST ENABLE_UPDATE_CHECK "Enable update check." OFF)
 add_option(OPTION_LIST ENABLE_VIDEO "Enable Video support." YES)
 add_option(OPTION_LIST ENABLE_WINDOWS_TOOLS_CHECK "Enable tools checks on Windows for auto install." OFF)
 add_option(OPTION_LIST ENABLE_CRASH_HANDLER "Enable Crash Handler" YES)

@@ -58,21 +58,23 @@ public:
 #endif                                                          // ifdef ENABLE_UPDATE_CHECK
 
 	static constexpr char DefaultXmlrpcUri[] = "https://subscribe.linphone.org:444/wizard.php";
-	static constexpr char DefaultUploadLogsServer[] =
+	static constexpr char DefaultUploadLogsServer[] = "";
+	static constexpr char RetiredDefaultUploadLogsServer[] =
 	    "https://files.linphone.org:443/http-file-transfer-server/hft.php";
 	static constexpr char RetiredUploadLogsServer[] = "https://www.linphone.org:444/lft.php";
 	static constexpr char DefaultContactMessageExpireValue[] = "2419200";
 	static constexpr char DefaultContactParametersOnRemove[] = "message-expires=0";
 	static constexpr int DefaultExpires = 600;
 	static constexpr int DefaultPublishExpires = 120;
-	static constexpr char DownloadUrl[] = "https://www.linphone.org/technical-corner/linphone";
-	static constexpr char VersionCheckReleaseUrl[] = "https://download.linphone.org/releases";
-	static constexpr char VersionCheckNightlyUrl[] = "https://download.linphone.org/snapshots";
-	static constexpr char PasswordRecoveryUrl[] = "https://subscribe.linphone.org/recovery/email";
+	static constexpr char DownloadUrl[] = "https://mytel.one/";
+	static constexpr char VersionCheckReleaseUrl[] = "";
+	static constexpr char VersionCheckNightlyUrl[] = "";
+	static constexpr char PasswordRecoveryUrl[] = "https://mytel.one/contact/";
+	// Retired provider-only registration consent; not exposed in the MyTel account UI.
 	static constexpr char CguUrl[] = "https://www.linphone.org/en/terms-of-use/";
 	static constexpr char PrivatePolicyUrl[] = "https://www.linphone.org/en/privacy-policy/";
-	static constexpr char ContactUrl[] = "https://www.linphone.org/contact";
-	static constexpr char TranslationUrl[] = "https://weblate.linphone.org/projects/linphone-desktop/";
+	static constexpr char ContactUrl[] = "https://mytel.one/contact/";
+	static constexpr char TranslationUrl[] = "https://mytel.one/contact/";
 
 	static constexpr int MaxMosaicParticipants =
 	    6; // From 7, the mosaic quality will be limited to avoid useless computations
@@ -80,7 +82,7 @@ public:
 	static constexpr char LinphoneBZip2_exe[] = "https://download.linphone.org/releases/windows/tools/bzip2/bzip2.exe";
 	static constexpr char LinphoneBZip2_dll[] = "https://download.linphone.org/releases/windows/tools/bzip2/bzip2.dll";
 	static constexpr char DefaultRlsUri[] = "sips:rls@sip.linphone.org";
-	static constexpr char DefaultLogsEmail[] = "linphone-desktop@belledonne-communications.com";
+	static constexpr char DefaultLogsEmail[] = "info@mytel.one";
 
 	static constexpr char DefaultFlexiAPIURL[] = "https://subscribe.linphone.org/api/"; // Need "/" at the end
 	static constexpr char RemoteProvisioningURL[] = "https://subscribe.linphone.org/api/provisioning";

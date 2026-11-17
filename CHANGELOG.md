@@ -1,3 +1,11 @@
+## MyTel 3.1.2 — 2026-11-17
+
+- Simplified Help/About with MyTel branding, official website and verified contact information.
+- Removed ordinary Privacy Policy, translation/signup promotion and update controls; disabled startup/tray/SDK update dispatch.
+- Kept original component notices and GPL/LGPL text in a separate accessible Software licenses dialog.
+- Diagnostics retains local logs and MyTel support; retired default diagnostic upload endpoints are disabled, with custom administrator URLs preserved.
+- SIP/chat protocols, account/profile identity, SDK and runtime dependencies remain unchanged.
+
 # Change Log
 All notable changes to this project will be documented in this file.
 

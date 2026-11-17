@@ -51,29 +51,6 @@ LoginLayout {
 		},
 		Item {
 			Layout.fillWidth: true
-		},
-		RowLayout {
-			visible: !SettingsCpp.assistantHideCreateAccount
-            spacing: Utils.getSizeWithScreenRatio(20)
-            Layout.rightMargin: Math.max(Utils.getSizeWithScreenRatio(10), Utils.getSizeWithScreenRatio(51 - ((51/(DefaultStyle.defaultWidth - mainWindow.minimumWidth))*(DefaultStyle.defaultWidth-mainWindow.width))))
-
-			Text {
-                Layout.rightMargin: Utils.getSizeWithScreenRatio(15)
-                //: "Pas encore de compte ?"
-                text: qsTr("assistant_no_account_yet")
-                font.pixelSize: Typography.p1.pixelSize
-                font.weight: Typography.p1.weight
-			}
-			BigButton {
-				Layout.alignment: Qt.AlignRight
-				style: ButtonStyle.main
-                //: "S'inscrire"
-                text: qsTr("assistant_account_register")
-				onClicked: {
-					console.debug("[LoginPage] User: go to register")
-					mainItem.goToRegister()
-				}
-			}
 		}
 	]
 	centerContent: [

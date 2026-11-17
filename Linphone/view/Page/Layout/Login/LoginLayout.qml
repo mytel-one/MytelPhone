@@ -69,59 +69,28 @@ Rectangle {
 		// Item {Layout.fillWidth: true}
 	}
 
-	Dialog {
-		id: aboutPopup
-		anchors.centerIn: parent
-        width: Utils.getSizeWithScreenRatio(637)
-        //: À propos de %1
-        title: qsTr("help_about_title").arg(applicationName)
-        bottomPadding: Utils.getSizeWithScreenRatio(10)
-		buttons: []
-		content: RowLayout {
-			ColumnLayout {
-                spacing: Utils.getSizeWithScreenRatio(17)
-				Layout.alignment: Qt.AlignTop | Qt.AlignLeft
-				AboutLine {
-					imageSource: AppIcons.detective
-                    //: "Politique de confidentialité"
-                    title: qsTr("help_about_privacy_policy_title")
-                    //: "Visiter notre potilique de confidentialité"
-                    text: qsTr("help_about_privacy_policy_link")
-					enableMouseArea: true
-					onContentClicked: Qt.openUrlExternally(ConstantsCpp.PrivatePolicyUrl)
-				}
-				AboutLine {
-					imageSource: AppIcons.info
-                    //: "Version"
-                    title: qsTr("help_about_version_title")
-					text: Qt.application.version
-				}
-				AboutLine {
-					imageSource: AppIcons.checkSquareOffset
-                    //: "Licence"
-                    title: qsTr("help_about_licence_title")
-					text: applicationLicence
-				}
-				AboutLine {
-					imageSource: AppIcons.copyright
-                    //: "Copyright
-                    title: qsTr("help_about_copyright_title")
-					text: applicationVendor
-				}
-				Item {
-					// Item to shift close button
-                    Layout.preferredHeight: Utils.getSizeWithScreenRatio(10)
-				}
-			}
-			MediumButton {
-				Layout.alignment: Qt.AlignRight | Qt.AlignBottom
-                //: "Fermer"
-                text: qsTr("close")
-				style: ButtonStyle.main
-				onClicked: aboutPopup.close()
-			}
-		}
-	}
+    Dialog {
+        id: aboutPopup
+        parent: Control.Overlay.overlay
+        width: Math.min(760, parent ? parent.width - 40 : 760)
+        title: qsTr("About MyTel")
+        content: Control.ScrollView {
+            Layout.preferredWidth: aboutPopup.width - aboutPopup.leftPadding - aboutPopup.rightPadding
+            Layout.preferredHeight: Math.max(160, Math.min(500, aboutPopup.parent ? aboutPopup.parent.height - 240 : 500))
+            contentWidth: availableWidth
+            contentHeight: aboutContent.implicitHeight
+            clip: true
+            MyTelAboutContent {
+                id: aboutContent
+                width: parent.width
+            }
+        }
+        buttons: [MediumButton {
+            text: qsTr("Close")
+            style: ButtonStyle.main
+            onClicked: aboutPopup.close()
+        }]
+    }
 
 	RowLayout {
 		anchors.fill: parent

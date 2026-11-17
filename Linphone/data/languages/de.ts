@@ -308,7 +308,7 @@
     <message>
         <location filename="../../view/Page/Layout/Settings/AccountSettingsGeneralLayout.qml" line="206"/>
         <source>manage_account_delete_message</source>
-        <translation>Ihr Konto wird aus diesem Linphone-Client entfernt, bleibt jedoch auf Ihren anderen Geräten verbunden</translation>
+        <translation>Ihr Konto wird aus diesem MyTel-Client entfernt, bleibt jedoch auf Ihren anderen Geräten verbunden</translation>
     </message>
     <message>
         <location filename="../../view/Page/Layout/Settings/AccountSettingsGeneralLayout.qml" line="225"/>
@@ -320,7 +320,7 @@
         <location filename="../../view/Page/Layout/Settings/AccountSettingsGeneralLayout.qml" line="227"/>
         <source>manage_account_dialog_remove_account_message</source>
         <extracomment>Si vous souhaitez supprimer définitivement votre compte rendez-vous sur : https://subscribe.linphone.org</extracomment>
-        <translation>Wenn Sie Ihr Konto dauerhaft löschen möchten, besuchen Sie: https://subscribe.linphone.org</translation>
+        <translation>Dieses Konto wird aus MyTel auf diesem Gerät entfernt. Wenden Sie sich an Ihren Administrator, um Ihr Telefonkonto zu ändern oder zu schließen.</translation>
     </message>
     <message>
         <location filename="../../view/Page/Layout/Settings/AccountSettingsGeneralLayout.qml" line="131"/>
@@ -736,7 +736,7 @@
         <location filename="../../core/App.cpp" line="517"/>
         <source>info_popup_new_version_available_message</source>
         <extracomment>A new version of Linphone (%1) is available. %2</extracomment>
-        <translation>Eine neue Version von Linphone (%1) ist unter %1 verfügbar</translation>
+        <translation>Eine neue Version von MyTel (%1) ist unter %1 verfügbar</translation>
     </message>
     <message>
         <location filename="../../core/App.cpp" line="525"/>
@@ -782,7 +782,7 @@
         <location filename="../../core/App.cpp" line="1199"/>
         <source>command_line_option_config_to_fetch</source>
         <extracomment>&quot;Specify the linphone configuration file to be fetched. It will be merged with the current configuration.&quot;</extracomment>
-        <translation>Abzurufende Linphone-Konfigurationsdatei angeben. Sie wird mit der aktuellen Konfiguration zusammengeführt.</translation>
+        <translation>Abzurufende MyTel-Konfigurationsdatei angeben. Sie wird mit der aktuellen Konfiguration zusammengeführt.</translation>
     </message>
     <message>
         <location filename="../../core/App.cpp" line="1201"/>
@@ -2081,7 +2081,7 @@
         <location filename="../../view/Page/Layout/Settings/CarddavSettingsLayout.qml" line="20"/>
         <source>settings_contacts_carddav_subtitle</source>
         <extracomment>&quot;Ajouter un carnet d’adresse CardDAV pour synchroniser vos contacts Linphone avec un carnet d’adresse tiers.&quot;</extracomment>
-        <translation>Fügen Sie ein CardDAV-Adressbuch hinzu, um Ihre Linphone-Kontakte mit einem Drittanbieter-Adressbuch zu synchronisieren.</translation>
+        <translation>Fügen Sie ein CardDAV-Adressbuch hinzu, um Ihre MyTel-Kontakte mit einem Drittanbieter-Adressbuch zu synchronisieren.</translation>
     </message>
     <message>
         <location filename="../../view/Page/Layout/Settings/CarddavSettingsLayout.qml" line="32"/>
@@ -3632,7 +3632,7 @@ Sie sind dabei, &quot;%1&quot; anzurufen. Möchten Sie fortfahren?</translation>
     <message>
         <location filename="../../view/Page/Layout/Settings/ContactsSettingsLayout.qml" line="22"/>
         <source>settings_contacts_carddav_subtitle</source>
-        <translation>CardDAV-Adressbuch hinzufügen, um Linphone-Kontakte mit einem Drittanbieter-Adressbuch zu synchronisieren.</translation>
+        <translation>CardDAV-Adressbuch hinzufügen, um MyTel-Kontakte mit einem Drittanbieter-Adressbuch zu synchronisieren.</translation>
     </message>
     <message>
         <location filename="../../view/Page/Layout/Settings/ContactsSettingsLayout.qml" line="42"/>
@@ -6396,7 +6396,7 @@ Um sie in einem kommerziellen Projekt zu aktivieren, kontaktieren Sie uns bitte.
         <location filename="../../view/Page/Form/Login/SIPLoginPage.qml" line="133"/>
         <source>assistant_third_party_sip_account_create_linphone_account</source>
         <extracomment>&quot;Créer un compte linphone&quot;</extracomment>
-        <translation>Linphone-Konto erstellen</translation>
+        <translation>MyTel-Konto erstellen</translation>
     </message>
     <message>
         <location filename="../../view/Page/Form/Login/SIPLoginPage.qml" line="145"/>
@@ -6604,7 +6604,7 @@ Um sie in einem kommerziellen Projekt zu aktivieren, kontaktieren Sie uns bitte.
         <location filename="../../view/Page/Form/Security/SecurityModePage.qml" line="57"/>
         <source>manage_account_e2e_encrypted_mode_interoperable_summary</source>
         <extracomment>&quot;Ce mode vous permet de profiter de toute les fonctionnalités de Linphone, toute en restant interopérable avec n’importe qu’elle autre service SIP.&quot;</extracomment>
-        <translation>Dieser Modus ermöglicht es, alle Funktionen von Linphone zu nutzen, während Sie weiterhin mit jedem anderen SIP-Dienst interoperabel bleiben.</translation>
+        <translation>Dieser Modus ermöglicht es, alle Funktionen von MyTel zu nutzen, während Sie weiterhin mit jedem anderen SIP-Dienst interoperabel bleiben.</translation>
     </message>
     <message>
         <location filename="../../view/Page/Form/Security/SecurityModePage.qml" line="77"/>

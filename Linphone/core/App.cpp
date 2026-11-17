@@ -401,14 +401,14 @@ void App::connectCoreModel() {
 	mCoreModelConnection->makeConnectToModel(
 	    &CoreModel::globalStateChanged,
 	    [this](const std::shared_ptr<linphone::Core> &core, linphone::GlobalState gstate, const std::string &message) {
-			    mCoreModelConnection->invokeToCore([this, gstate] {
-				    lInfo() << log().arg("Core global state changed :") << (int)gstate;
-				    setCoreStarted(gstate == linphone::GlobalState::On);
-				    // MyTel: seed the reachability property at core start
-				    if (gstate == linphone::GlobalState::On) {
-					    setNetworkReachable(CoreModel::getInstance()->getCore()->isNetworkReachable());
-				    }
-				    setCoreGlobalState((int)gstate);
+		    mCoreModelConnection->invokeToCore([this, gstate] {
+			    lInfo() << log().arg("Core global state changed :") << (int)gstate;
+			    setCoreStarted(gstate == linphone::GlobalState::On);
+			    // MyTel: seed the reachability property at core start
+			    if (gstate == linphone::GlobalState::On) {
+				    setNetworkReachable(CoreModel::getInstance()->getCore()->isNetworkReachable());
+			    }
+			    setCoreGlobalState((int)gstate);
 			    if (gstate == linphone::GlobalState::Configuring) {
 				    if (mEngine) {
 					    // Force cleaning components when configuring for the buttons styles to be reset
@@ -422,11 +422,8 @@ void App::connectCoreModel() {
 	mCoreModelConnection->makeConnectToModel(&CoreModel::authenticationRequested, &App::onAuthenticationRequested);
 	// MyTel: keep the QML-visible network reachability property live
 	mCoreModelConnection->makeConnectToModel(
-	    &CoreModel::networkReachableChanged,
-	    [this](const std::shared_ptr<linphone::Core> &core, bool reachable) {
-		    mCoreModelConnection->invokeToCore([this, reachable]() {
-			    setNetworkReachable(reachable);
-		    });
+	    &CoreModel::networkReachableChanged, [this](const std::shared_ptr<linphone::Core> &core, bool reachable) {
+		    mCoreModelConnection->invokeToCore([this, reachable]() { setNetworkReachable(reachable); });
 	    });
 	// Config error message
 	mCoreModelConnection->makeConnectToModel(
@@ -508,45 +505,6 @@ void App::connectCoreModel() {
 		});
 	});
 
-	// Check update
-	mCoreModelConnection->makeConnectToModel(
-	    &CoreModel::versionUpdateCheckResultReceived,
-	    [this](const std::shared_ptr<linphone::Core> &core, linphone::VersionUpdateCheckResult result,
-	           const std::string &version, const std::string &url, bool checkRequestedByUser) {
-		    mustBeInLinphoneThread(log().arg(Q_FUNC_INFO));
-		    mCoreModelConnection->invokeToCore([this, result, version, url, checkRequestedByUser] {
-			    switch (result) {
-				    case linphone::VersionUpdateCheckResult::Error:
-					    Utils::showInformationPopup(tr("info_popup_error_title"),
-					                                //: An error occured while trying to check update. Please
-					                                //: try again later or contact support team.
-					                                tr("info_popup_error_checking_update"), false);
-					    break;
-				    case linphone::VersionUpdateCheckResult::NewVersionAvailable: {
-					    QString downloadLink =
-					        QStringLiteral("<a href='%1'><font color='DefaultStyle.main2_600'>%2</a>")
-					            .arg(Utils::coreStringToAppString(url))
-					            //: Download it !
-					            .arg(tr("info_popup_new_version_download_label"));
-					    Utils::showInformationPopup(
-					        //: New version available !
-					        tr("info_popup_new_version_available_title"),
-					        //: A new version of Linphone (%1) is available. %2
-					        tr("info_popup_new_version_available_message")
-					            .arg(Utils::coreStringToAppString(version))
-					            .arg(downloadLink));
-					    break;
-				    }
-				    case linphone::VersionUpdateCheckResult::UpToDate:
-					    if (checkRequestedByUser)
-						    //: Up to date
-						    Utils::showInformationPopup(tr("info_popup_version_up_to_date_title"),
-						                                //: Your version is up to date
-						                                tr("info_popup_version_up_to_date_message"));
-			    }
-		    });
-	    });
-
 	mCoreModelConnection->makeConnectToModel(&CoreModel::oidcRemainingTimeBeforeTimeoutChanged,
 	                                         [this](int remainingTime) {
 		                                         mCoreModelConnection->invokeToCore([this, remainingTime] {
@@ -556,7 +514,7 @@ void App::connectCoreModel() {
 	                                         });
 	mCoreModelConnection->makeConnectToCore(&App::lForceOidcTimeout, [this] {
 		qDebug() << "App: force oidc timeout";
-		mCoreModelConnection->invokeToModel([this] { emit CoreModel::getInstance()->forceOidcTimeout(); });
+		mCoreModelConnection->invokeToModel([this] { emit CoreModel::getInstance() -> forceOidcTimeout(); });
 	});
 	mCoreModelConnection->makeConnectToModel(&CoreModel::timeoutTimerStarted, [this]() {
 		qDebug() << "App: oidc timer started";
@@ -922,7 +880,6 @@ void App::initCore() {
 								                Qt::SingleShotConnection);
 							        }
 						        }
-						        if (mSettings->autoCheckForUpdateOnStart()) checkForUpdate();
 						        window->show();
 						        window->requestActivate();
 
@@ -1280,9 +1237,7 @@ void App::setNetworkReachable(bool reachable) {
 	if (mNetworkReachable != reachable) {
 		// MyTel telemetry (leader correction): reachability transitions are
 		// recorded so state changes are observable without screen captures
-		lInfo() << QStringLiteral("[MyTel] Core network reachability: %1 -> %2")
-		           .arg(mNetworkReachable)
-		           .arg(reachable);
+		lInfo() << QStringLiteral("[MyTel] Core network reachability: %1 -> %2").arg(mNetworkReachable).arg(reachable);
 		mNetworkReachable = reachable;
 		emit networkReachableChanged(mNetworkReachable);
 	}
@@ -1757,12 +1712,6 @@ void App::setSysTrayIcon() {
 		menu->addSeparator();
 	}
 	menu->addAction(markAllReadAction);
-	//: Check for update
-	if (mSettings->isCheckForUpdateAvailable()) {
-		QAction *checkForUpdateAction = new QAction(tr("check_for_update"), root);
-		root->connect(checkForUpdateAction, &QAction::triggered, this, [this] { checkForUpdate(true); });
-		menu->addAction(checkForUpdateAction);
-	}
 	menu->addAction(quitAction);
 	if (!mSystemTrayIcon) {
 		systemTrayIcon->setContextMenu(menu); // This is a Qt bug. We cannot call setContextMenu more than once. So
@@ -1860,14 +1809,7 @@ QString App::getQtVersion() const {
 }
 
 void App::checkForUpdate(bool requestedByUser) {
-	mustBeInMainThread(log().arg(Q_FUNC_INFO));
-	if (CoreModel::getInstance() && mCoreModelConnection) {
-		mCoreModelConnection->invokeToModel([this, requestedByUser] {
-			mustBeInLinphoneThread(log().arg(Q_FUNC_INFO));
-			CoreModel::getInstance()->checkForUpdate(Utils::appStringToCoreString(applicationVersion()),
-			                                         requestedByUser);
-		});
-	}
+	Q_UNUSED(requestedByUser)
 }
 
 ChatGui *App::getCurrentChat() const {

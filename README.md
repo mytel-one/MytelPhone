@@ -1,14 +1,19 @@
-# Linphone Desktop
+# MyTel Desktop
 
-Linphone is an open source softphone for voice and video over IP calling and instant messaging.
+MyTel is a SIP softphone for business voice/video calls and team messaging.
+
+Official website and support: [mytel.one](https://mytel.one/).
+Project source: [mytel-one/MytelPhone, windows-v3](https://github.com/mytel-one/MytelPhone/tree/windows-v3).
 
 It is fully SIP-based, for all calling, presence and IM features.
 
-General description is available from [Linphone web site](https://www.linphone.org/linphone-softphone/)
+MyTel services and contact information are available from [the MyTel website](https://mytel.one/contact/).
 
 ### License
 
-Copyright © Belledonne Communications
+MyTel branding and modifications © 2026 MyTel.
+
+Included upstream components: Copyright © Belledonne Communications.
 
 Linphone is dual licensed, and is available either :
 
@@ -66,8 +71,8 @@ export PATH="~/Qt/6.10.0/gcc_64/bin/:$PATH"
 #### On Linux and Windows
 
 ```bash
-git clone https://gitlab.linphone.org/BC/public/linphone-desktop.git --recursive`
-cd linphone-desktop
+git clone --branch windows-v3 https://github.com/mytel-one/MytelPhone.git`
+cd MytelPhone
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_PARALLEL_LEVEL=10 -DCMAKE_BUILD_TYPE=RelWithDebInfo
@@ -85,8 +90,8 @@ Build may take a long time on MacOS. We recommend to use a linux VM on this OS.
 
 If you still want to build on MacOS:
 ```bash
-git clone https://gitlab.linphone.org/BC/public/linphone-desktop.git --recursive
-cd linphone-desktop
+git clone --branch windows-v3 https://github.com/mytel-one/MytelPhone.git
+cd MytelPhone
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_PARALLEL_LEVEL=10 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_APP_PACKAGING=ON
@@ -97,7 +102,7 @@ cmake --build . --parallel 10 --config RelWithDebInfo --target install app_macos
 ### Get sources
 
 ```bash
-git clone https://gitlab.linphone.org/BC/public/linphone-desktop.git --recursive
+git clone --branch windows-v3 https://github.com/mytel-one/MytelPhone.git
 ```
 
 ### Building : General Steps

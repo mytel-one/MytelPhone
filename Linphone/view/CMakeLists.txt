@@ -56,6 +56,7 @@ list(APPEND _LINPHONEAPP_QML_FILES
 	view/Control/Display/ToolTip.qml
 	view/Control/Display/UnreadNotification.qml
 	view/Control/Display/MyTel/MyTelConnectionChip.qml
+	view/Control/Display/MyTel/MyTelAboutContent.qml
 	view/Control/Display/Call/CallListView.qml
 	view/Control/Display/Call/CallHistoryListView.qml
 	view/Control/Display/Call/CallStatistics.qml
@@ -184,6 +185,7 @@ list(APPEND _LINPHONEAPP_QML_FILES
 	view/Page/Main/Chat/ChatPage.qml
 	view/Page/Main/Contact/ContactPage.qml
 	view/Page/Main/Help/HelpPage.qml
+	view/Control/Popup/Dialog/SoftwareLicensesDialog.qml
 	view/Page/Main/Meeting/MeetingPage.qml
 	view/Page/Main/Record/RecordPage.qml
 	view/Page/Main/Start/WelcomePage.qml

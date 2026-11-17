@@ -116,8 +116,11 @@ void CoreModel::start() {
 		mCore->setVideoDisplayFilter("MSQOGL");
 	}
 	mCore->enableFriendListSubscription(true);
-	if (mCore->getLogCollectionUploadServerUrl().empty())
-		mCore->setLogCollectionUploadServerUrl(Constants::DefaultUploadLogsServer);
+	// Retire only the bundled upstream upload services; keep custom administrator URLs.
+	const auto diagnosticUploadUrl = mCore->getLogCollectionUploadServerUrl();
+	if (diagnosticUploadUrl == Constants::RetiredUploadLogsServer ||
+	    diagnosticUploadUrl == Constants::RetiredDefaultUploadLogsServer)
+		mCore->setLogCollectionUploadServerUrl("");
 
 	mIterateTimer = new QTimer(this);
 	mIterateTimer->setInterval(20);
@@ -391,16 +394,9 @@ void CoreModel::searchInMagicSearch(QString filter,
 }
 
 void CoreModel::checkForUpdate(const std::string &applicationVersion, bool requestedByUser) {
-	mCheckVersionRequestedByUser = requestedByUser;
-	auto settingsModel = SettingsModel::getInstance();
-	if (settingsModel->isCheckForUpdateEnabled()) {
-		if (settingsModel->getVersionCheckUrl().isEmpty())
-			settingsModel->setVersionCheckUrl(Constants::VersionCheckReleaseUrl);
-		lInfo() << log().arg("Checking for update for version") << applicationVersion;
-		getCore()->checkForUpdate(applicationVersion);
-	} else {
-		lInfo() << log().arg("Check for update settings is not set");
-	}
+	// Ignore stale callers and persisted upstream update settings as well as UI requests.
+	Q_UNUSED(applicationVersion)
+	Q_UNUSED(requestedByUser)
 }
 
 bool CoreModel::isCheckVersionRequestedByUser() const {

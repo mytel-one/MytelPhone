@@ -998,7 +998,8 @@ void SettingsModel::setShowPastMeetings(bool show) {
 }
 
 bool SettingsModel::autoCheckForUpdateOnStart() const {
-	return !!mConfig->getInt(UiSection, "auto_check_for_update_on_start", isCheckForUpdateAvailable());
+	// MyTel updates are distributed through its official website and stores.
+	return false;
 }
 
 void SettingsModel::setAutoCheckForUpdateOnStart(bool check) {
@@ -1007,15 +1008,11 @@ void SettingsModel::setAutoCheckForUpdateOnStart(bool check) {
 }
 
 bool SettingsModel::isCheckForUpdateAvailable() const {
-#ifdef ENABLE_UPDATE_CHECK
-	return true;
-#else
 	return false;
-#endif
 }
 
 bool SettingsModel::isCheckForUpdateEnabled() const {
-	return !!mConfig->getInt(UiSection, "check_for_update_enabled", isCheckForUpdateAvailable());
+	return false;
 }
 
 void SettingsModel::setCheckForUpdateEnabled(bool enable) {
