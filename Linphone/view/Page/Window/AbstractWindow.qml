@@ -102,7 +102,7 @@ ApplicationWindow {
             contentItem: ColumnLayout {
                 spacing: Utils.getSizeWithScreenRatio(16)
                 Text {
-                    text: qsTr("dialog_call") + " " + preDialEditPopup.contactName
+                    text: qsTranslate("ContactPage", "dialog_call") + " " + preDialEditPopup.contactName
                     font.pixelSize: Typography.h2m.pixelSize
                     font.weight: Typography.h2m.weight
                     color: DefaultStyle.main2_600
@@ -131,12 +131,12 @@ ApplicationWindow {
                     spacing: Utils.getSizeWithScreenRatio(10)
                     Layout.alignment: Qt.AlignRight
                     Button {
-                        text: qsTr("dialog_cancel")
+                        text: qsTranslate("Dialog", "dialog_cancel")
                         style: ButtonStyle.secondary
                         onClicked: preDialEditPopup.close()
                     }
                     Button {
-                        text: qsTr("dialog_call")
+                        text: qsTranslate("ContactPage", "dialog_call")
                         style: ButtonStyle.main
                         enabled: preDialNumberField.text.length > 0
                         onClicked: {
@@ -297,10 +297,10 @@ ApplicationWindow {
                         if (uname.length > 0) rawDisplay = uname
                     }
                     var normalized = mytelNormalizeNumber(rawDisplay)
-                    var preDialPopup = preDialEditPopupComp.createObject()
-                    preDialPopup.parent = parentItem
-                    preDialPopup.contactName = contact.core.fullName || ""
-                    preDialPopup.initialNumber = normalized
+                    var preDialPopup = preDialEditPopupComp.createObject(parentItem, {
+                        "contactName": contact.core.fullName || "",
+                        "initialNumber": normalized
+                    })
                     preDialPopup.confirmed.connect(function(editedNumber) {
                         // If the edited value is a full SIP URI use it directly;
                         // otherwise preserve the original address routing context
