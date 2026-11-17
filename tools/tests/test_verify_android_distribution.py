@@ -191,6 +191,54 @@ feature-group: label=''
         self.assertIsNone(verification.parse_bundle_alignment("optimizations {}"))
 
 
+class PermissionMetadataTests(unittest.TestCase):
+    BADGING = """package: name='one.example.phone' versionCode='30101' versionName='3.1.1'
+sdkVersion:'24'
+targetSdkVersion:'37'
+"""
+    MANIFEST = '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="one.example.phone" android:versionCode="30101" android:versionName="3.1.1"><uses-sdk android:minSdkVersion="24" android:targetSdkVersion="37" />{}</manifest>'
+
+    def test_badging_exposes_even_sdk_limited_phone_number_permission(self):
+        text = self.BADGING + "uses-permission: name='android.permission.CAMERA'\nuses-permission: name='android.permission.READ_PHONE_NUMBERS' maxSdkVersion='30'\n"
+        self.assertEqual(
+            ["android.permission.CAMERA", "android.permission.READ_PHONE_NUMBERS"],
+            verification.parse_badging(text)["permissions"],
+        )
+
+    def test_badging_permission_inventory_is_sorted_unique_and_handles_sdk_records(self):
+        text = self.BADGING + "  uses-permission-sdk-23: name='android.permission.RECORD_AUDIO'\nuses-permission: name='android.permission.CAMERA'\nuses-permission: name='android.permission.CAMERA'\npermission: name='one.example.permission.DECLARED'\n"
+        self.assertEqual(
+            ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"],
+            verification.parse_badging(text)["permissions"],
+        )
+
+    def test_badging_malformed_permission_record_is_not_silently_omitted(self):
+        with self.assertRaises(verification.VerificationError):
+            verification.parse_badging(self.BADGING + "uses-permission: maxSdkVersion='30'\n")
+
+    def test_bundle_exposes_sdk_limited_permission_and_ignores_custom_declarations(self):
+        body = '<uses-permission android:name="android.permission.CAMERA" /><uses-permission-sdk-23 android:name="android.permission.READ_PHONE_NUMBERS" android:maxSdkVersion="30" /><permission android:name="one.example.permission.DECLARED" />'
+        self.assertEqual(
+            ["android.permission.CAMERA", "android.permission.READ_PHONE_NUMBERS"],
+            verification._parse_bundle_manifest(self.MANIFEST.format(body))["permissions"],
+        )
+
+    def test_bundle_permission_inventory_is_sorted_unique_and_top_level_only(self):
+        body = '<uses-permission android:name="android.permission.RECORD_AUDIO" /><uses-permission android:name="android.permission.CAMERA" /><uses-permission android:name="android.permission.CAMERA" /><application><meta-data android:name="android.permission.READ_PHONE_NUMBERS" /></application>'
+        self.assertEqual(
+            ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"],
+            verification._parse_bundle_manifest(self.MANIFEST.format(body))["permissions"],
+        )
+
+    def test_bundle_malformed_permission_record_is_not_silently_omitted(self):
+        with self.assertRaises(verification.VerificationError):
+            verification._parse_bundle_manifest(self.MANIFEST.format('<uses-permission android:maxSdkVersion="30" />'))
+
+    def test_an_empty_inventory_is_explicit_for_both_artifact_formats(self):
+        self.assertEqual([], verification.parse_badging(self.BADGING)["permissions"])
+        self.assertEqual([], verification._parse_bundle_manifest(self.MANIFEST.format(""))["permissions"])
+
+
 class DistributionReportTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
