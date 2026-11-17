@@ -176,6 +176,14 @@ def parse_badging(text):
     native = re.search(r"^native-code:\s*(.*)$", text, re.MULTILINE)
     result["native_code"] = re.findall(r"'([^']+)'", native.group(1)) if native else []
     result["required_features"] = sorted(set(re.findall(r"^[ \t]*(?:uses-feature|uses-implied-feature):[ \t]*name='([^']+)'", text, re.MULTILINE)))
+    permissions = set()
+    for line in text.splitlines():
+        if re.match(r"^[ \t]*uses-permission(?:-sdk-\d+)?:", line):
+            permission = re.match(r"^[ \t]*uses-permission(?:-sdk-\d+)?:[ \t]*name='([^']+)'", line)
+            if permission is None:
+                raise VerificationError("aapt permission record does not contain a name")
+            permissions.add(permission.group(1))
+    result["permissions"] = sorted(permissions)
     return result
 
 
@@ -194,11 +202,19 @@ def _parse_bundle_manifest(text):
         sdk = root.find("uses-sdk")
         if sdk is None:
             raise VerificationError("Bundle manifest does not declare uses-sdk")
+        permissions = set()
+        for element in root:
+            if re.fullmatch(r"uses-permission(?:-sdk-\d+)?", element.tag):
+                permission = element.get(ANDROID_XML + "name")
+                if not permission:
+                    raise VerificationError("Bundle permission record does not contain android:name")
+                permissions.add(permission)
         return {
             "package_name": root.attrib["package"], "version_code": int(root.attrib[ANDROID_XML + "versionCode"]),
             "version_name": root.attrib[ANDROID_XML + "versionName"], "min_sdk": int(sdk.attrib[ANDROID_XML + "minSdkVersion"]),
             "target_sdk": int(sdk.attrib[ANDROID_XML + "targetSdkVersion"]),
             "required_features": sorted({x.get(ANDROID_XML + "name") for x in root.findall("uses-feature") if x.get(ANDROID_XML + "name") and x.get(ANDROID_XML + "required", "true") != "false"}),
+            "permissions": sorted(permissions),
         }
     except (ET.ParseError, KeyError, ValueError) as error:
         raise VerificationError("Invalid or incomplete bundletool manifest: " + str(error)) from error
