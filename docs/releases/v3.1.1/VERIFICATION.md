@@ -20,6 +20,8 @@ The universal APK contains all four ABIs and may exceed CafeBazaar's displayed15
 
 The official CafeBazaar bundle-signer tool must be pinned by release/hash and its reconstructed APKs independently verified for signatures, production certificate and native packaging. The tool's old bundled bundletool does not establish target37/16KB compatibility by assumption.
 
+The pinned official signer 0.1.14 embeds bundletool1.11.0, whose ModuleSplitSerializer aligns stored native libraries to4096 bytes. This build therefore uses AGP's supported `packaging.jniLibs.useLegacyPackaging=true` alternative: compressed libraries extracted by Android during installation. The actual AAB configuration, APK extraction flag, compressed entries and native ELF alignment must be checked on both direct and reconstructed APKs. This can increase installed disk use; it is not a RAM optimization. See [Android's packaging guidance](https://developer.android.com/guide/practices/page-sizes#update-packaging) and [the official signer release](https://github.com/cafebazaar/bundle-signer/releases/tag/v0.1.14).
+
 ## Limits
 
 Prior3.1.0 runtime evidence remains tied to its original builds. This narrow patch requires its own listed acceptance; it does not claim every phone/PBX, physical speech-quality or untested video/transfer/Bluetooth behavior. Native SDK sources/dependency gaps remain disclosed in the3.1.0 source manifests. Store review/submission is separate from local builds or GitHub publication.

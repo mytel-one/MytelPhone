@@ -232,6 +232,15 @@ android {
         abortOnError = true
     }
 
+    packaging {
+        jniLibs {
+            // CafeBazaar's official signer embeds bundletool 1.11, which only
+            // ZIP-aligns stored native libraries to 4 KB. Extract compressed
+            // libraries at install time; the SDK's ELF 16 KB alignment remains.
+            useLegacyPackaging = true
+        }
+    }
+
     testOptions {
         unitTests.isReturnDefaultValues = true
     }

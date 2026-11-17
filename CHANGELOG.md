@@ -19,6 +19,7 @@ Group changes to describe their impact on the project, as follows:
 
 ### Distribution
 - Android maintenance release for CafeBazaar; production signing identity and existing account/contact/message data are retained.
+- Compress native libraries for compatibility with CafeBazaar's official bundle signer. Android extracts them during installation; native ELF page alignment and all four processor architectures are retained.
 - The separately released Windows version remains 3.1.0.
 
 ## MyTel [3.1.0] - 2026-11-17
