@@ -10,6 +10,17 @@ Group changes to describe their impact on the project, as follows:
     Fixed for any bug fixes.
     Security to invite users to upgrade in case of vulnerabilities.
 
+## MyTel [3.1.1] - 2026-11-17
+
+### Fixed
+- Removed unnecessary READ_PHONE_NUMBERS access from the Android manifest and optional call-redirection permission request.
+- Cancelled or missing phone-state permission results no longer request the call-redirection role; late results for a finishing activity are ignored.
+- APK/AAB verification now reports the actual merged permission inventory and rejects malformed permission records.
+
+### Distribution
+- Android maintenance release for CafeBazaar; production signing identity and existing account/contact/message data are retained.
+- The separately released Windows version remains 3.1.0.
+
 ## MyTel [3.1.0] - 2026-11-17
 
 ### Changed

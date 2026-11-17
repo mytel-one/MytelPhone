@@ -4,7 +4,13 @@
 
 SIP calling and team messages for **Android and Windows**, built on the Linphone engine and the [MyTel](https://mytel.one) identity.
 
-[Download v3.1.0](https://github.com/mytel-one/MytelPhone/releases/tag/v3.1.0) · [Verification record](docs/releases/v3.1.0/VERIFICATION.md) · [Windows build tools](release/windows/README.md)
+[Android v3.1.1](https://github.com/mytel-one/MytelPhone/releases/tag/v3.1.1) · [Windows v3.1.0](https://github.com/mytel-one/MytelPhone/releases/tag/v3.1.0) · [Android patch verification](docs/releases/v3.1.1/VERIFICATION.md) · [Windows build tools](release/windows/README.md)
+
+## What changed in Android v3.1.1
+
+- Removed unnecessary phone-number permission; contact, microphone and camera features keep their existing permission controls.
+- Optional call redirection handles a denied/cancelled phone-state permission without requesting its system role.
+- Artifact verification reports the actual merged APK/AAB permissions. The Windows release remains 3.1.0.
 
 ## What changed in v3.1.0
 
@@ -40,7 +46,7 @@ The release verification record distinguishes automated tests, visual review, ac
 
 | Platform | Package | Requirement |
 |---|---|---|
-| Android | `MyTel-v3.1.0-android.apk` | Android 7+ (API 24); ARMv7, ARM64, x86 or x86_64 |
+| Android | `MyTel-v3.1.1-android.apk` | Android 7+ (API 24); ARMv7, ARM64, x86 or x86_64 |
 | Windows | `MyTel-v3.1.0-windows-x64-setup.exe` or portable ZIP | Windows 10/11 x64; run the MyTel setup, or extract the portable ZIP |
 
 Keep the existing Android installation when upgrading so its account and message data remain available. Release updates use the existing production signing key. The Windows setup installs MyTel for the current user and keeps application data. The Windows executable uses the existing application profile in `%LOCALAPPDATA%\mytellphone`; keep that directory when replacing the application folder. Windows packages include the standard x64 Microsoft C++ runtime DLLs next to the application. The supplied official `vc_redist.x64.exe` remains available for an administrator-managed runtime installation; MyTel setup does not run it automatically. The Windows binaries are not Authenticode-signed.
@@ -62,7 +68,7 @@ SIP transport security and media encryption depend on your account/PBX configura
 
 مای‌تل‌فون ۳ برای تماس و گفت‌وگوی سازمانی در اندروید و ویندوز است. برای ورود، داخلی، رمز و آدرس سرور را وارد کنید. رابط برنامه انگلیسی است و پیام فارسی پشتیبانی می‌شود. شماره‌های فارسی و قالب‌های معمول شمارهٔ ایران در شماره‌گیر پردازش می‌شوند.
 
-برای تماس بیرونی باید مسیر خروجی و ترانک سرور تنظیم باشد. چت و تماس تصویری هم به پشتیبانی و تنظیم سرور و دستگاه مقابل نیاز دارند. جزئیات تست و محدودیت‌های همین نسخه در [گزارش بررسی](docs/releases/v3.1.0/VERIFICATION.md) آمده است.
+برای تماس بیرونی باید مسیر خروجی و ترانک سرور تنظیم باشد. چت و تماس تصویری هم به پشتیبانی و تنظیم سرور و دستگاه مقابل نیاز دارند. جزئیات اصلاح اندروید در [گزارش ۳.۱.۱](docs/releases/v3.1.1/VERIFICATION.md) و آزمون‌های نسخهٔ پایه در [گزارش ۳.۱.۰](docs/releases/v3.1.0/VERIFICATION.md) آمده است.
 
 ## Build Android
 
@@ -78,7 +84,7 @@ For a production APK, configure the existing private signing key using `keystore
 ./gradlew assembleRelease bundleRelease
 ```
 
-Outputs: `app/build/outputs/apk/release/MytellPhone-release-v3.1.0.apk` and the release AAB under `app/build/outputs/bundle/release/`. A missing production signing configuration fails release packaging; it does not silently use a debug key. Never commit signing keys or credentials.
+Outputs: `app/build/outputs/apk/release/MytellPhone-release-v3.1.1.apk` and the release AAB under `app/build/outputs/bundle/release/`. A missing production signing configuration fails release packaging; it does not silently use a debug key. Never commit signing keys or credentials.
 
 ## Source and licenses
 
