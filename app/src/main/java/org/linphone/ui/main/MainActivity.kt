@@ -937,8 +937,8 @@ class MainActivity : GenericActivity() {
             coreContext.postOnCoreThread { corePreferences.useCallRedirectionService = false }
             return
         }
-        Log.i("$TAG Requesting READ_PHONE_STATE and READ_PHONE_NUMBERS permissions needed for Call Redirection feature")
-        requestReadPhonePermissionsLauncher.launch(arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_PHONE_NUMBERS))
+        Log.i("$TAG Requesting READ_PHONE_STATE for optional Call Redirection")
+        requestReadPhonePermissionsLauncher.launch(arrayOf(Manifest.permission.READ_PHONE_STATE))
     }
 
     private fun showBackgroundAccessHintIfNeeded() {
