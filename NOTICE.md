@@ -22,8 +22,13 @@ terms. All upstream copyright notices remain valid.
   not committed)
 - Output APK renamed to `MyTelSoftPhone-<buildType>-<version>.apk`
 
-The Android Linphone SDK binaries are consumed from the pinned official
-Belledonne Maven dependency recorded in `gradle/libs.versions.toml`.
+MyTel Android packages the official Linphone SDK Java API, resources and native
+dependencies with a locally rebuilt `liblinphone.so` for each supported ABI.
+The source revision, MyTel patch and build instructions are in
+[native-sdk/README.md](native-sdk/README.md).
+The Android SIP client certificate importer uses Bouncy Castle Java 1.87.
+The library is distributed under the Bouncy Castle license, included as
+[`META-INF/LICENSE.md`](https://www.bouncycastle.org/licence/) in the provider JAR.
 The separate Windows release uses the Linphone SDK dependency distribution
 with a locally rebuilt liblinphone/C++ wrapper. Its exact source revision,
 local build patch, corresponding SDK source archive and license are supplied

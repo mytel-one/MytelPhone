@@ -22,12 +22,17 @@ package org.linphone.utils
 import android.app.Dialog
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.os.Build
+import android.text.InputType
 import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
+import android.widget.EditText
+import android.widget.FrameLayout
 import androidx.annotation.UiThread
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
@@ -76,6 +81,40 @@ import org.linphone.databinding.DialogRemoveParticipantFromGroupBinding
 
 class DialogUtils {
     companion object {
+        @UiThread
+        fun showSipClientCertificatePassword(context: Context, onPassword: (CharArray) -> Unit) {
+            val password = EditText(context).apply {
+                hint = context.getString(R.string.mytel_client_certificate_password)
+                contentDescription = hint
+                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                isSaveEnabled = false
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+                }
+            }
+            val container = FrameLayout(context).apply {
+                val inset = (24 * resources.displayMetrics.density).toInt()
+                setPaddingRelative(inset, 0, inset, 0)
+                addView(password)
+            }
+            AlertDialog.Builder(context)
+                .setTitle(R.string.mytel_client_certificate_import)
+                .setMessage(R.string.mytel_client_certificate_password_help)
+                .setView(container)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.mytel_client_certificate_import) { _, _ ->
+                    val entered = password.text
+                    val secret = CharArray(entered.length) { entered[it] }
+                    entered.clear()
+                    onPassword(secret)
+                }
+                .create().apply {
+                    window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    setOnDismissListener { password.text.clear() }
+                    show()
+                }
+        }
+
         @UiThread
         fun getAcceptConditionsAndPrivacyDialog(
             context: Context,

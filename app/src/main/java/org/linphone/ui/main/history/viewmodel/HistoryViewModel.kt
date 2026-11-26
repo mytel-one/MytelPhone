@@ -187,7 +187,7 @@ class HistoryViewModel
     fun startAudioCall() {
         coreContext.postOnCoreThread { core ->
             if (!::address.isInitialized) return@postOnCoreThread
-            coreContext.startAudioCall(address)
+            coreContext.startAudioCall(address, preserveDestination = true)
         }
     }
 
@@ -195,7 +195,7 @@ class HistoryViewModel
     fun startVideoCall() {
         coreContext.postOnCoreThread { core ->
             if (!::address.isInitialized) return@postOnCoreThread
-            coreContext.startVideoCall(address)
+            coreContext.startVideoCall(address, preserveDestination = true)
         }
     }
 

@@ -3,7 +3,9 @@ import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
 import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsPlugin
 import com.google.gms.googleservices.GoogleServicesPlugin
 import java.io.BufferedReader
-import java.io.FileInputStream
+import java.io.InputStream
+import java.security.MessageDigest
+import java.util.zip.ZipFile
 import java.util.Properties
 import java.util.concurrent.TimeUnit
 
@@ -16,8 +18,18 @@ plugins {
 }
 
 val packageName = "one.mytel.softphone"
-val mytelVersion = "3.1.2"
-val useDifferentPackageNameForDebugBuild = false
+val mytelVersion = "3.2.1"
+val arm64DeviceTest = providers.gradleProperty("mytel.arm64DeviceTest").orElse("false").get().toBooleanStrict()
+val localSdkAar = providers.gradleProperty("mytel.sdkAar")
+val checkedSdk = configurations.create("checkedMyTelSipSdk") {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+    isTransitive = false
+}
+val useDifferentPackageNameForDebugBuild = providers.gradleProperty("mytel.debugSideBySide")
+    .map(String::toBoolean)
+    .orElse(false)
+    .get()
 
 val sdkPath = providers.gradleProperty("LinphoneSdkBuildDir").get()
 val googleServices = File(projectDir.absolutePath + "/google-services.json")
@@ -84,16 +96,50 @@ configurations {
     implementation { isCanBeResolved = true }
 }
 
-tasks.register("linphoneSdkSource") {
+val verifyMyTelSipSdk = tasks.register("verifyMyTelSipSdk") {
+    val artifactPins = rootProject.file("native-sdk/artifacts.sha256.properties")
+    val enginePins = rootProject.file("native-sdk/engines.sha256.properties")
+    inputs.file(artifactPins)
+    inputs.file(enginePins)
+    inputs.files(checkedSdk)
+    inputs.property("arm64DeviceTest", arm64DeviceTest)
     doLast {
-        configurations.implementation.get().incoming.resolutionResult.allComponents.forEach {
-            if (it.id.displayName.contains("linphone-sdk-android")) {
-                println("Linphone SDK used is ${it.moduleVersion?.version}")
+        fun sha256(stream: InputStream): String {
+            val digest = MessageDigest.getInstance("SHA-256")
+            val buffer = ByteArray(64 * 1024)
+            var count = stream.read(buffer)
+            while (count >= 0) {
+                digest.update(buffer, 0, count)
+                count = stream.read(buffer)
+            }
+            return digest.digest().joinToString("") { "%02x".format(it) }
+        }
+        val expectedArtifact = Properties().apply { artifactPins.inputStream().use { load(it) } }
+        val buildScope = if (arm64DeviceTest) "arm64DeviceTest" else "universal"
+        val archive = checkedSdk.singleFile
+        check(archive.inputStream().buffered().use { sha256(it) } == expectedArtifact.getProperty(buildScope)) {
+            "The Android SIP SDK archive differs from its verified MyTel SHA-256."
+        }
+        val expected = Properties().apply { enginePins.inputStream().use { load(it) } }
+        val abis = if (arm64DeviceTest) setOf("arm64-v8a") else setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        ZipFile(archive).use { sdk ->
+            val nativeEntries = sdk.entries().asSequence().filter { it.name.startsWith("jni/") && it.name.endsWith(".so") }.toList()
+            check(nativeEntries.map { it.name.substringAfter("jni/").substringBefore("/") }.toSet() == abis) {
+                "The selected SIP SDK does not contain exactly the requested Android ABIs."
+            }
+            for (abi in abis) {
+                val engine = nativeEntries.single { it.name == "jni/$abi/liblinphone.so" }
+                val actual = sdk.getInputStream(engine).use { sha256(it) }
+                check(expected.getProperty(abi) == actual) { "The SIP engine for $abi differs from the verified MyTel build." }
             }
         }
     }
 }
-project.tasks.preBuild.dependsOn("linphoneSdkSource")
+project.tasks.preBuild.dependsOn(verifyMyTelSipSdk)
+
+androidComponents.beforeVariants { variant ->
+    if (arm64DeviceTest && variant.buildType != "deviceTest") variant.enable = false
+}
 
 android {
     namespace = "org.linphone"
@@ -103,7 +149,7 @@ android {
         applicationId = packageName
         minSdk = 24
         targetSdk = 37
-        versionCode = 30102
+        versionCode = 30201
         versionName = mytelVersion
 
         // Match the declared English-only interface. Message/contact text
@@ -114,7 +160,7 @@ android {
 
         ndk {
             //noinspection ChromeOsAbiSupport
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            abiFilters += if (arm64DeviceTest) listOf("arm64-v8a") else listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
     }
 
@@ -129,10 +175,10 @@ android {
 
     // MyTel: keystore.properties is deliberately not committed; a clean
     // checkout can build debug APKs. Release packaging requires the production key.
-    val keystorePropertiesFile = rootProject.file("keystore.properties")
+    val keystorePropertiesFile = rootProject.file(providers.gradleProperty("mytel.signingProperties").orElse("keystore.properties").get())
     val keystoreProperties = Properties()
     if (keystorePropertiesFile.exists()) {
-        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+        keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
     } else {
         println("Release signing is unavailable; debug builds remain available")
     }
@@ -140,13 +186,13 @@ android {
     signingConfigs {
         create("release") {
             val keyStorePath = keystoreProperties["storeFile"] as? String
-            val keyStore = keyStorePath?.let { project.file(it) }
+            val keyStore = keyStorePath?.let { keystorePropertiesFile.parentFile.resolve("app").resolve(it) }
             if (keyStore != null && keyStore.exists() && keystorePropertiesFile.exists()) {
                 storeFile = keyStore
                 storePassword = keystoreProperties["storePassword"] as String
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
-                println("Signing config release is using keystore [$storeFile]")
+                println("Release signing configured")
             } else {
                 tasks.matching { it.name == "packageRelease" || it.name == "validateSigningRelease" }.configureEach {
                     doFirst {
@@ -197,7 +243,7 @@ android {
             signingConfig = signingConfigs.getByName("release")
 
             val appVersion = mytelVersion
-            val appBranch = gitBranch
+            val appBranch = "v$mytelVersion"
             println("Release flavor app version is [$appVersion], app branch is [$appBranch]")
             resValue("string", "linphone_app_version", appVersion)
             resValue("string", "linphone_app_branch", appBranch)
@@ -212,6 +258,14 @@ android {
                 }
             }
             buildConfigField("Boolean", "CRASHLYTICS_ENABLED", crashlyticsAvailable.toString())
+        }
+        if (arm64DeviceTest) {
+            create("deviceTest") {
+                initWith(getByName("release"))
+                isMinifyEnabled = false
+                isShrinkResources = false
+                matchingFallbacks += "release"
+            }
         }
     }
 
@@ -237,6 +291,8 @@ android {
             // CafeBazaar's official signer embeds bundletool 1.11, which only
             // ZIP-aligns stored native libraries to 4 KB. Extract compressed
             // libraries at install time; the SDK's ELF 16 KB alignment remains.
+            // The verified engine is already stripped. Preserve its published ELF digest.
+            keepDebugSymbols += "**/liblinphone.so"
             useLegacyPackaging = true
         }
     }
@@ -247,6 +303,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.bcprov)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     implementation(libs.androidx.annotations)
     implementation(libs.androidx.appcompat)
@@ -293,7 +350,13 @@ dependencies {
     // https://github.com/openid/AppAuth-Android/blob/master/LICENSE Apache v2.0
     implementation(libs.openid.appauth)
 
-    implementation(libs.linphone)
+    val sipSdk = if (localSdkAar.isPresent) {
+        files(rootProject.file(localSdkAar.get()))
+    } else {
+        "one.mytel.sdk:sip-android:$mytelVersion@aar"
+    }
+    implementation(sipSdk)
+    add(checkedSdk.name, sipSdk)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

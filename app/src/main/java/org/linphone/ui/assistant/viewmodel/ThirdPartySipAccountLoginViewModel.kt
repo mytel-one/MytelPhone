@@ -19,12 +19,18 @@
  */
 package org.linphone.ui.assistant.viewmodel
 
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import java.util.Locale
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
@@ -37,6 +43,7 @@ import org.linphone.core.CoreListenerStub
 import org.linphone.core.Factory
 import org.linphone.core.Reason
 import org.linphone.core.RegistrationState
+import org.linphone.core.SipClientIdentity
 import org.linphone.core.TransportType
 import org.linphone.core.tools.Log
 import org.linphone.ui.GenericViewModel
@@ -88,6 +95,12 @@ class ThirdPartySipAccountLoginViewModel
 
     val registrationInProgress = MutableLiveData<Boolean>()
 
+    val readingClientCertificate = MutableLiveData(false)
+
+    val clientCertificateSelected = MutableLiveData(false)
+
+    private var clientIdentity: SipClientIdentity? = null
+
     val connectionFeedback = MutableLiveData("")
 
     val localNetworkSettingsAvailable = MutableLiveData(false)
@@ -102,7 +115,7 @@ class ThirdPartySipAccountLoginViewModel
     private data class LoginInput(
         val username: String, val authId: String, val password: String, val server: String,
         val displayName: String, val outbound: String, val proxy: String, val transport: String,
-        val prefix: String, val prefixIso: String
+        val prefix: String, val prefixIso: String, val clientIdentity: SipClientIdentity?
     ) {
         val routes: List<String> get() = listOf(server, outbound, proxy)
     }
@@ -127,6 +140,7 @@ class ThirdPartySipAccountLoginViewModel
     private var pendingAttempt: Long? = null
     private var newlyCreatedAuthInfo: AuthInfo? = null
     private var newlyCreatedAccount: Account? = null
+    private var installedClientIdentity = false
 
     private val coreListener = object : CoreListenerStub() {
         @WorkerThread
@@ -137,7 +151,7 @@ class ThirdPartySipAccountLoginViewModel
             message: String
         ) {
             val attempt = pendingAttempt ?: return
-            if (account == newlyCreatedAccount && attempts.isCurrent(attempt)) {
+            if (account.nativePointer == newlyCreatedAccount?.nativePointer && attempts.isCurrent(attempt)) {
                 Log.i("$TAG Newly created account registration state is [$state] ($message)")
 
                 if (state == RegistrationState.Ok) {
@@ -145,6 +159,7 @@ class ThirdPartySipAccountLoginViewModel
                     registrationInProgress.postValue(false)
                     core.defaultAccount = account
                     releasePendingAccount(core, attempt, removeAccount = false)
+                    coreContext.postOnMainThread { clearSelectedClientCertificate() }
                     accountLoggedInEvent.postValue(Event(true))
                 } else if (state == RegistrationState.Failed) {
                     val error = when (account.error) {
@@ -201,7 +216,9 @@ class ThirdPartySipAccountLoginViewModel
 
     @UiThread
     fun login() {
-        if (registrationInProgress.value == true || localNetworkGate.current() != null) return
+        if (registrationInProgress.value == true || readingClientCertificate.value == true ||
+            localNetworkGate.current() != null
+        ) return
         localNetworkSettingsAvailable.value = false
         localNetworkSettingsHint = false
         if (!coreContext.isReady()) return
@@ -213,7 +230,7 @@ class ThirdPartySipAccountLoginViewModel
             username.value.orEmpty().trim(), authId.value.orEmpty().trim(), password.value.orEmpty(),
             domain.value.orEmpty().trim(), displayName.value.orEmpty().trim(), outboundProxy.value.orEmpty().trim(),
             proxy.value.orEmpty().trim(), transport.value.orEmpty(), internationalPrefix.value.orEmpty().trim(),
-            internationalPrefixIsoCountryCode.value.orEmpty()
+            internationalPrefixIsoCountryCode.value.orEmpty(), clientIdentity
         )
         val routes = input.routes
         val need = SipLocalNetworkPolicy.routes(routes)
@@ -447,7 +464,16 @@ class ThirdPartySipAccountLoginViewModel
                         }
                     ).also { it.begin(auth) }
                 }
-                newlyCreatedAccount?.let { core.addAccount(it) }
+                val created = requireNotNull(newlyCreatedAccount)
+                if (input.clientIdentity != null) {
+                    if (!coreContext.sipClientCertificates.status(core, created).eligible) {
+                        failLogin(core, attempt, AppUtils.getString(R.string.mytel_client_certificate_ineligible))
+                        return@postOnCoreThread
+                    }
+                    coreContext.sipClientCertificates.install(core, created, input.clientIdentity)
+                    installedClientIdentity = true
+                }
+                core.addAccount(created)
                 coreContext.postOnCoreThreadDelayed({ currentCore ->
                     failLogin(currentCore, attempt, AppUtils.getString(R.string.mytel_login_timeout))
                 }, REGISTRATION_TIMEOUT_MS)
@@ -493,7 +519,16 @@ class ThirdPartySipAccountLoginViewModel
         if (pendingAttempt != attempt) return
         core.removeListener(coreListener)
         if (removeAccount) {
-            newlyCreatedAccount?.let { core.removeAccount(it) }
+            newlyCreatedAccount?.let {
+                if (installedClientIdentity) {
+                    runCatching { coreContext.sipClientCertificates.remove(it) }.onFailure {
+                        Log.w("$TAG Could not clear the certificate from the cancelled account")
+                    }
+                }
+                if (core.accountList.any { current -> current.nativePointer == it.nativePointer }) {
+                    core.removeAccount(it)
+                }
+            }
             authTransaction?.rollback()
         } else {
             authTransaction?.commit()
@@ -502,6 +537,33 @@ class ThirdPartySipAccountLoginViewModel
         newlyCreatedAccount = null
         newlyCreatedAuthInfo = null
         pendingAttempt = null
+        installedClientIdentity = false
+    }
+
+    @UiThread
+    fun selectClientCertificate(uri: Uri, password: CharArray) {
+        readingClientCertificate.value = true
+        viewModelScope.launch {
+            try {
+                clientIdentity = withContext(Dispatchers.IO) {
+                    SipClientIdentity.fromDocument(coreContext.context.contentResolver, uri, password)
+                }
+                clientCertificateSelected.value = true
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Exception) {
+                showRedToast(R.string.mytel_client_certificate_import_failed, R.drawable.warning_circle)
+            } finally {
+                password.fill('\u0000')
+                readingClientCertificate.value = false
+            }
+        }
+    }
+
+    @UiThread
+    fun clearSelectedClientCertificate() {
+        clientIdentity = null
+        clientCertificateSelected.value = false
     }
 
     @UiThread
@@ -520,6 +582,7 @@ class ThirdPartySipAccountLoginViewModel
     }
 
     override fun onCleared() {
+        clientIdentity = null
         localNetworkGate.cancel()
         pendingLoginInput = null
         val attempt = attempts.cancel()

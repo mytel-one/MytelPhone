@@ -146,4 +146,24 @@ class MyTelNumberNormalizerTest {
         assertNormalized("tel:+989121234567", "09121234567")
         assertNormalized("sips:2@example.org", "sips:2@example.org")
     }
+
+    @Test
+    fun manual_dialing_keeps_the_user_entered_route_and_country_prefixes() {
+        for (destination in listOf("900000000001", "91544", "701", "0980000000000", "+980000000000", "00980000000000")) {
+            assertEquals(destination, MyTelNumberNormalizer.prepareDialString(destination))
+        }
+    }
+
+    @Test
+    fun manual_dialing_removes_only_visual_number_formatting() {
+        assertEquals("900000000001", MyTelNumberNormalizer.prepareDialString("۹ (۰۰۰۰) ۰۰۰-۰۰۰۱"))
+        assertEquals("+980000000000", MyTelNumberNormalizer.prepareDialString("tel:+98 000-0000000"))
+        assertEquals("*21*701#", MyTelNumberNormalizer.prepareDialString("*۲۱*۷۰۱#"))
+    }
+
+    @Test
+    fun manual_dialing_keeps_sip_addresses_and_aliases() {
+        assertEquals("sips:701@192.0.2.1:5061;transport=tls", MyTelNumberNormalizer.prepareDialString("sips:701@192.0.2.1:5061;transport=tls"))
+        assertEquals("front.desk", MyTelNumberNormalizer.prepareDialString("front.desk"))
+    }
 }

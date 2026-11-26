@@ -70,6 +70,8 @@ class CoreContext
 
     lateinit var core: Core
 
+    internal val sipClientCertificates = SipClientCertificates(context)
+
     fun isCoreAvailable(): Boolean {
         return ::core.isInitialized
     }
@@ -555,6 +557,7 @@ class CoreContext
             // Prevent this trigger when core is stopped/start in remote prov
             if (core.globalState == GlobalState.Off) return
 
+            sipClientCertificates.clearChangedAccounts(core)
             Log.i(
                 "$TAG New account configured: [${account.params.identityAddress?.asStringUriOnly()}]"
             )
@@ -575,6 +578,14 @@ class CoreContext
 
         @WorkerThread
         override fun onAccountRemoved(core: Core, account: Account) {
+            if (core.globalState == GlobalState.On) {
+                runCatching { sipClientCertificates.remove(account) }.onFailure {
+                    Log.w("$TAG Could not remove the account's local SIP client identity")
+                }
+                sipClientCertificates.restore(core)
+            } else {
+                sipClientCertificates.clearBeforeAccountEdit(account)
+            }
             Log.i("$TAG Account [${account.params.identityAddress?.asStringUriOnly()}] removed, clearing auth request dialog if needed")
             if (account.findAuthInfo() == digestAuthInfoPendingPasswordUpdate) {
                 Log.i("$TAG Removed account matches auth info pending password update, removing dialog")
@@ -743,6 +754,7 @@ class CoreContext
         // Disable the SDK update endpoint for both existing profiles and new installs.
         core.config.setString("misc", "version_check_url_root", "")
 
+        sipClientCertificates.restore(core)
         computeUserAgent()
         Log.i("$TAG Core has been configured with user-agent [${core.userAgent}], starting it")
         core.start()
@@ -1123,11 +1135,12 @@ class CoreContext
         address: Address,
         forceZRTP: Boolean = false,
         localAddress: Address? = null,
-        skipNetworkReachabilityTest: Boolean = false
+        skipNetworkReachabilityTest: Boolean = false,
+        preserveDestination: Boolean = false
     ) {
         val params = core.createCallParams(null)
         params?.isVideoEnabled = false
-        startCall(address, params, forceZRTP, localAddress, skipNetworkReachabilityTest)
+        startCall(address, params, forceZRTP, localAddress, skipNetworkReachabilityTest, preserveDestination)
     }
 
     @WorkerThread
@@ -1135,12 +1148,13 @@ class CoreContext
         address: Address,
         forceZRTP: Boolean = false,
         localAddress: Address? = null,
-        skipNetworkReachabilityTest: Boolean = false
+        skipNetworkReachabilityTest: Boolean = false,
+        preserveDestination: Boolean = false
     ) {
         val params = core.createCallParams(null)
         params?.isVideoEnabled = true
         params?.videoDirection = MediaDirection.SendRecv
-        startCall(address, params, forceZRTP, localAddress, skipNetworkReachabilityTest)
+        startCall(address, params, forceZRTP, localAddress, skipNetworkReachabilityTest, preserveDestination)
     }
 
     @WorkerThread
@@ -1149,7 +1163,8 @@ class CoreContext
         callParams: CallParams? = null,
         forceZRTP: Boolean = false,
         localAddress: Address? = null,
-        skipNetworkReachabilityTest: Boolean = false
+        skipNetworkReachabilityTest: Boolean = false,
+        preserveDestination: Boolean = false
     ) {
         if (!skipNetworkReachabilityTest && !core.isNetworkReachable) {
             Log.e("$TAG Network unreachable, abort outgoing call")
@@ -1202,7 +1217,7 @@ class CoreContext
         val username = address.username.orEmpty()
         val domain = address.domain.orEmpty()
         val account = params.account ?: core.defaultAccount
-        if (account != null && Compatibility.isIpAddress(domain)) {
+        if (!preserveDestination && account != null && Compatibility.isIpAddress(domain)) {
             Log.i("$TAG SIP URI [${address.asStringUriOnly()}] seems to have an IP address as domain")
             if (username.isNotEmpty() && (username.startsWith("+") || username.isDigitsOnly())) {
                 val identityDomain = account.params.identityAddress?.domain

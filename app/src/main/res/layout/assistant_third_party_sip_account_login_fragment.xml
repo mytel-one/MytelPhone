@@ -275,11 +275,37 @@
                             android:textSize="14sp"
                             android:onClick="@{otherSetupClickListener}" />
                     </LinearLayout>
+                    <androidx.appcompat.widget.AppCompatTextView
+                        style="@style/MyTel.Ux.Label"
+                        android:text="@string/mytel_client_certificate_title" />
+                    <androidx.appcompat.widget.AppCompatTextView
+                        style="@style/MyTel.Ux.Body"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.clientCertificateSelected ? @string/mytel_client_certificate_login_selected : @string/mytel_client_certificate_login_help}" />
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/import_client_certificate"
+                        style="@style/secondary_button_label_style"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:layout_marginTop="8dp"
+                        android:enabled="@{!viewModel.registrationInProgress &amp;&amp; !viewModel.readingClientCertificate}"
+                        android:text="@{viewModel.clientCertificateSelected ? @string/mytel_client_certificate_replace : @string/mytel_client_certificate_import}" />
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/remove_client_certificate"
+                        style="@style/tertiary_button_label_style"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:enabled="@{!viewModel.registrationInProgress &amp;&amp; !viewModel.readingClientCertificate}"
+                        android:text="@string/mytel_client_certificate_remove"
+                        android:visibility="@{viewModel.clientCertificateSelected ? View.VISIBLE : View.GONE}" />
                     <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/login"
                         style="@style/MyTel.Ux.Primary"
                         android:layout_marginTop="24dp"
-                        android:enabled="@{viewModel.loginEnabled &amp;&amp; !viewModel.registrationInProgress, default=false}"
+                        android:enabled="@{viewModel.loginEnabled &amp;&amp; !viewModel.registrationInProgress &amp;&amp; !viewModel.readingClientCertificate, default=false}"
                         android:text="@{viewModel.registrationInProgress ? @string/mytel_ux_connecting : @string/mytel_ux_connect}"
                         android:onClick="@{() -> viewModel.login()}" />
                     <LinearLayout

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mytel_client_certificate_title">SIP client certificate (mTLS)</string>
+    <string name="mytel_client_certificate_help">Import the .p12 or .pfx file and password from your SBC administrator. Keep the SIP password in your account settings.</string>
+    <string name="mytel_client_certificate_ready">A certificate is stored for this account. Fully close and reopen MyTel if it is still using an earlier connection.</string>
+    <string name="mytel_client_certificate_login_help">Optional. If your SBC requires mTLS, import its .p12 or .pfx file before connecting and select TLS under Advanced.</string>
+    <string name="mytel_client_certificate_login_selected">Certificate selected. MyTel will use it to connect to your SIP account over TLS.</string>
+    <string name="mytel_client_certificate_ineligible">Use TLS and a SIP server hostname dedicated to one account in MyTel. The server hostname must match the SIP account domain.</string>
+    <string name="mytel_client_certificate_import">Import certificate</string>
+    <string name="mytel_client_certificate_replace">Replace certificate</string>
+    <string name="mytel_client_certificate_remove">Remove certificate</string>
+    <string name="mytel_client_certificate_password">Certificate file password</string>
+    <string name="mytel_client_certificate_password_help">Enter the password for this .p12 or .pfx file.</string>
+    <string name="mytel_client_certificate_remove_confirm">Remove the certificate from this phone? Fully close and reopen MyTel to end the previous TLS connection.</string>
+    <string name="mytel_client_certificate_import_failed">Could not open this certificate. Check the file, its password, and the certificate expiration date.</string>
+    <string name="mytel_client_certificate_save_failed">Could not update the certificate on this phone. Check the SIP account settings and try again.</string>
+    <string name="mytel_client_certificate_installed">Certificate stored. Reconnect MyTel if needed.</string>
+    <string name="mytel_client_certificate_removed">Certificate removed. Reconnect MyTel.</string>
+</resources>

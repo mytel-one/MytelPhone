@@ -485,23 +485,14 @@ class ContactViewModel
 
     @UiThread
     fun callEditedDestination(edited: String, isVideo: Boolean, originalAddress: Address? = null) {
+        val destination = MyTelNumberNormalizer.prepareDialString(edited)
+        if (destination.isEmpty()) return
         coreContext.postOnCoreThread { core ->
-            // Leader correction: preserve the COMPLETE original dialing
-            // context — scheme, port, transport, params and account
-            // selection — by cloning the original address and updating only
-            // the username when the edited value is a plain number. A full
-            // edited SIP URI is interpreted directly. The edited value IS the
-            // destination — no hidden rewrite on call.
-            val address: Address? = if (edited.startsWith("sip:") || edited.contains("@")) {
-                core.interpretUrl(edited, false)
-            } else if (originalAddress != null) {
-                val clone = originalAddress.clone()
-                clone.setUsername(edited)
-                clone
+            // Reuse the contact's routing context when only its number is edited.
+            val address = if (originalAddress != null && !MyTelNumberNormalizer.isSipAddress(destination)) {
+                originalAddress.clone().takeIf { it.setUsername(destination) == 0 }
             } else {
-                val domain = LinphoneUtils.getDefaultAccount()?.params?.domain
-                    ?: corePreferences.defaultDomain
-                core.createAddress("sip:$edited@$domain")
+                core.interpretUrl(destination, false)
             }
             if (address == null) {
                 Log.e("$TAG Failed to create address for edited destination [$edited]")
@@ -511,9 +502,9 @@ class ContactViewModel
                 "$TAG Starting ${if (isVideo) "video" else "audio"} call to edited destination [${address.asStringUriOnly()}]"
             )
             if (isVideo) {
-                coreContext.startVideoCall(address)
+                coreContext.startVideoCall(address, preserveDestination = true)
             } else {
-                coreContext.startAudioCall(address)
+                coreContext.startAudioCall(address, preserveDestination = true)
             }
         }
     }

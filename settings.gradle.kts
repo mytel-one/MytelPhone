@@ -49,6 +49,10 @@ dependencyResolutionManagement {
             url = uri("https://mirrors.cloud.tencent.com/nexus/repository/maven-public/")
         }
         mavenCentral()
+        exclusiveContent {
+            forRepository { mavenCentral() }
+            filter { includeModule("org.bouncycastle", "bcprov-jdk18on") }
+        }
         maven {
             url = uri("https://maven.aliyun.com/repository/google")
             content {
@@ -73,29 +77,18 @@ dependencyResolutionManagement {
             }
         }
 
-        val localSdk = File("${providers.gradleProperty("LinphoneSdkBuildDir").get()}/maven_repository/org/linphone/linphone-sdk-android/maven-metadata.xml")
-        if (localSdk.exists()) {
-            val localSdkPath = providers.gradleProperty("LinphoneSdkBuildDir").get()
-            println("Using locally built SDK from maven repository at ${localSdkPath}/maven_repository/")
-            maven {
-                name = "local linphone-sdk maven repository"
-                url = uri(
-                    "file://${localSdkPath}/maven_repository/"
-                )
-                content {
-                    includeGroup("org.linphone")
+        exclusiveContent {
+            forRepository {
+                ivy {
+                    name = "MyTel verified Android SIP SDK"
+                    url = uri("https://github.com/mytel-one/MytelPhone/releases/download")
+                    patternLayout { artifact("v[revision]/MyTel-sip-sdk-[revision].[ext]") }
+                    metadataSources { artifact() }
                 }
             }
-        } else {
-            maven {
-                println("Using CI built SDK from maven repository at https://download.linphone.org/maven_repository")
-                name = "linphone.org maven repository"
-                url = uri("https://download.linphone.org/maven_repository")
-                content {
-                    includeGroup("org.linphone")
-                }
-            }
+            filter { includeModule("one.mytel.sdk", "sip-android") }
         }
+
     }
 }
 

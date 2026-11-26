@@ -87,6 +87,7 @@ import org.linphone.utils.DialogUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.MyTelNumberNormalizer
 import androidx.core.content.edit
 import org.linphone.ui.sso.SingleSignOnActivity
 
@@ -1256,15 +1257,16 @@ class MainActivity : GenericActivity() {
             else -> uri.replace("%40", "@") // Unescape @ character if needed
         }
 
-        coreContext.postOnCoreThread {
-            val address = coreContext.core.interpretUrl(
-                sipUriToCall,
-                LinphoneUtils.applyInternationalPrefix()
-            )
+        coreContext.postOnCoreThread { core ->
+            val address = core.interpretUrl(MyTelNumberNormalizer.prepareDialString(sipUriToCall), false)
             Log.i("$TAG Interpreted SIP URI is [${address?.asStringUriOnly()}]")
             if (address != null) {
                 // Skip network reachability test, this code will be called too soon
-                coreContext.startAudioCall(address, skipNetworkReachabilityTest = true)
+                coreContext.startAudioCall(
+                    address,
+                    skipNetworkReachabilityTest = true,
+                    preserveDestination = true
+                )
             }
         }
     }

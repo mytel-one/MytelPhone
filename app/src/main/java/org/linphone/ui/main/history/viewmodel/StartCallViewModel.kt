@@ -39,6 +39,7 @@ import org.linphone.ui.main.history.model.NumpadModel
 import org.linphone.ui.main.viewmodel.AddressSelectionViewModel
 import org.linphone.utils.Event
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.MyTelNumberNormalizer
 
 class StartCallViewModel
     @UiThread
@@ -132,12 +133,12 @@ class StartCallViewModel
                     Log.i("$TAG Using numpad dial button to call [$suggestion]")
                     coreContext.postOnCoreThread { core ->
                         val address = core.interpretUrl(
-                            suggestion,
-                            LinphoneUtils.applyInternationalPrefix()
+                            MyTelNumberNormalizer.prepareDialString(suggestion),
+                            false
                         )
                         if (address != null) {
                             Log.i("$TAG Calling [${address.asStringUriOnly()}]")
-                            coreContext.startAudioCall(address)
+                            coreContext.startAudioCall(address, preserveDestination = true)
                             leaveFragmentEvent.postValue(Event(true))
                         } else {
                             Log.e("$TAG Failed to parse [$suggestion] as SIP address")
@@ -151,8 +152,8 @@ class StartCallViewModel
                     Log.i("$TAG Using numpad transfer button to blind forward call to [$suggestion]")
                     coreContext.postOnCoreThread { core ->
                         val address = core.interpretUrl(
-                            suggestion,
-                            LinphoneUtils.applyInternationalPrefix()
+                            MyTelNumberNormalizer.prepareDialString(suggestion),
+                            false
                         )
                         if (address != null) {
                             initiateBlindTransferEvent.postValue(Event(Pair(address, LinphoneUtils.getDisplayName(address))))

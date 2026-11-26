@@ -81,7 +81,8 @@ class StartCallDialogFragment : AppCompatDialogFragment() {
             setHintTextColor(themeColor(R.attr.color_hint_text))
             textSize = 25f
             gravity = Gravity.CENTER
-            inputType = InputType.TYPE_CLASS_PHONE
+            textDirection = View.TEXT_DIRECTION_LTR
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
             setSingleLine(true)
             showSoftInputOnFocus = false
             setPadding(dp(12), dp(12), dp(12), dp(12))
@@ -204,12 +205,13 @@ class StartCallDialogFragment : AppCompatDialogFragment() {
 
     private fun placeCall(video: Boolean) {
         if (submitting) return
-        val destination = MyTelNumberNormalizer.normalize(numberDisplay?.text?.toString().orEmpty().trim())
+        val destination = MyTelNumberNormalizer.prepareDialString(numberDisplay?.text?.toString().orEmpty())
         val toastContext = context ?: return
         if (!coreContext.isReady()) return
         submitting = true
         coreContext.postOnCoreThread { core ->
-            val address = core.interpretUrl(destination)
+            // The PBX owns its dialing rules, including outside-line prefixes.
+            val address = core.interpretUrl(destination, false)
             val error = when {
                 core.defaultAccount == null -> R.string.start_chat_no_account_toast
                 address == null -> R.string.start_chat_invalid_number_toast
@@ -220,10 +222,14 @@ class StartCallDialogFragment : AppCompatDialogFragment() {
                 submitting = false
                 if (error != null) {
                     Toast.makeText(toastContext, error, Toast.LENGTH_LONG).show()
-                } else if (isAdded) {
+                } else if (isAdded && address != null) {
                     dismissAllowingStateLoss()
                     coreContext.postOnCoreThread {
-                        if (video) coreContext.startVideoCall(address!!) else coreContext.startAudioCall(address!!)
+                        if (video) {
+                            coreContext.startVideoCall(address, preserveDestination = true)
+                        } else {
+                            coreContext.startAudioCall(address, preserveDestination = true)
+                        }
                     }
                 }
             }

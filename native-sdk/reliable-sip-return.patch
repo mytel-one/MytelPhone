@@ -1,0 +1,119 @@
+--- a/belle-sip/src/belle_sip_internal.h
++++ b/belle-sip/src/belle_sip_internal.h
+@@ -851,6 +851,10 @@
+  **/
+ 
+ void belle_sip_message_init(belle_sip_message_t *message);
++void belle_sip_message_set_received_channel(belle_sip_message_t *msg, belle_sip_channel_t *chan);
++belle_sip_channel_t *belle_sip_provider_get_response_channel(belle_sip_provider_t *prov,
++                                                             const belle_sip_message_t *origin,
++                                                             belle_sip_response_t *resp);
+ 
+ struct _belle_sip_message {
+ 	belle_sip_object_t base;
+@@ -858,6 +862,7 @@
+ 	belle_sip_body_handler_t *body_handler;
+ 	char *multipart_body_cache;
+ 	char *channel_bank_identifier;
++	belle_sip_channel_t *received_channel; /* Weak reference to the network flow of an inbound SIP request. */
+ };
+ 
+ struct _belle_sip_request {
+--- a/belle-sip/src/message.cc
++++ b/belle-sip/src/message.cc
+@@ -90,7 +90,19 @@
+ 	belle_sip_free(obj);
+ }
+ 
++static void received_channel_destroyed(void *data, belle_sip_object_t *) {
++	static_cast<belle_sip_message_t *>(data)->received_channel = nullptr;
++}
++
++void belle_sip_message_set_received_channel(belle_sip_message_t *msg, belle_sip_channel_t *chan) {
++	if (msg->received_channel == chan) return;
++	if (msg->received_channel) belle_sip_object_weak_unref(msg->received_channel, received_channel_destroyed, msg);
++	msg->received_channel = chan;
++	if (chan) belle_sip_object_weak_ref(chan, received_channel_destroyed, msg);
++}
++
+ static void belle_sip_message_destroy(belle_sip_message_t *msg) {
++	belle_sip_message_set_received_channel(msg, nullptr);
+ 	belle_sip_list_free_with_data(msg->header_list, (void (*)(void *))belle_sip_headers_container_delete);
+ 	if (msg->body_handler) belle_sip_object_unref(msg->body_handler);
+ 	if (msg->multipart_body_cache) bctbx_free(msg->multipart_body_cache);
+@@ -882,6 +894,8 @@
+ 	const belle_sip_list_t *vias;
+ 
+ 	belle_sip_response_init_default(resp, status_code, NULL);
++	/* Locally generated responses inherit this hint. Ordinary clones and forwarded messages do not. */
++	belle_sip_message_set_received_channel(BELLE_SIP_MESSAGE(resp), req->base.received_channel);
+ 	if (status_code == 100 && (h = belle_sip_message_get_header((belle_sip_message_t *)req, "timestamp"))) {
+ 		belle_sip_message_add_header((belle_sip_message_t *)resp, h);
+ 	}
+--- a/belle-sip/src/provider.c
++++ b/belle-sip/src/provider.c
+@@ -478,6 +478,8 @@
+ }
+ 
+ static void channel_on_message(belle_sip_channel_listener_t *obj, belle_sip_channel_t *chan, belle_sip_message_t *msg) {
++	if (belle_sip_message_is_request(msg) && belle_sip_channel_is_reliable(chan))
++		belle_sip_message_set_received_channel(msg, chan);
+ 	belle_sip_object_ref(msg);
+ 	belle_sip_provider_dispatch_message(BELLE_SIP_PROVIDER(obj), msg);
+ }
+@@ -950,8 +952,25 @@
+ 	}
+ }
+ 
++belle_sip_channel_t *belle_sip_provider_get_response_channel(belle_sip_provider_t *p,
++                                                             const belle_sip_message_t *origin,
++                                                             belle_sip_response_t *resp) {
++	belle_sip_channel_t *chan = origin->received_channel;
++	belle_sip_header_via_t *via = belle_sip_message_get_header_by_type(resp, belle_sip_header_via_t);
++	const char *transport = via ? belle_sip_header_via_get_transport(via) : NULL;
++	belle_sip_hop_t *hop;
++	/* RFC 3261 section 18.2.2: use the existing reliable connection on which this request arrived. */
++	if (chan && chan->state == BELLE_SIP_CHANNEL_READY && !chan->about_to_be_closed && transport &&
++	    belle_sip_list_find(p->lps, chan->lp) && strcasecmp(transport, belle_sip_channel_get_transport_name(chan)) == 0)
++		return chan;
++	hop = belle_sip_response_get_return_hop(resp);
++	if (!hop) return NULL;
++	chan = belle_sip_provider_get_channel(p, hop);
++	belle_sip_object_unref(hop);
++	return chan;
++}
++
+ void belle_sip_provider_send_response(belle_sip_provider_t *p, belle_sip_response_t *resp) {
+-	belle_sip_hop_t *hop;
+ 	belle_sip_channel_t *chan;
+ 	belle_sip_header_to_t *to =
+ 	    (belle_sip_header_to_t *)belle_sip_message_get_header((belle_sip_message_t *)resp, "to");
+@@ -961,12 +980,8 @@
+ 		compute_hash_from_invariants((belle_sip_message_t *)resp, token, sizeof(token), "tag");
+ 		belle_sip_header_to_set_tag(to, token);
+ 	}
+-	hop = belle_sip_response_get_return_hop(resp);
+-	if (hop) {
+-		chan = belle_sip_provider_get_channel(p, hop);
+-		if (chan) belle_sip_channel_queue_message(chan, BELLE_SIP_MESSAGE(resp));
+-		belle_sip_object_unref(hop);
+-	}
++	chan = belle_sip_provider_get_response_channel(p, BELLE_SIP_MESSAGE(resp), resp);
++	if (chan) belle_sip_channel_queue_message(chan, BELLE_SIP_MESSAGE(resp));
+ }
+ 
+ /*private provider API*/
+--- a/belle-sip/src/transaction.c
++++ b/belle-sip/src/transaction.c
+@@ -379,10 +379,7 @@
+ static int belle_sip_server_transaction_check_channel(belle_sip_server_transaction_t *t, belle_sip_response_t *resp) {
+ 	belle_sip_transaction_t *base = (belle_sip_transaction_t *)t;
+ 	if (!base->channel) {
+-		belle_sip_hop_t *hop;
+-		hop = belle_sip_response_get_return_hop(resp);
+-		base->channel = belle_sip_provider_get_channel(base->provider, hop);
+-		belle_sip_object_unref(hop);
++		base->channel = belle_sip_provider_get_response_channel(base->provider, BELLE_SIP_MESSAGE(base->request), resp);
+ 		if (!base->channel) {
+ 			belle_sip_error("Transaction [%p]: No channel available for sending response.", t);
+ 			return -1;

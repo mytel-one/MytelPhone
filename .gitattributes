@@ -1,0 +1,2 @@
+native-sdk/*.patch text eol=lf
+native-sdk/*.sh text eol=lf

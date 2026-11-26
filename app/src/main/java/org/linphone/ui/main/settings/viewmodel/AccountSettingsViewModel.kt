@@ -19,19 +19,26 @@
  */
 package org.linphone.ui.main.settings.viewmodel
 
+import android.net.Uri
 import androidx.annotation.UiThread
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
+import org.linphone.R
 import org.linphone.contacts.ServerDirectoryManager
 import org.linphone.core.AVPFMode
 import org.linphone.core.Account
 import org.linphone.core.Address
 import org.linphone.core.AuthInfo
+import org.linphone.core.Core
 import org.linphone.core.Factory
 import org.linphone.core.NatPolicy
+import org.linphone.core.SipClientIdentity
 import org.linphone.core.TransportType
 import org.linphone.core.tools.Log
 import org.linphone.ui.GenericViewModel
@@ -102,6 +109,10 @@ class AccountSettingsViewModel
 
     val accountFoundEvent = MutableLiveData<Event<Boolean>>()
 
+    val clientCertificateEligible = MutableLiveData(false)
+
+    val clientCertificateStored = MutableLiveData(false)
+
     val showDeveloperSettings = MutableLiveData<Boolean>()
 
     val limeAlgorithms = MutableLiveData<String>()
@@ -138,6 +149,8 @@ class AccountSettingsViewModel
             if (found != null) {
                 Log.i("$TAG Found matching account [$found]")
                 account = found
+
+                updateClientCertificateStatus(core)
 
                 val params = account.params
                 val pushAvailableForDomain = params.identityAddress?.domain in corePreferences.pushNotificationCompatibleDomains
@@ -352,7 +365,17 @@ class AccountSettingsViewModel
                 newParams.useInternationalPrefixForCallsAndChats = applyPrefix.value == true
                 newParams.isDialEscapePlusEnabled = replacePlusBy00.value == true
 
+                val oldParams = account.params
+                val routeChanged = oldParams.serverAddress?.asStringUriOnly() != newParams.serverAddress?.asStringUriOnly() ||
+                    oldParams.routesAddresses.map { it.asStringUriOnly() } !=
+                    newParams.routesAddresses.map { it.asStringUriOnly() }
+                if (routeChanged) {
+                    coreContext.sipClientCertificates.clearBeforeAccountEdit(account)
+                }
                 account.params = newParams
+                coreContext.sipClientCertificates.clearChangedAccounts(core)
+                if (routeChanged) coreContext.sipClientCertificates.restore(core)
+                updateClientCertificateStatus(core)
 
                 val accountIdentity = account.params.identityAddress?.asStringUriOnly().orEmpty()
                 val directoryUrlValue = directoryUrl.value.orEmpty().trim()
@@ -392,8 +415,10 @@ class AccountSettingsViewModel
                     Log.i(
                         "$TAG Updating password for username [${authInfo.username}] using auth info [$authInfo]"
                     )
+                    coreContext.sipClientCertificates.clearBeforeAccountEdit(account)
                     authInfo.password = newPassword
                     core.addAuthInfo(authInfo)
+                    coreContext.sipClientCertificates.restore(core)
                     core.refreshRegisters()
                 } else {
                     Log.w(
@@ -407,5 +432,53 @@ class AccountSettingsViewModel
     @UiThread
     fun toggleShowTurnPassword() {
         showTurnPassword.value = showTurnPassword.value == false
+    }
+
+    @UiThread
+    fun importClientCertificate(uri: Uri, password: CharArray) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val identity = try {
+                SipClientIdentity.fromDocument(coreContext.context.contentResolver, uri, password)
+            } catch (_: Exception) {
+                showRedToast(R.string.mytel_client_certificate_import_failed, R.drawable.warning_circle)
+                return@launch
+            }
+
+            coreContext.postOnCoreThread { core ->
+                if (!::account.isInitialized || core.accountList.none { it.nativePointer == account.nativePointer }) {
+                    return@postOnCoreThread
+                }
+                try {
+                    coreContext.sipClientCertificates.install(core, account, identity)
+                    updateClientCertificateStatus(core)
+                    account.refreshRegister()
+                    showGreenToast(R.string.mytel_client_certificate_installed, R.drawable.lock_key)
+                } catch (_: Exception) {
+                    showRedToast(R.string.mytel_client_certificate_save_failed, R.drawable.warning_circle)
+                }
+            }
+        }
+    }
+
+    @UiThread
+    fun removeClientCertificate() {
+        coreContext.postOnCoreThread { core ->
+            if (!::account.isInitialized || core.accountList.none { it.nativePointer == account.nativePointer }) {
+                return@postOnCoreThread
+            }
+            try {
+                coreContext.sipClientCertificates.remove(account)
+                updateClientCertificateStatus(core)
+                showGreenToast(R.string.mytel_client_certificate_removed, R.drawable.lock_key)
+            } catch (_: Exception) {
+                showRedToast(R.string.mytel_client_certificate_save_failed, R.drawable.warning_circle)
+            }
+        }
+    }
+
+    private fun updateClientCertificateStatus(core: Core) {
+        val status = coreContext.sipClientCertificates.status(core, account)
+        clientCertificateEligible.postValue(status.eligible)
+        clientCertificateStored.postValue(status.stored)
     }
 }

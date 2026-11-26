@@ -23,7 +23,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.UiThread
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -49,6 +51,14 @@ class AccountSettingsFragment : GenericMainFragment() {
     private val args: AccountSettingsFragmentArgs by navArgs()
 
     private lateinit var viewModel: AccountSettingsViewModel
+
+    private val chooseClientIdentity = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            DialogUtils.showSipClientCertificatePassword(requireContext()) {
+                viewModel.importClientCertificate(uri, it)
+            }
+        }
+    }
 
     override fun goBack(): Boolean {
         try {
@@ -92,6 +102,21 @@ class AccountSettingsFragment : GenericMainFragment() {
 
         binding.setOutboundProxyTooltipClickListener {
             showOutboundProxyInfoDialog()
+        }
+
+        binding.importClientCertificate.setOnClickListener {
+            chooseClientIdentity.launch(arrayOf("*/*"))
+        }
+
+        binding.removeClientCertificate.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.mytel_client_certificate_remove)
+                .setMessage(R.string.mytel_client_certificate_remove_confirm)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.mytel_client_certificate_remove) { _, _ ->
+                    viewModel.removeClientCertificate()
+                }
+                .show()
         }
 
         viewModel.accountFoundEvent.observe(viewLifecycleOwner) {
@@ -145,4 +170,5 @@ class AccountSettingsFragment : GenericMainFragment() {
         val dialog = DialogUtils.getAccountOutboundProxyHelpDialog(requireActivity())
         dialog.show()
     }
+
 }

@@ -207,7 +207,7 @@ class HistoryListFragment : AbstractMainFragment() {
                         )
                     } else {
                         Log.i("$TAG Starting call to [${model.address.asStringUriOnly()}]")
-                        coreContext.startAudioCall(model.address)
+                        coreContext.startAudioCall(model.address, preserveDestination = true)
                     }
                 }
             }

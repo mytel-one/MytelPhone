@@ -38,13 +38,43 @@ object MyTelNumberNormalizer {
     fun normalize(raw: String): String {
         val trimmed = raw.trim()
         if (trimmed.isEmpty()) return raw
-        if (trimmed.startsWith("sip:", ignoreCase = true) ||
-            trimmed.startsWith("sips:", ignoreCase = true) ||
-            trimmed.contains("@")
-        ) {
-            return raw
-        }
+        if (isSipAddress(trimmed)) return raw
 
+        val cleaned = stripTelephoneFormatting(trimmed)
+        if (cleaned.isEmpty()) return raw
+        if (cleaned.startsWith("*") || cleaned.startsWith("#")) return cleaned
+
+        val prefix = prefixes.firstOrNull { cleaned.startsWith(it) } ?: return cleaned
+        val remainder = cleaned.substring(prefix.length)
+        if (!remainder.all { it in '0'..'9' }) return cleaned
+
+        return when {
+            remainder.length == 10 -> "0$remainder"
+            remainder.length == 11 && remainder.startsWith("0") -> remainder
+            else -> cleaned
+        }
+    }
+
+    /** Keep routing digits and the user's country prefix when placing a call. */
+    fun prepareDialString(raw: String): String {
+        val trimmed = raw.trim()
+        if (isSipAddress(trimmed)) return trimmed
+        val cleaned = stripTelephoneFormatting(trimmed)
+        return if (trimmed.startsWith("tel:", ignoreCase = true) ||
+            cleaned.all { it in '0'..'9' || it in "+*#,;" }
+        ) {
+            cleaned
+        } else {
+            trimmed
+        }
+    }
+
+    internal fun isSipAddress(destination: String): Boolean =
+        destination.startsWith("sip:", ignoreCase = true) ||
+            destination.startsWith("sips:", ignoreCase = true) ||
+            destination.contains("@")
+
+    private fun stripTelephoneFormatting(trimmed: String): String {
         val ascii = StringBuilder()
         val telephone = if (trimmed.startsWith("tel:", ignoreCase = true)) trimmed.substring(4) else trimmed
         for (ch in telephone) {
@@ -57,20 +87,8 @@ object MyTelNumberNormalizer {
             )
         }
 
-        val cleaned = ascii.toString().filter {
+        return ascii.toString().filter {
             !it.isWhitespace() && it != '\u00A0' && it !in "-()./\u200E\u200F\u202A\u202B\u202C\u202D\u202E\u2066\u2067\u2068\u2069"
-        }
-        if (cleaned.isEmpty()) return raw
-        if (cleaned.startsWith("*") || cleaned.startsWith("#")) return cleaned
-
-        val prefix = prefixes.firstOrNull { cleaned.startsWith(it) } ?: return cleaned
-        val remainder = cleaned.substring(prefix.length)
-        if (!remainder.all { it in '0'..'9' }) return cleaned
-
-        return when {
-            remainder.length == 10 -> "0$remainder"
-            remainder.length == 11 && remainder.startsWith("0") -> remainder
-            else -> cleaned
         }
     }
 }

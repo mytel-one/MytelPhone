@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# The SIP PKCS#12 provider resolves algorithms by their class names.
+-keep class org.bouncycastle.jcajce.provider.** { *; }
+-keep class org.bouncycastle.jce.provider.** { *; }
+# The provider includes an optional desktop LDAP certificate store. Android's
+# SIP PKCS#12 import does not use that store or require Java's JNDI APIs.
+-dontwarn javax.naming.**

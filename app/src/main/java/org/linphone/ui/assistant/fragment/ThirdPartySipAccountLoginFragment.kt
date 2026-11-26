@@ -72,6 +72,14 @@ class ThirdPartySipAccountLoginFragment : GenericFragment() {
         R.id.assistant_nav_graph
     )
 
+    private val chooseClientIdentity = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            DialogUtils.showSipClientCertificatePassword(requireContext()) {
+                viewModel.selectClientCertificate(uri, it)
+            }
+        }
+    }
+
     private val dropdownListener = object : AdapterView.OnItemSelectedListener {
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
             val transport = viewModel.availableTransports[position]
@@ -134,6 +142,13 @@ class ThirdPartySipAccountLoginFragment : GenericFragment() {
 
         binding.viewModel = viewModel
         observeToastEvents(viewModel)
+
+        binding.importClientCertificate.setOnClickListener {
+            chooseClientIdentity.launch(arrayOf("*/*"))
+        }
+        binding.removeClientCertificate.setOnClickListener {
+            viewModel.clearSelectedClientCertificate()
+        }
 
         binding.domain.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
