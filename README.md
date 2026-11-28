@@ -4,13 +4,21 @@
 
 SIP calling and team messages for **Android and Windows**, built on the Linphone engine and the [MyTel](https://mytel.one) identity.
 
-[Android v3.1.1](https://github.com/mytel-one/MytelPhone/releases/tag/v3.1.1) · [Windows v3.1.0](https://github.com/mytel-one/MytelPhone/releases/tag/v3.1.0) · [Android patch verification](docs/releases/v3.1.1/VERIFICATION.md) · [Windows build tools](release/windows/README.md)
+## Latest releases
+
+| Platform | Version | Download | Release |
+| :--- | :---: | :--- | :--- |
+| **Android** | **3.2.1** | [APK](https://github.com/mytel-one/MytelPhone/releases/download/v3.2.1/MyTel-v3.2.1-android.apk) · [AAB](https://github.com/mytel-one/MytelPhone/releases/download/v3.2.1/MyTel-v3.2.1-android.aab) | [Release notes](https://github.com/mytel-one/MytelPhone/releases/tag/v3.2.1) |
+| **Windows x64 · Public** | **3.1.2** | [Installer](https://github.com/mytel-one/MytelPhone/releases/download/v3.1.2/MyTel-v3.1.2-windows-x64-setup.exe) · [Portable ZIP](https://github.com/mytel-one/MytelPhone/releases/download/v3.1.2/MyTel-v3.1.2-windows-x64.zip) | [Release notes](https://github.com/mytel-one/MytelPhone/releases/tag/v3.1.2) |
+| **Windows x64 · Private** | **3.2.1** | GitHub repository access required | [Private release](https://github.com/mytel-one/MytelPhone-private/releases/tag/windows-v3.2.1) |
+
+[All releases](https://github.com/mytel-one/MytelPhone/releases) · [Windows build tools](release/windows/README.md)
 
 ## What changed in Android v3.1.1
 
 - Removed unnecessary phone-number permission; contact, microphone and camera features keep their existing permission controls.
 - Optional call redirection handles a denied/cancelled phone-state permission without requesting its system role.
-- Artifact verification reports the actual merged APK/AAB permissions. The Windows release remains 3.1.0.
+- Artifact verification reports the actual merged APK/AAB permissions.
 
 ## What changed in v3.1.0
 
@@ -44,10 +52,7 @@ The release verification record distinguishes automated tests, visual review, ac
 
 ## Install
 
-| Platform | Package | Requirement |
-|---|---|---|
-| Android | `MyTel-v3.1.1-android.apk` | Android 7+ (API 24); ARMv7, ARM64, x86 or x86_64 |
-| Windows | `MyTel-v3.1.0-windows-x64-setup.exe` or portable ZIP | Windows 10/11 x64; run the MyTel setup, or extract the portable ZIP |
+Choose a package from the [latest releases](#latest-releases). Android 7+ supports ARMv7, ARM64, x86 and x86_64. On Windows 10 or 11 x64, run the installer or extract the portable ZIP.
 
 Keep the existing Android installation when upgrading so its account and message data remain available. Release updates use the existing production signing key. The Windows setup installs MyTel for the current user and keeps application data. The Windows executable uses the existing application profile in `%LOCALAPPDATA%\mytellphone`; keep that directory when replacing the application folder. Windows packages include the standard x64 Microsoft C++ runtime DLLs next to the application. The supplied official `vc_redist.x64.exe` remains available for an administrator-managed runtime installation; MyTel setup does not run it automatically. The Windows binaries are not Authenticode-signed.
 
@@ -65,6 +70,8 @@ Enter your **extension**, **password** and **SIP server**. Transport, port and o
 SIP transport security and media encryption depend on your account/PBX configuration. SIP SIMPLE messages are not represented as end-to-end encrypted. This application uses SIP, not IAX2.
 
 ## فارسی
+
+[دانلود آخرین نسخه‌های مای‌تل](#latest-releases)
 
 مای‌تل‌فون ۳ برای تماس و گفت‌وگوی سازمانی در اندروید و ویندوز است. برای ورود، داخلی، رمز و آدرس سرور را وارد کنید. رابط برنامه انگلیسی است و پیام فارسی پشتیبانی می‌شود. شماره‌های فارسی و قالب‌های معمول شمارهٔ ایران در شماره‌گیر پردازش می‌شوند.
 
@@ -84,7 +91,7 @@ For a production APK, configure the existing private signing key using `keystore
 ./gradlew assembleRelease bundleRelease
 ```
 
-Outputs: `app/build/outputs/apk/release/MytellPhone-release-v3.1.1.apk` and the release AAB under `app/build/outputs/bundle/release/`. A missing production signing configuration fails release packaging; it does not silently use a debug key. Never commit signing keys or credentials.
+Outputs: `app/build/outputs/apk/release/` (APK) and the release AAB under `app/build/outputs/bundle/release/`. A missing production signing configuration fails release packaging; it does not silently use a debug key. Never commit signing keys or credentials.
 
 ## Source and licenses
 
